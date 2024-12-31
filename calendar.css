@@ -1,0 +1,49 @@
+BODY {
+    margin: 0;
+}
+
+EVENT {
+    display: none;
+}
+
+.calendar {
+    width: 100vw;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: 2em 2em;
+    grid-auto-rows: 1fr;
+}
+
+.calendar > nav {
+    grid-column: 1 / -1;
+    height: 5em;
+    text-align: center;
+}
+
+.box {
+    text-align: right;
+    overflow: hidden;
+}
+
+.box:hover {
+}
+
+.box.inactive {
+    background-color: #f5f5f5;
+}
+
+.heading {
+    text-align: right;
+    padding: 0.5em;
+}
+
+.entry {
+    line-height: 2;
+    text-align: left;
+    padding: 0 0.5em;
+}
+
+.day {
+    padding: 0.5em;
+}
