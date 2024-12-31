@@ -1,4 +1,4 @@
-const containerClass = 'calendar'
+const containerClass = 'calendar';
 
 class Entry {
     static datePattern = /(\d{4})-(\d{2})-(\d{2})/g;
@@ -113,44 +113,35 @@ function parseEntries() {
     return entries;
 }
 
-const entries = parseEntries();
-
 function setup() {
+    const start = document.querySelector('HEAD META[name=calendar-start]');
     const body = document.querySelector('BODY');
     const calendar = document.createElement('CALENDAR');
     body.prepend(calendar);
-    render();
+
+    if (start) {
+        const [year, month] = start.content.split('-').map(x => parseInt(x, 10));
+        const d = new Date(year, month - 1, 1);
+        render(calendar, d);
+    } else {
+        render(calendar, new Date());
+    }
 }
 
-setup();
-
-
-function render() {
-    let parent, container, d;
-    if (arguments.length === 0) {
-        parent = document.querySelector('CALENDAR');
-        d = new Date();
-        d.setDate(1);
-    }
-
-    if (arguments.length === 3) {
-        parent = arguments[0];
-        d = new Date(arguments[1], arguments[2]);
-    }
-
+function render(container, d) {
     d.setHours(0);
     d.setMinutes(0);
     d.setSeconds(0);
     d.setMilliseconds(0);
 
-    container = document.createElement('div');
     container.classList.add(containerClass);
     container.dataset.date = d.toISOString();
 
-    renderNav(container, d);
-    renderHeaders(container, d);
-    renderBoxes(container, d);
-    parent.replaceChildren(container);
+    const fragment = document.createDocumentFragment();
+    renderNav(fragment, d);
+    renderHeaders(fragment, d);
+    renderBoxes(fragment, d);
+    container.replaceChildren(fragment);
 }
 
 
@@ -306,6 +297,9 @@ window.addEventListener('click', (e) => {
         const step = parseInt(e.target.dataset.step, 10);
         const now = displayedDate(container);
         const goal = dateStep(now, step);
-        render(container.parentNode, goal.getFullYear(), goal.getMonth());
+        render(container.parentNode, goal);
     }
 });
+
+const entries = parseEntries();
+setup();
