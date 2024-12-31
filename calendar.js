@@ -114,43 +114,41 @@ function parseEntries() {
 }
 
 function setup() {
-    const start = document.querySelector('HEAD META[name=calendar-start]');
-    const body = document.querySelector('BODY');
-    const calendar = document.createElement('CALENDAR');
-    body.prepend(calendar);
-
-    if (start) {
-        const [year, month] = start.content.split('-').map(x => parseInt(x, 10));
-        const d = new Date(year, month - 1, 1);
-        render(calendar, d);
-    } else {
-        render(calendar, new Date());
-    }
+    const calendar = document.createElement('calendar');
+    render(calendar, defaultStartDate());
+    document.querySelector('body').prepend(calendar);
 }
 
-function render(container, d) {
+function defaultStartDate() {
+    const meta = document.querySelector('HEAD META[name=calendar-start]');
+    if (meta) {
+        const [year, month] = meta.content.split('-').map(x => parseInt(x, 10));
+        return new Date(year, month - 1, 1);
+    }
+    return new Date();
+}
+
+function render(parent, d) {
     d.setHours(0);
     d.setMinutes(0);
     d.setSeconds(0);
     d.setMilliseconds(0);
 
-    container.classList.add(containerClass);
-    container.dataset.date = d.toISOString();
+    parent.classList.add(containerClass);
+    parent.dataset.date = d.toISOString();
 
     const fragment = document.createDocumentFragment();
     renderNav(fragment, d);
     renderHeaders(fragment, d);
     renderBoxes(fragment, d);
-    container.replaceChildren(fragment);
+    parent.replaceChildren(fragment);
 }
-
 
 function renderNav(parent, d) {
     const nav = document.createElement('nav');
     renderDatePicker(nav, d);
+    renderDateReset(nav, d);
     parent.appendChild(nav);
-    //container.appendChild(datePicker(d));
-    //return container;
 }
 
 function monthMenu() {
@@ -175,6 +173,27 @@ function renderDatePicker(parent, d) {
     renderDatePickerButton(node, 1);
     renderDatePickerButton(node, 12);
     parent.appendChild(node);
+}
+
+function renderDateReset(parent, d) {
+    const start = defaultStartDate();
+    if (yearmonth(start) === yearmonth(d)) {
+        parent.appendChild(document.createElement('div'));
+        return;
+    }
+
+    const button = document.createElement('button');
+    button.classList.add('reset');
+    button.textContent = start.toLocaleString('en-US', {month: 'long', year: 'numeric'});
+    if (start < d) {
+        button.textContent = '↶ ' + button.textContent;
+    }
+
+    if (start > d) {
+        button.textContent += ' ↷';
+    }
+
+    parent.appendChild(button);
 }
 
 function renderDatePickerText(parent, d) {
@@ -298,6 +317,14 @@ window.addEventListener('click', (e) => {
         const now = displayedDate(container);
         const goal = dateStep(now, step);
         render(container.parentNode, goal);
+        return;
+    }
+
+    if (e.target.nodeName === 'BUTTON' && e.target.classList.contains('reset')) {
+        e.preventDefault();
+        e.stopPropagation();
+        const container = e.target.closest('.' + containerClass);
+        render(container, defaultStartDate());
     }
 });
 

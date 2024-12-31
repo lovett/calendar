@@ -1,3 +1,12 @@
+:root {
+    --padding: 0.5em;
+}
+
+HTML {
+    font-size: 22px;
+    background-color: rgb(247, 247, 251);
+}
+
 BODY {
     margin: 0;
 }
@@ -6,19 +15,29 @@ EVENT {
     display: none;
 }
 
+A {
+    text-decoration: none;
+}
+
 .calendar {
     width: 100vw;
     height: 100vh;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-template-rows: 2em 2em;
+    grid-template-rows: 3rem 2rem;
     grid-auto-rows: 1fr;
 }
 
 .calendar > nav {
+    padding: 0 var(--padding);
     grid-column: 1 / -1;
-    height: 5em;
-    text-align: center;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+}
+
+.datepicker {
+    background-color: ;
 }
 
 .box {
@@ -45,5 +64,5 @@ EVENT {
 }
 
 .day {
-    padding: 0.5em;
+    padding: var(--padding);
 }
