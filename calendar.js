@@ -1,16 +1,19 @@
 const containerClass = 'calendar';
 
-class Entry {
-    static datePattern = /(\d{4})-(\d{2})-(\d{2})/g;
-    static timePattern = /(\d{1,2}):(\d{1,2})\s*([AP]M)?/;
-    static descriptionPattern = /,\s*(.*)/;
-    start = null;
-    end = null;
-    description = null;
-    hasStartTime = false;
-    hasEndTime = false;
+const patterns = {
+    date: /(\d{4})-(\d{2})-(\d{2})/g,
+    time: /(\d{1,2}):(\d{1,2})\s*([AP]M)?/,
+    description: /,\s*(.*)/
+}
 
-    constructor(value) {
+class Entry {
+    constructor(patterns, value) {
+        this.patterns = patterns;
+        this.start = null;
+        this.end = null;
+        this.description = null;
+        this.hasStartTime = false;
+        this.hasEndTime = false;
         this.parseDate(value);
         this.parseTime(value);
         this.parseDescription(value);
@@ -44,7 +47,7 @@ class Entry {
     }
 
     parseDate(value) {
-        for (const matches of value.matchAll(Entry.datePattern)) {
+        for (const matches of value.matchAll(this.patterns.date)) {
             const d = new Date(
                 parseInt(matches[1], 10),
                 parseInt(matches[2], 10) - 1,
@@ -63,7 +66,7 @@ class Entry {
     parseTime(value) {
         if (!this.start) return;
 
-        const matches = value.match(Entry.timePattern);
+        const matches = value.match(this.patterns.time);
         if (matches) {
             this.hasStartTime = true;
             let hour = parseInt(matches[1], 10);
@@ -76,7 +79,7 @@ class Entry {
     }
 
     parseDescription(value) {
-        let matches = value.match(Entry.descriptionPattern);
+        let matches = value.match(this.patterns.description);
         if (matches) {
             this.description = matches[1];
         }
@@ -100,7 +103,8 @@ function parseEntries() {
     const entries = new Map();
 
     document.querySelectorAll('BODY EVENT').forEach(node => {
-        const entry = new Entry(node.innerHTML);
+        const entry = new Entry(patterns, node.innerHTML);
+        if (!entry.start) return;
         const key = yearmonth(entry.start);
         if (!entries.has(key)) {
             entries.set(key, []);
@@ -109,6 +113,10 @@ function parseEntries() {
         const collection = entries.get(key);
         collection.push(entry);
     });
+
+    for (const collection of entries.values()) {
+        collection.sort();
+    }
 
     return entries;
 }
@@ -141,7 +149,13 @@ function render(parent, d) {
     renderHeader(fragment, d);
     renderDayNames(fragment, d);
     renderBoxes(fragment, d);
-    parent.replaceChildren(fragment);
+
+    if (parent.replaceChildren) {
+        parent.replaceChildren(fragment);
+    } else {
+        parent.innerHTML = '';
+        parent.appendChild(fragment);
+    }
 }
 
 function renderHeader(parent, d) {
@@ -277,7 +291,7 @@ function renderBoxEntries(parent, d) {
     const collection = entries.get(key);
     if (!collection) return;
 
-    for (entry of collection.toSorted()) {
+    for (entry of collection) {
         if (entry.occursOn(d)) {
             renderSingleEntry(parent, entry, d);
         }
