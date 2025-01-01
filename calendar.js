@@ -1,5 +1,3 @@
-const containerClass = 'calendar';
-
 const patterns = {
     date: /(\d{4})-(\d{2})-(\d{2})/g,
     time: /(\d{1,2}):(\d{1,2})\s*([AP]M)?/,
@@ -142,7 +140,6 @@ function render(parent, d) {
     d.setSeconds(0);
     d.setMilliseconds(0);
 
-    parent.classList.add(containerClass);
     parent.dataset.date = d.toISOString();
 
     const fragment = document.createDocumentFragment();
@@ -321,7 +318,7 @@ window.addEventListener('click', (e) => {
     if (e.target.matches('A.step')) {
         e.preventDefault();
         e.stopPropagation();
-        const container = e.target.closest('.' + containerClass)
+        const container = e.target.closest('calendar')
         const goal = dateStep(
             new Date(container.dataset.date),
             parseInt(e.target.dataset.step, 10)
