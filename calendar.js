@@ -122,7 +122,8 @@ function parseEntries() {
 function setup() {
     const calendar = document.createElement('calendar');
     render(calendar, defaultStartDate());
-    document.querySelector('body').prepend(calendar);
+    document.body.prepend(calendar);
+    renderSvgDefs(document.body);
 }
 
 function defaultStartDate() {
@@ -198,26 +199,37 @@ function renderDateReset(parent, d) {
     const start = defaultStartDate();
     if (yearmonth(start) === yearmonth(d)) return;
 
-    const node = document.createElement('a');
-    node.classList.add('reset');
-    node.href = '#';
-    node.textContent = '⭯';
-    parent.appendChild(node);
+    const a = document.createElement('a');
+    a.className = 'reset';
+    a.href = '#';
+    renderSvgIcon(a, 'reset');
+    parent.appendChild(a);
 }
 
 function renderDateStep(parent, step) {
     const a = document.createElement('a');
     a.classList.add('step');
     a.href = '#';
-    a.innerText = (() => {
-        switch (step) {
-            case 1: return '⮞';
-            case -1: return '⮜';
-        }
-    })();
+    switch (step) {
+        case 1:
+            renderSvgIcon(a, 'arrow-right');
+            break;
+        case -1:
+            renderSvgIcon(a, 'arrow-left');
+            break;
+    }
 
     a.dataset.step = step;
     parent.appendChild(a);
+}
+
+function renderSvgIcon(parent, id) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'icon');
+    const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+    use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${id}`);
+    svg.appendChild(use);
+    parent.appendChild(svg);
 }
 
 function renderDayNames(parent, d) {
@@ -314,6 +326,18 @@ function dateStep(d, step) {
     return d;
 }
 
+function renderSvgDefs(parent) {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('version', '1.1');
+
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    defs.innerHTML += `<symbol id="arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>`;
+    defs.innerHTML += `<symbol id="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>`;
+    defs.innerHTML += `<symbol id="reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></symbol>`;
+    svg.appendChild(defs);
+    parent.appendChild(svg);
+}
+
 window.addEventListener('click', (e) => {
     if (e.target.matches('A.step')) {
         e.preventDefault();
@@ -329,7 +353,7 @@ window.addEventListener('click', (e) => {
     if (e.target.matches('A.reset')) {
         e.preventDefault();
         e.stopPropagation();
-        const container = e.target.closest('.' + containerClass);
+        const container = e.target.closest('calendar');
         render(container, defaultStartDate());
     }
 });
