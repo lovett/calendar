@@ -7,18 +7,20 @@
         <link rel="stylesheet" type="text/css" href="calendar.css"/>
         <link rel="icon" type="image/svg+xml" href="calendar.svg">
         <script defer src="calendar.js"></script>
+        <style>
+            .purple { background-color: purple; };
+        </style>
     </head>
     <body>
         <event>Undated event (invalid)</event>
-        <event>2024-12-04 to 2024-12-08, Multi-day event</event>
-        <event>2024-12-31, All-day event</event>
+        <event class="purple">2024-12-04 to 2024-12-08, Multi-day event</event>
+        <event style="background-color:red">2024-12-31, All-day event</event>
         <event>2024-12-25 10:00 AM, Date with time</event>
         <event>2025-01-01 8:00 AM, Busy day event 1</event>
         <event>2025-01-01 8:30 PM, Busy day event 2</event>
         <event>2025-01-01 8:00 AM, Busy day event 3</event>
         <event>2025-01-01 8:30 AM, Busy day event 4</event>
         <event>2025-01-02, Event with <a href="http://example.com">markup</a></event>
-        <event>asfasdf</event>
 
         <section>
             <div>

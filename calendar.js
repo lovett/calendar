@@ -1,20 +1,19 @@
 const patterns = {
-    date: /(\d{4})-(\d{2})-(\d{2})/g,
-    time: /(\d{1,2}):(\d{1,2})\s*([AP]M)?/,
-    description: /,\s*(.*)/
+    date: /(\d{4})-(\d{2})-(\d{2})\W*/g,
+    time: /(\d{1,2}):(\d{1,2})\s*([AP]M)?\W*/
 }
 
 class Entry {
-    constructor(patterns, value) {
+    constructor(patterns, node) {
         this.patterns = patterns;
+        this.node = node;
         this.start = null;
         this.end = null;
-        this.description = null;
+        this.parsingIndex = -1;
         this.hasStartTime = false;
         this.hasEndTime = false;
-        this.parseDate(value);
-        this.parseTime(value);
-        this.parseDescription(value);
+        this.parseDate();
+        this.parseTime();
     }
 
     toString() {
@@ -24,6 +23,25 @@ class Entry {
     occursOn(d) {
         if (!this.start) return false;
         return d >= this.startOfDay(this.start) && d <= this.endOfDay(this.end);
+    }
+
+    isMultiDay() {
+        if (!this.start) return false;
+        return this.end.getTime() - this.start > 86400000;
+    }
+
+    isMultiDayStart(d) {
+        return this.isMultiDay() && this.startOfDay(d).getTime() == this.startOfDay(this.start).getTime();
+    }
+
+    isMultiDayContinuation(d) {
+        if (!this.isMultiDay()) return false;
+        if (this.isMultiDayEnd()) return false;
+        return d > this.start;
+    }
+
+    isMultiDayEnd(d) {
+        return this.isMultiDay() && this.startOfDay(d).getTime() == this.startOfDay(this.end).getTime();
     }
 
     startOfDay(d) {
@@ -44,14 +62,18 @@ class Entry {
         return d2;
     }
 
-    parseDate(value) {
-        for (const matches of value.matchAll(this.patterns.date)) {
+    captureParsingIndex(match) {
+        this.parsingIndex = Math.max(this.parsingIndex, match.index + match[0].length);
+    }
+
+    parseDate() {
+        for (const matches of this.node.innerHTML.matchAll(this.patterns.date)) {
+            this.captureParsingIndex(matches);
             const d = new Date(
                 parseInt(matches[1], 10),
                 parseInt(matches[2], 10) - 1,
                 parseInt(matches[3], 10),
             );
-
 
             if (!this.start) {
                 this.start = this.startOfDay(d);
@@ -64,8 +86,9 @@ class Entry {
     parseTime(value) {
         if (!this.start) return;
 
-        const matches = value.match(this.patterns.time);
+        const matches = this.node.innerHTML.match(this.patterns.time);
         if (matches) {
+            this.captureParsingIndex(matches);
             this.hasStartTime = true;
             let hour = parseInt(matches[1], 10);
             const minute = parseInt(matches[2], 10);
@@ -76,21 +99,16 @@ class Entry {
         }
     }
 
-    parseDescription(value) {
-        let matches = value.match(this.patterns.description);
-        if (matches) {
-            this.description = matches[1];
-        }
+    get description() {
+        if (this.parsingIndex < 0) return '';
+        return this.node.innerHTML.slice(this.parsingIndex);
     }
 
     shortLine(d) {
         let result = '';
 
-        if (d > this.start && d < this.end) return '→';
-        if (d > this.start) return '↓';
-
         if (this.hasStartTime) {
-            result = this.start.toLocaleString('en-US', {timeStyle: 'short'}) + ' ';
+            result = this.start.toLocaleString('en-US', {hour: 'numeric', minute: 'numeric'}) + ' ';
         }
 
         return result + this.description;
@@ -101,7 +119,7 @@ function parseEntries() {
     const entries = new Map();
 
     document.querySelectorAll('BODY EVENT').forEach(node => {
-        const entry = new Entry(patterns, node.innerHTML);
+        const entry = new Entry(patterns, node);
         if (!entry.start) return;
         const key = yearmonth(entry.start);
         if (!entries.has(key)) {
@@ -120,9 +138,10 @@ function parseEntries() {
 }
 
 function setup() {
-    const calendar = document.createElement('calendar');
-    render(calendar, defaultStartDate());
-    document.body.prepend(calendar);
+    const container = document.createElement('calendar');
+    document.body.dataset.calendarTag = container.nodeName;
+    render(container, defaultStartDate());
+    document.body.prepend(container);
     renderSvgDefs(document.body);
 }
 
@@ -167,8 +186,8 @@ function renderHeader(parent, d) {
         if (i === 1) {
             const child = document.createElement('div');
             renderDateReset(child, d);
-            renderDateStep(child, -1);
-            renderDateStep(child, 1);
+            renderMonthStep(child, d, -1);
+            renderMonthStep(child, d, 1);
             node.appendChild(child);
         }
     }
@@ -207,24 +226,27 @@ function renderDateReset(parent, d) {
     parent.appendChild(a);
 }
 
-function renderDateStep(parent, step) {
+function renderMonthStep(parent, d, count) {
     const a = document.createElement('a');
-    a.classList.add('step');
+    a.className = 'step';
     a.href = '#';
-    switch (step) {
+
+    const destination = new Date(d);
+    switch (count) {
         case 1:
-            renderSvgIcon(a, 'arrow-right');
+            renderIcon(a, 'arrow-right');
+            destination.setDate(32);
             break;
         case -1:
-            renderSvgIcon(a, 'arrow-left');
+            renderIcon(a, 'arrow-left');
+            destination.setDate(0);
             break;
     }
-
-    a.dataset.step = step;
+    a.dataset.destination = destination;
     parent.appendChild(a);
 }
 
-function renderSvgIcon(parent, id) {
+function renderIcon(parent, id) {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'icon');
     const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
@@ -242,7 +264,6 @@ function renderDayNames(parent, d) {
         node.classList.add('daynames');
         const d = new Date(start.getTime() + 86400000 * i);
         node.innerText = d.toLocaleString('en-US', {weekday: 'short'});
-        node.classList.add('heading');
         fragment.appendChild(node);
     }
 
@@ -260,14 +281,16 @@ function renderBoxes(parent, d) {
     for (let i=0; i < boxCount; i++) {
         const d = new Date(firstBox.getTime() + 86400000 * i);
         const node = document.createElement('div');
+        const inner = document.createElement('div');
         node.dataset.date = d.toISOString();
         node.classList.add('box');
         if (d < monthStart || d > monthEnd) {
             node.classList.add('inactive');
         }
 
-        renderBoxLabel(node, d);
-        renderBoxEntries(node, d);
+        renderBoxLabel(inner, d);
+        renderBoxEntries(inner, d);
+        node.appendChild(inner);
         fragment.appendChild(node);
     }
 
@@ -303,28 +326,49 @@ function renderBoxEntries(parent, d) {
 
     for (entry of collection) {
         if (entry.occursOn(d)) {
-            renderSingleEntry(parent, entry, d);
+            renderEntry(parent, entry, d);
         }
     }
 }
 
-function renderSingleEntry(parent, entry, d) {
+function renderEntry(parent, entry, d) {
     const node = document.createElement('div');
     node.classList.add('entry');
-    node.innerHTML = entry.shortLine(d);
+    node.setAttribute('style', entry.node.getAttribute('style'));
+
+    if (!entry.hasStartTime && !entry.isMultiDay()) {
+        node.classList.add('all-day');
+    }
+
+    if (entry.isMultiDay()) {
+        node.classList.add('multi-day');
+        if (entry.isMultiDayStart(d)) {
+            node.classList.add('multi-day-start');
+        }
+
+        if (entry.isMultiDayContinuation(d)) {
+            node.classList.add('multi-day-continuation');
+        }
+        if (entry.isMultiDayEnd(d)) {
+            node.classList.add('multi-day-end');
+        }
+
+    }
+
+    for (const token of entry.node.classList) {
+        node.classList.add(token);
+    }
+
+    if (entry.isMultiDayEnd(d)) {
+        renderIcon(node, 'arrow-down');
+    } else if (entry.isMultiDayContinuation(d)) {
+        renderIcon(node, 'arrow-right');
+    } else {
+        node.innerHTML = entry.shortLine(d);
+
+    }
+
     parent.appendChild(node);
-}
-
-function dateStep(d, step) {
-    if (step > 0) {
-        return dateStep(new Date(d.getFullYear(), d.getMonth(), 32), step - 1);
-    }
-
-    if (step < 0) {
-        return dateStep(new Date(d.getFullYear(), d.getMonth(), 0), step + 1);
-    }
-
-    return d;
 }
 
 function renderSvgDefs(parent) {
@@ -332,29 +376,28 @@ function renderSvgDefs(parent) {
     svg.setAttribute('version', '1.1');
 
     const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-    defs.innerHTML += `<symbol id="arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>`;
-    defs.innerHTML += `<symbol id="arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>`;
-    defs.innerHTML += `<symbol id="reset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></symbol>`;
+    defs.innerHTML = `
+    <symbol id="arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
+    <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
+    <symbol id="arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
+    <symbol id="reset" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></symbol>
+    `;
     svg.appendChild(defs);
     parent.appendChild(svg);
 }
 
 window.addEventListener('click', (e) => {
+    const container = e.target.closest(document.body.dataset.calendarTag);
+    if (!container) return;
+
     if (e.target.matches('A.step')) {
         e.preventDefault();
-        e.stopPropagation();
-        const container = e.target.closest('calendar')
-        const goal = dateStep(
-            new Date(container.dataset.date),
-            parseInt(e.target.dataset.step, 10)
-        );
-        render(container, goal);
+        const d = new Date(e.target.dataset.destination);
+        render(container, d);
     }
 
     if (e.target.matches('A.reset')) {
         e.preventDefault();
-        e.stopPropagation();
-        const container = e.target.closest('calendar');
         render(container, defaultStartDate());
     }
 });
