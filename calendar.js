@@ -179,6 +179,7 @@ function renderHeader(parent, d) {
 function renderYearMonth(parent, d) {
     const node = document.createElement('h1');
     node.innerText = d.toLocaleString('en-US', {month: 'long', year: 'numeric'});
+    document.title = node.innerText;
     parent.appendChild(node);
 }
 
