@@ -137,7 +137,7 @@ calendar > header .icon {
     text-align: right;
 }
 
-.day {
+.day-of-month {
     text-align: right;
     padding: var(--padding);
 }
