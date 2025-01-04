@@ -60,7 +60,7 @@ class CalendarGrid extends HTMLElement {
         return d;
     }
 
-    * entryFinder(d, start, end) {
+    * eventFinder(d, start, end) {
         const selector = `c-e[datespan^="${this.yearmonth(start)}"],c-e[datespan^="${this.yearmonth(end)}"]`;
         for (const node of document.querySelectorAll(selector)) {
             if (node.occursOn(d)) yield node;
@@ -173,21 +173,21 @@ class CalendarGrid extends HTMLElement {
     }
 
     renderEvents(parent, d, firstDay, lastDay) {
-        for (const entry of this.entryFinder(d, firstDay, lastDay)) {
+        for (const event of this.eventFinder(d, firstDay, lastDay)) {
             const div = document.createElement('div');
 
-            if (entry.hasAttribute('style')) {
-                div.setAttribute('style', entry.getAttribute('style'));
+            if (event.hasAttribute('style')) {
+                div.setAttribute('style', event.getAttribute('style'));
             }
 
             const classes = [
-                'entry', true,
-                'all-day', entry.isAllDay(),
-                'multi-day', entry.isMultiDay(),
-                'multi-day-start', entry.isMultiDayStart(d),
-                'multi-day-continuation', entry.isMultiDayContinuation(d),
-                'multi-day-end', entry.isMultiDayEnd(d),
-                entry.className, entry.hasAttribute('class'),
+                'event', true,
+                'all-day', event.isAllDay(),
+                'multi-day', event.isMultiDay(),
+                'multi-day-start', event.isMultiDayStart(d),
+                'multi-day-continuation', event.isMultiDayContinuation(d),
+                'multi-day-end', event.isMultiDayEnd(d),
+                event.className, event.hasAttribute('class'),
             ].reduce((accumulator, value, index) => {
                 if (typeof value === 'string') accumulator.push(value);
                 if (value === false) accumulator.pop();
@@ -196,9 +196,9 @@ class CalendarGrid extends HTMLElement {
 
             div.classList.add(...classes);
 
-            if (entry.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
-            if (entry.isMultiDayContinuation(d)) this.renderIcon(div, 'arrow-right');
-            if (!entry.isMultiDay() || entry.isMultiDayStart(d)) div.innerHTML = entry.shortLine(d);
+            if (event.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
+            if (event.isMultiDayContinuation(d)) this.renderIcon(div, 'arrow-right');
+            if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML = event.shortLine(d);
 
             parent.appendChild(div);
         }

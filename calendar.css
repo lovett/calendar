@@ -103,7 +103,7 @@ c-g > header .icon {
     stroke-linejoin: round;
 }
 
-.entry {
+.event {
     line-height: 1.5;
     white-space: nowrap;
     overflow: hidden;
@@ -113,7 +113,7 @@ c-g > header .icon {
     box-sizing: border-box;
 }
 
-.entry .icon {
+.event .icon {
     width: 1em;
     height: 1em;
     vertical-align: middle;
