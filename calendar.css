@@ -1,5 +1,5 @@
 :root {
-    --padding: 0.5em;
+    --padding: 0.25em;
 }
 
 * {
@@ -9,10 +9,9 @@
 HTML {
     font-family: "New York Medium", "Liberation Serif", serif;
     color: #333;
-    font-size: 18px;
+    font-size: 12px;
     background-color: rgb(247, 247, 251);
 }
-
 
 EVENT {
     display: none;
@@ -28,7 +27,7 @@ c-e {
 
 c-g {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: auto 2em;
@@ -46,7 +45,7 @@ c-g > header {
 }
 
 c-g > header h1 {
-    font-size: 2.5rem;
+    font-size: 2.25em;
     font-weight: normal;
     margin: 0;
     line-height: 1;
@@ -55,16 +54,20 @@ c-g > header h1 {
 c-g > header a {
     border-radius: .25em;
     padding: var(--padding);
-    margin-left: 1em;
+    margin-left: 2em;
     font-weight: bold;
     color: #fff;
     background-color: #333;
     display: inline-flex;
 }
 
+c-g > header a.reset {
+    display: none;
+}
+
 c-g > header .icon {
-    width: 1em;
-    height: 1em;
+    width: 2em;
+    height: 2em;
     pointer-events: none;
 }
 
@@ -73,17 +76,16 @@ c-g > header .icon {
     border: 1px solid #333;
     border-left-width: 0;
     border-right-width: 0;
-    text-align: right;
-    padding: 0.5em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: var(--padding);
     line-height: 1;
 }
 
 .box {
     overflow: hidden;
     box-shadow:1px 1px 0 0px #ddd;
-}
-
-.box:hover {
 }
 
 .box.diminished > div {
@@ -133,11 +135,11 @@ c-g > header .icon {
 }
 
 .multi-day-start {
-    margin-left: .25em;
+    margin-left: var(--padding);
     border-radius: .5em 0 0 .5em;
 }
 .multi-day-end {
-    margin-right: .25em;
+    margin-right: var(--padding);
     border-radius: 0 .5em .5em 0;
     text-align: right;
 }
@@ -145,4 +147,38 @@ c-g > header .icon {
 .day-of-month {
     text-align: right;
     padding: var(--padding);
+}
+
+.day-of-month.today {
+    float: right;
+    background-color: #333;
+    color: #fff;
+    display: inline-block;
+    border-bottom-left-radius: 1em;
+    width: .75em;
+    height: .75em;
+    line-height: .75;
+    text-align: center;
+}
+
+
+
+@media only screen and (min-width: 600px) {
+    html {
+        font-size: 14px;
+    }
+}
+
+@media only screen and (min-width: 1024px) {
+    :root {
+        --padding: 0.5em;
+    }
+
+    html {
+        font-size: 18px;
+    }
+
+    c-g > header .icon {
+        width: 1.5em;
+        height: 1.5em;
 }

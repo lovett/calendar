@@ -72,6 +72,11 @@ class CalendarGrid extends HTMLElement {
         return d.toLocaleString('en-US', {year: 'numeric', month: '2-digit'});
     }
 
+    yearmonthday(d) {
+        if (!d) return;
+        return d.toLocaleString('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'});
+    }
+
     renderSvgDefs() {
         if (document.body.querySelector('svg')) return;
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -226,8 +231,14 @@ class CalendarGrid extends HTMLElement {
     }
 
     renderDayOfMonth(parent, d) {
+        const today = this.yearmonthday(new Date());
         const node = document.createElement('div');
         node.classList.add('day-of-month');
+
+        console.log(today, d);
+        if (today == this.yearmonthday(d)) {
+            node.classList.add('today');
+        }
 
         let label = '';
         if (d.getDate() === 1) {
