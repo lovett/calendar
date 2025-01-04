@@ -22,7 +22,11 @@ A {
     text-decoration: none;
 }
 
-calendar {
+c-e {
+    display: none;
+}
+
+c-g {
     width: 100vw;
     height: 100vh;
     display: grid;
@@ -32,7 +36,7 @@ calendar {
     align-items: stretch;
 }
 
-calendar > header {
+c-g > header {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: auto auto;
@@ -41,14 +45,14 @@ calendar > header {
     padding: 1em var(--padding);
 }
 
-calendar > header h1 {
+c-g > header h1 {
     font-size: 2.5rem;
     font-weight: normal;
     margin: 0;
     line-height: 1;
 }
 
-calendar > header a {
+c-g > header a {
     border-radius: .25em;
     padding: var(--padding);
     margin-left: 1em;
@@ -58,14 +62,14 @@ calendar > header a {
     display: inline-flex;
 }
 
-calendar > header .icon {
+c-g > header .icon {
     width: 1em;
     height: 1em;
     pointer-events: none;
 }
 
 
-.daynames {
+.day-of-week {
     border: 1px solid #333;
     border-left-width: 0;
     border-right-width: 0;
@@ -82,7 +86,8 @@ calendar > header .icon {
 .box:hover {
 }
 
-.box.inactive > div {
+.box.diminished > div {
+    opacity: .5;
     height: 100%;
     margin: 1px;
     background-color: #eee;
