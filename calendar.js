@@ -61,11 +61,17 @@ class CalendarGrid extends HTMLElement {
         return d;
     }
 
-    * eventFinder(d, start, end) {
-        const selector = `c-e[datespan^="${this.yearmonth(start)}"],c-e[datespan^="${this.yearmonth(end)}"]`;
-        for (const node of document.querySelectorAll(selector)) {
-            if (node.occursOn(d)) yield node;
+    eventFinder(start, end) {
+        const d = new Date(start);
+        const yearmonths = new Set();
+        while (d <= end) {
+            yearmonths.add(this.yearmonth(d));
+            d.setDate(d.getDate() + 1);
         }
+
+        const selectors = yearmonths.values().map(yearmonth => `c-e[datespan*="${yearmonth}"]`);
+        const query = Array.from(selectors).join(',');
+        return document.querySelectorAll(query);
     }
 
     yearmonth(d) {
@@ -173,8 +179,10 @@ class CalendarGrid extends HTMLElement {
         parent.appendChild(fragment);
     }
 
-    renderEvents(parent, d, firstDay, lastDay) {
-        for (const event of this.eventFinder(d, firstDay, lastDay)) {
+    renderEvents(parent, events, d) {
+        for (const event of events) {
+            if (!event.occursOn(d)) continue;
+            event.parseTime();
             const div = document.createElement('div');
 
             if (event.hasAttribute('style')) {
@@ -209,11 +217,13 @@ class CalendarGrid extends HTMLElement {
         const monthStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
         const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
         const firstDay = new Date(monthStart.getTime() - monthStart.getDay() * 86400000);
-        const lastDay = new Date(monthEnd.getTime() + (7 - monthEnd.getDay()) * 86400000);
+        const lastDay = new Date(monthEnd.getTime() + (6 - monthEnd.getDay()) * 86400000);
         const boxCount = (lastDay.getTime() - firstDay.getTime()) / 86400000;
         const fragment = document.createDocumentFragment();
 
-        for (let i=0; i < boxCount; i++) {
+        const events = this.eventFinder(firstDay, lastDay);
+
+        for (let i=0; i <= boxCount; i++) {
             const d = new Date(firstDay.getTime() + 86400000 * i);
             const outer = document.createElement('div');
             const inner = document.createElement('div');
@@ -223,7 +233,7 @@ class CalendarGrid extends HTMLElement {
             }
 
             this.renderDayOfMonth(inner, d);
-            this.renderEvents(inner, d, firstDay, lastDay);
+            this.renderEvents(inner, events, d);
             outer.appendChild(inner);
             fragment.appendChild(outer);
         }
@@ -255,16 +265,23 @@ class CalendarEvent extends HTMLElement {
         super();
         this.start = null;
         this.end = null;
+        this.startYearmonth = null;
+        this.endYearmonth = null;
         this.startTime = [0, 0];
         this.endTime = [0,0];
         this.parsingIndex = -1;
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
+        this.parsedDate = false;
+        this.parsedTime = false;
     }
 
     connectedCallback() {
         this.parseDate();
-        this.parseTime();
-        this.datespan = `${this.yearmonth(this.start)} ${this.yearmonth(this.end)}`;
+        let datespan = this.startYearmonth;
+        if (this.endYearmonth != this.startYearmonth) {
+            datespan += ' ' + this.endYearmonth;
+        }
+        this.datespan = datespan;
     }
 
     get description() {
@@ -273,7 +290,7 @@ class CalendarEvent extends HTMLElement {
     }
 
     set datespan(value) {
-        this.setAttribute('datespan', value);
+        if (value) this.setAttribute('datespan', value);
     }
 
     get datespan() {
@@ -325,14 +342,18 @@ class CalendarEvent extends HTMLElement {
     }
 
     parseDate() {
+        if (this.parsedDate) return;
         for (const [i, match] of this.match(/(\d{4})-(\d{2})-(\d{2})\W*/g, 2)) {
             this.captureParsingIndex(match);
             const [_, year, month, day] = match.map(x => parseInt(x, 10));
             if (i === 0) {
                 this.start = new Date(year, month - 1, day, 0, 0, 0);
+                this.startYearmonth = this.yearmonth(this.start);
             }
             this.end = new Date(year, month - 1, day, 23, 59, 59);
+            this.endYearmonth = this.yearmonth(this.end);
         }
+        this.parseDate = true;
     }
 
     yearmonth(d) {
@@ -341,6 +362,7 @@ class CalendarEvent extends HTMLElement {
     }
 
     parseTime() {
+        if (this.parsedTime) return;
         if (!this.start) return;
 
         for (const [i, match] of this.match(/(\d{1,2}):(\d{1,2})\s*([AP]M)?\W*/g, 2)) {
@@ -360,6 +382,7 @@ class CalendarEvent extends HTMLElement {
                 this.endTime = [hour, minute];
             }
         }
+        this.parsedTime = true;
     }
 
 
