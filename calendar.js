@@ -277,11 +277,10 @@ class CalendarEvent extends HTMLElement {
 
     connectedCallback() {
         this.parseDate();
-        let datespan = this.startYearmonth;
-        if (this.endYearmonth != this.startYearmonth) {
-            datespan += ' ' + this.endYearmonth;
-        }
-        this.datespan = datespan;
+        const yearmonths = new Set();
+        yearmonths.add(this.startYearmonth);
+        yearmonths.add(this.endYearmonth);
+        this.datespan = Array.from(yearmonths.values()).join(' ');
     }
 
     get description() {
