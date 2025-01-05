@@ -5,6 +5,7 @@ class CalendarGrid extends HTMLElement {
         this.renderSvgDefs();
         this.addEventListener('click', this.onClick);
         this.visit('default');
+        this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
     }
 
     attributeChangedCallback(name, _, newValue) {
@@ -69,12 +70,12 @@ class CalendarGrid extends HTMLElement {
 
     yearmonth(d) {
         if (!d) return;
-        return d.toLocaleString('en-US', {year: 'numeric', month: '2-digit'});
+        return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit'});
     }
 
     yearmonthday(d) {
         if (!d) return;
-        return d.toLocaleString('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'});
+        return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit', day: '2-digit'});
     }
 
     renderSvgDefs() {
@@ -113,7 +114,7 @@ class CalendarGrid extends HTMLElement {
 
     renderTitle(parent) {
         const node = document.createElement('h1');
-        node.innerText = this.date.toLocaleString('en-US', {month: 'long', year: 'numeric'});
+        node.innerText = this.date.toLocaleString(this.locale, {month: 'long', year: 'numeric'});
         document.title = node.innerText;
         parent.appendChild(node);
     }
@@ -165,7 +166,7 @@ class CalendarGrid extends HTMLElement {
             const node = document.createElement('div');
             node.classList.add('day-of-week');
             const d = new Date(weekStart.getTime() + 86400000 * i);
-            node.innerText = d.toLocaleString('en-US', {weekday: 'short'});
+            node.innerText = d.toLocaleString(this.locale, {weekday: 'short'});
             fragment.appendChild(node);
         }
 
@@ -235,14 +236,13 @@ class CalendarGrid extends HTMLElement {
         const node = document.createElement('div');
         node.classList.add('day-of-month');
 
-        console.log(today, d);
         if (today == this.yearmonthday(d)) {
             node.classList.add('today');
         }
 
         let label = '';
         if (d.getDate() === 1) {
-            label = d.toLocaleString('en-US', {month: 'short'}) + ' ';
+            label = d.toLocaleString(this.locale, {month: 'short'}) + ' ';
         }
 
         node.textContent = label + d.getDate();
@@ -258,6 +258,7 @@ class CalendarEvent extends HTMLElement {
         this.startTime = [0, 0];
         this.endTime = [0,0];
         this.parsingIndex = -1;
+        this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
     }
 
     connectedCallback() {
@@ -336,7 +337,7 @@ class CalendarEvent extends HTMLElement {
 
     yearmonth(d) {
         if (!d) return;
-        return d.toLocaleString('en-US', {year: 'numeric', month: '2-digit'});
+        return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit'});
     }
 
     parseTime() {
@@ -375,7 +376,7 @@ class CalendarEvent extends HTMLElement {
     }
 
     toString() {
-        return this.start.toLocaleString('en-US', {timeStyle: 'short'});
+        return this.start.toLocaleString(this.locale, {timeStyle: 'short'});
     }
 
     occursOn(d) {
@@ -387,7 +388,7 @@ class CalendarEvent extends HTMLElement {
         let result = '';
 
         if (this.hasStartTime()) {
-            result = this.start.toLocaleString('en-US', {hour: 'numeric', minute: 'numeric'}) + ' ';
+            result = this.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'}) + ' ';
         }
 
         return result + this.description;
