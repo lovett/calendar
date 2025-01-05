@@ -88,10 +88,19 @@ c-g > header .icon {
     box-shadow:1px 1px 0 0px #ddd;
 }
 
+.box > div {
+    display: grid;
+    gap: .1em;
+    grid-template-columns: 1fr;
+    align-content: start;
+    align-items: start;
+}
+
 .box.diminished > div {
     opacity: .5;
     height: 100%;
     margin: 1px;
+    margin-top: 0;
     background-color: #eee;
 }
 
@@ -145,20 +154,15 @@ c-g > header .icon {
 }
 
 .day-of-month {
-    text-align: right;
+    justify-self: end;
     padding: var(--padding);
 }
 
 .day-of-month.today {
-    float: right;
     background-color: #333;
     color: #fff;
     display: inline-block;
     border-bottom-left-radius: 1em;
-    width: .75em;
-    height: .75em;
-    line-height: .75;
-    text-align: center;
 }
 
 
