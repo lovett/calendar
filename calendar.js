@@ -123,7 +123,7 @@ class CalendarGrid extends HTMLElement {
             d.setDate(d.getDate() + 1);
         }
 
-        const selectors = Array.from(yearmonths.values()).map(yearmonth => `c-e[datespan*="${yearmonth}"]`);
+        const selectors = Array.from(yearmonths.values()).map(yearmonth => `c-e[group*="${yearmonth}"]`);
         const query = Array.from(selectors).join(',');
         return document.querySelectorAll(query);
     }
@@ -223,7 +223,7 @@ class CalendarEvent extends HTMLElement {
         const yearmonths = new Set();
         yearmonths.add(this.startYearmonth);
         yearmonths.add(this.endYearmonth);
-        this.datespan = Array.from(yearmonths.values()).join(' ');
+        this.group = Array.from(yearmonths.values()).join(' ');
     }
 
     get description() {
@@ -231,12 +231,12 @@ class CalendarEvent extends HTMLElement {
         return this.innerHTML.slice(this.parsingIndex);
     }
 
-    set datespan(value) {
-        if (value) this.setAttribute('datespan', value);
+    set group(value) {
+        if (value) this.setAttribute('group', value);
     }
 
-    get datespan() {
-        return this.getAttribute('datespan');
+    get group() {
+        return this.getAttribute('group');
     }
 
     hasStartTime() {
