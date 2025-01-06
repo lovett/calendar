@@ -4,6 +4,7 @@ class CalendarGrid extends HTMLElement {
     connectedCallback() {
         this.renderShell();
         this.addEventListener('click', this.onClick);
+        window.addEventListener('keypress', this.onKeyPress.bind(this));
         this.visit('default');
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
     }
@@ -31,9 +32,9 @@ class CalendarGrid extends HTMLElement {
             <header>
             <h1></h1>
             <div class="toolbar">
-                <a class="reset" href="#"><svg class="icon"><use xlink:href="#reset" /></svg></a>
-                <a class="step month" data-month-step="-1" href="#"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
-                <a class="step month" data-month-step="1" href="#"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
+                <a class="reset" title="Reset (r)" href="#"><svg class="icon"><use xlink:href="#reset" /></svg></a>
+                <a class="step month backward" title="Back one month (p)" data-month-step="-1" href="#"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
+                <a class="step month forward" title="Forward one month (n)" data-month-step="1" href="#"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
             </div>
         </header>
         `;
@@ -97,6 +98,14 @@ class CalendarGrid extends HTMLElement {
         if (e.target.matches('A.reset')) {
             e.preventDefault();
             this.visit('default');
+        }
+    }
+
+    onKeyPress(e) {
+        switch (e.key) {
+        case 'n': this.querySelector('A.step.month.forward').click(); break;
+        case 'p': this.querySelector('A.step.month.backward').click(); break;
+        case 'r': this.visit('default');
         }
     }
 
