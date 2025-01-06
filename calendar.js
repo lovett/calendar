@@ -2,6 +2,7 @@ class CalendarGrid extends HTMLElement {
     static get observedAttributes() { return ['date']; }
 
     connectedCallback() {
+        this.createTemplate();
         this.renderSvgDefs();
         this.addEventListener('click', this.onClick);
         this.visit('default');
@@ -15,29 +16,49 @@ class CalendarGrid extends HTMLElement {
         }
     }
 
-    render(d) {
-        this.date = d;
-        const fragment = document.createDocumentFragment();
-        this.renderHeader(fragment);
-        this.renderDayNames(fragment);
-        this.renderBoxes(fragment);
+    createTemplate() {
+        const template = document.createElement('template');
+        const header = template.content.appendChild(document.createElement('header'));
 
-        if (this.replaceChildren) {
-            this.replaceChildren(fragment);
-        } else {
-            this.innerHTML = '';
-            this.appendChild(fragment);
-        }
+        header.appendChild(document.createElement('h1'));
+
+        const headerRight = header.appendChild(document.createElement('div'));
+        const toolbar = headerRight.appendChild(document.createElement('div'))
+        this.renderResetButton(toolbar);
+        this.renderMonthStep(toolbar, -1);
+        this.renderMonthStep(toolbar, 1);
+
+        this.renderDayNames(template.content);
+
+        this.append(template);
     }
 
-    visit(dest) {
-        this.setAttribute('date', (dest === 'default') ? this.defaultDate : dest)
+    render(d) {
+        this.date = d;
+        const fragment = this.querySelector('template').content.cloneNode(true);
+        this.renderTitle(fragment.querySelector('header h1'));
+        this.renderBoxes(fragment);
+
+        while (this.childNodes.length > 1) {
+            this.removeChild(this.lastChild);
+        }
+
+        this.appendChild(fragment);
+    }
+
+    visit(unit, quantity) {
+        let destination = this.defaultDate;
+        if (unit === 'month-step') {
+            destination = new Date(this.date);
+            destination.setMonth(destination.getMonth() + quantity);
+        }
+        this.setAttribute('date', destination);
     }
 
     onClick(e) {
-        if (e.target.matches('A.step')) {
+        if (e.target.matches('A.step.month')) {
             e.preventDefault();
-            this.visit(e.target.dataset.destination);
+            this.visit('month-step', parseInt(e.target.dataset.monthStep, 10));
         }
 
         if (e.target.matches('A.reset')) {
@@ -69,7 +90,7 @@ class CalendarGrid extends HTMLElement {
             d.setDate(d.getDate() + 1);
         }
 
-        const selectors = yearmonths.values().map(yearmonth => `c-e[datespan*="${yearmonth}"]`);
+        const selectors = Array.from(yearmonths.values()).map(yearmonth => `c-e[datespan*="${yearmonth}"]`);
         const query = Array.from(selectors).join(',');
         return document.querySelectorAll(query);
     }
@@ -97,32 +118,9 @@ class CalendarGrid extends HTMLElement {
         document.body.append(svg.appendChild(defs));
     }
 
-
-    renderHeader(parent) {
-        const node = document.createElement('header');
-
-        for (let i=0; i < 2; i++) {
-            if (i === 0) {
-                this.renderTitle(node);
-            }
-
-            if (i === 1) {
-                const div = document.createElement('div');
-                this.renderResetButton(div);
-                this.renderMonthStep(div, -1);
-                this.renderMonthStep(div, 1);
-                node.appendChild(div);
-            }
-        }
-
-        parent.appendChild(node);
-    }
-
     renderTitle(parent) {
-        const node = document.createElement('h1');
-        node.innerText = this.date.toLocaleString(this.locale, {month: 'long', year: 'numeric'});
-        document.title = node.innerText;
-        parent.appendChild(node);
+        parent.innerText = this.date.toLocaleString(this.locale, {month: 'long', year: 'numeric'});
+        document.title = parent.innerText;
     }
 
     renderResetButton(parent) {
@@ -137,21 +135,18 @@ class CalendarGrid extends HTMLElement {
 
     renderMonthStep(parent, count) {
         const a = document.createElement('a');
-        a.className = 'step';
+        a.className = 'step month';
         a.href = '#';
+        a.dataset.monthStep = count;
 
-        const destination = new Date(this.date);
         switch (count) {
         case 1:
             this.renderIcon(a, 'arrow-right');
-            destination.setDate(32);
             break;
         case -1:
             this.renderIcon(a, 'arrow-left');
-            destination.setDate(0);
             break;
         }
-        a.dataset.destination = destination;
         parent.appendChild(a);
     }
 
@@ -165,7 +160,8 @@ class CalendarGrid extends HTMLElement {
     }
 
     renderDayNames(parent) {
-        const weekStart = new Date(this.date.getTime() - this.date.getDay() * 86400000);
+        const now = new Date();
+        const weekStart = new Date(now.getTime() - now.getDay() * 86400000);
 
         const fragment = document.createDocumentFragment();
         for (let i = 0; i < 7; i++) {
@@ -238,7 +234,7 @@ class CalendarGrid extends HTMLElement {
             fragment.appendChild(outer);
         }
 
-        parent.appendChild(fragment);
+        parent.append(fragment);
     }
 
     renderDayOfMonth(parent, d) {
