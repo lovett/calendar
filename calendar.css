@@ -192,6 +192,6 @@ c-g > header .icon {
     }
 
     c-g > header a.reset {
-        display: inline-block;
+        display: inline-flex;
     }
 }
