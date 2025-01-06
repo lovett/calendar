@@ -2,8 +2,7 @@ class CalendarGrid extends HTMLElement {
     static get observedAttributes() { return ['date']; }
 
     connectedCallback() {
-        this.createTemplate();
-        this.renderSvgDefs();
+        this.renderShell();
         this.addEventListener('click', this.onClick);
         this.visit('default');
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
@@ -12,38 +11,72 @@ class CalendarGrid extends HTMLElement {
     attributeChangedCallback(name, _, newValue) {
         if (name === 'date') {
             const d = new Date(newValue);
-            this.render(d);
+            this.date = d;
+            this.renderMonth();
         }
     }
 
-    createTemplate() {
-        const template = document.createElement('template');
-        const header = template.content.appendChild(document.createElement('header'));
+    renderShell() {
+        const now = new Date();
 
-        header.appendChild(document.createElement('h1'));
+        this.innerHTML = `
+            <svg>
+                <defs>
+                    <symbol id="arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
+                    <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
+                    <symbol id="arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
+                    <symbol id="reset" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></symbol>
+                </defs>
+            </svg>
+            <header>
+            <h1></h1>
+            <div class="toolbar">
+                <a class="reset" href="#"><svg class="icon"><use xlink:href="#reset" /></svg></a>
+                <a class="step month" data-month-step="-1" href="#"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
+                <a class="step month" data-month-step="1" href="#"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
+            </div>
+        </header>
+        `;
 
-        const headerRight = header.appendChild(document.createElement('div'));
-        const toolbar = headerRight.appendChild(document.createElement('div'))
-        this.renderResetButton(toolbar);
-        this.renderMonthStep(toolbar, -1);
-        this.renderMonthStep(toolbar, 1);
-
-        this.renderDayNames(template.content);
-
-        this.append(template);
+        const weekStart = new Date(now.getTime() - now.getDay() * 86400000);
+        for (let i = 0; i < 7; i++) {
+            const node = document.createElement('div');
+            node.className = 'day-of-week';
+            const d = new Date(weekStart.getTime() + 86400000 * i);
+            node.textContent = d.toLocaleString(this.locale, {weekday: 'short'});
+            this.appendChild(node);
+        }
     }
 
-    render(d) {
-        this.date = d;
-        const fragment = this.querySelector('template').content.cloneNode(true);
-        this.renderTitle(fragment.querySelector('header h1'));
-        this.renderBoxes(fragment);
+    renderMonth() {
+        const fragment = document.createDocumentFragment();
+        const monthStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
+        const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+        const firstDay = new Date(monthStart.getTime() - monthStart.getDay() * 86400000);
+        const lastDay = new Date(monthEnd.getTime() + (6 - monthEnd.getDay()) * 86400000);
+        const boxCount = (lastDay.getTime() - firstDay.getTime()) / 86400000;
+        const events = this.eventFinder(firstDay, lastDay);
 
-        while (this.childNodes.length > 1) {
-            this.removeChild(this.lastChild);
+        const h1 = this.querySelector('header h1');
+        h1.textContent = this.date.toLocaleString(this.locale, {month: 'long', year: 'numeric'});
+        document.title = h1.innerText;
+
+        this.querySelectorAll('.box').forEach(node => node.remove());
+
+        for (let i=0; i <= boxCount; i++) {
+            const d = new Date(firstDay.getTime() + 86400000 * i);
+            const outer = fragment.appendChild(document.createElement('div'));
+            outer.classList.add('box');
+            if (d < monthStart || d > monthEnd) {
+                outer.classList.add('diminished');
+            }
+            const inner = outer.appendChild(document.createElement('div'));
+
+            this.renderDayOfMonth(inner, d);
+            this.renderEvents(inner, events, d);
         }
 
-        this.appendChild(fragment);
+        this.append(fragment);
     }
 
     visit(unit, quantity) {
@@ -105,51 +138,6 @@ class CalendarGrid extends HTMLElement {
         return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit', day: '2-digit'});
     }
 
-    renderSvgDefs() {
-        if (document.body.querySelector('svg')) return;
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        const defs = svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'defs'));
-        defs.innerHTML = `
-        <symbol id="arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
-        <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
-        <symbol id="arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
-        <symbol id="reset" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></symbol>
-        `;
-        document.body.append(svg.appendChild(defs));
-    }
-
-    renderTitle(parent) {
-        parent.innerText = this.date.toLocaleString(this.locale, {month: 'long', year: 'numeric'});
-        document.title = parent.innerText;
-    }
-
-    renderResetButton(parent) {
-        if (this.date - this.defaultDate === 0) return;
-
-        const a = document.createElement('a');
-        a.className = 'reset';
-        a.href = '#';
-        this.renderIcon(a, 'reset');
-        parent.appendChild(a);
-    }
-
-    renderMonthStep(parent, count) {
-        const a = document.createElement('a');
-        a.className = 'step month';
-        a.href = '#';
-        a.dataset.monthStep = count;
-
-        switch (count) {
-        case 1:
-            this.renderIcon(a, 'arrow-right');
-            break;
-        case -1:
-            this.renderIcon(a, 'arrow-left');
-            break;
-        }
-        parent.appendChild(a);
-    }
-
     renderIcon(parent, id) {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'icon');
@@ -157,22 +145,6 @@ class CalendarGrid extends HTMLElement {
         use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${id}`);
         svg.appendChild(use);
         parent.appendChild(svg);
-    }
-
-    renderDayNames(parent) {
-        const now = new Date();
-        const weekStart = new Date(now.getTime() - now.getDay() * 86400000);
-
-        const fragment = document.createDocumentFragment();
-        for (let i = 0; i < 7; i++) {
-            const node = document.createElement('div');
-            node.classList.add('day-of-week');
-            const d = new Date(weekStart.getTime() + 86400000 * i);
-            node.innerText = d.toLocaleString(this.locale, {weekday: 'short'});
-            fragment.appendChild(node);
-        }
-
-        parent.appendChild(fragment);
     }
 
     renderEvents(parent, events, d) {
@@ -210,31 +182,6 @@ class CalendarGrid extends HTMLElement {
     }
 
     renderBoxes(parent) {
-        const monthStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
-        const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
-        const firstDay = new Date(monthStart.getTime() - monthStart.getDay() * 86400000);
-        const lastDay = new Date(monthEnd.getTime() + (6 - monthEnd.getDay()) * 86400000);
-        const boxCount = (lastDay.getTime() - firstDay.getTime()) / 86400000;
-        const fragment = document.createDocumentFragment();
-
-        const events = this.eventFinder(firstDay, lastDay);
-
-        for (let i=0; i <= boxCount; i++) {
-            const d = new Date(firstDay.getTime() + 86400000 * i);
-            const outer = document.createElement('div');
-            const inner = document.createElement('div');
-            outer.classList.add('box');
-            if (d < monthStart || d > monthEnd) {
-                outer.classList.add('diminished');
-            }
-
-            this.renderDayOfMonth(inner, d);
-            this.renderEvents(inner, events, d);
-            outer.appendChild(inner);
-            fragment.appendChild(outer);
-        }
-
-        parent.append(fragment);
     }
 
     renderDayOfMonth(parent, d) {

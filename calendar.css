@@ -61,6 +61,10 @@ c-g > header a {
     display: inline-flex;
 }
 
+c-g > svg {
+    display: none;
+}
+
 c-g > header a.reset {
     display: none;
 }
