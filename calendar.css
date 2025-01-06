@@ -185,4 +185,9 @@ c-g > header .icon {
     c-g > header .icon {
         width: 1.5em;
         height: 1.5em;
+    }
+
+    c-g > header a.reset {
+        display: inline-block;
+    }
 }
