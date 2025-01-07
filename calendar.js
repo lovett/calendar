@@ -5,14 +5,14 @@ class CalendarGrid extends HTMLElement {
         this.renderShell();
         this.addEventListener('click', this.onClick);
         window.addEventListener('keypress', this.onKeyPress.bind(this));
-        this.visit('default');
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
     }
 
-    attributeChangedCallback(name, _, newValue) {
+    attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'date') {
             const d = new Date(newValue);
             this.date = d;
+            if (!oldValue) this.defaultDate = d;
             this.renderMonth();
         }
     }
@@ -107,21 +107,6 @@ class CalendarGrid extends HTMLElement {
         case 'p': this.querySelector('A.step.month.backward').click(); break;
         case 'r': this.visit('default');
         }
-    }
-
-    get defaultDate() {
-        const d = new Date();
-        const meta = document.querySelector('HEAD META[name=start]');
-        if (meta) {
-            const [year, month] = meta.content.split('-').map(x => parseInt(x, 10));
-            d.setFullYear(year);
-            d.setMonth(month -1);
-        }
-        d.setDate(1);
-        d.setHours(0);
-        d.setMinutes(0);
-        d.setMilliseconds(0);
-        return d;
     }
 
     eventFinder(start, end) {
@@ -372,5 +357,25 @@ class CalendarEvent extends HTMLElement {
 window.addEventListener('DOMContentLoaded', (e) => {
     customElements.define("c-g", CalendarGrid);
     customElements.define("c-e", CalendarEvent);
-    document.body.append(document.createElement('c-g'));
+
+    const meta = document.querySelector('HEAD META[name=start]');
+    const metaValue = (meta) ? meta.content : '';
+    const d = new Date();
+
+    let view;
+
+    if (metaValue.length == 0) {
+        view = document.createElement('c-g');
+    }
+
+    if (metaValue.length == 7) {
+        const [year, month] = metaValue.split('-').map(x => parseInt(x, 10));
+        view = document.createElement('c-g');
+        d.setYear(year);
+        d.setMonth(month - 1);
+        d.setDate(1);
+    }
+
+    document.body.appendChild(view);
+    view.setAttribute('date', d);
 });
