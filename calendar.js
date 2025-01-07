@@ -25,6 +25,11 @@ class CalendarView extends HTMLElement {
         }
     }
 
+    yearmonth(d) {
+        if (!d) return;
+        return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit'});
+    }
+
     * daysOfWeek() {
         const now = new Date();
         const weekStart = new Date(now.getTime() - now.getDay() * 86400000);
@@ -86,6 +91,7 @@ class CalendarView extends HTMLElement {
             destination = new Date(this.date);
             destination.setYear(destination.getFullYear() + quantity);
         }
+
         this.setAttribute('date', destination);
     }
 
@@ -112,8 +118,10 @@ class CalendarYear extends CalendarView {
             if (day.getDate() === 1) {
                 const month = fragment.appendChild(document.createElement('div'));
                 month.className = 'month';
-                const h2 = month.appendChild(document.createElement('h2'));
-                h2.innerText = day.toLocaleString(this.locale, {month: 'long'});
+                const title = month.appendChild(document.createElement('h2'));
+                const link = title.appendChild(document.createElement('a'));
+                link.href = '#' + this.yearmonth(day);
+                link.innerText = day.toLocaleString(this.locale, {month: 'long'});
 
                 for (const dayOfWeek of this.daysOfWeek()) {
                     fragment.lastChild.appendChild(dayOfWeek);
@@ -160,6 +168,10 @@ class CalendarYear extends CalendarView {
         if (e.target.matches('A.reset')) {
             e.preventDefault();
             this.visit('default');
+        }
+
+        if (e.target.matches('.month A')) {
+            this.visit(e.target.hash);
         }
     }
 }
@@ -223,11 +235,6 @@ class CalendarGrid extends CalendarView {
         const selectors = Array.from(yearmonths.values()).map(yearmonth => `c-e[group*="${yearmonth}"]`);
         const query = Array.from(selectors).join(',');
         return document.querySelectorAll(query);
-    }
-
-    yearmonth(d) {
-        if (!d) return;
-        return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit'});
     }
 
     yearmonthday(d) {
