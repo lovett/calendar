@@ -9,7 +9,7 @@
 HTML {
     font-family: "New York Medium", "Baskerville", "Liberation Serif", serif;
     color: #333;
-    font-size: 12px;
+    font-size: 16px;
     background-color: rgb(247, 247, 251);
 }
 
@@ -26,6 +26,7 @@ c-e {
 }
 
 .calendar-view {
+    margin: 0 0.5em;
     display: grid;
 }
 
@@ -191,10 +192,10 @@ c-g {
 }
 
 c-y {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr;
     grid-template-rows: auto;
     grid-auto-rows: 1fr;
-    gap: 2em;
+    gap: 1em;
     align-items: start;
 }
 
@@ -226,8 +227,8 @@ c-y .day.diminished {
 }
 
 @media only screen and (min-width: 600px) {
-    html {
-        font-size: 14px;
+    c-y {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
@@ -247,5 +248,9 @@ c-y .day.diminished {
 
     .calendar-view > header a.reset {
         display: inline-flex;
+    }
+
+    c-y {
+        grid-template-columns: repeat(4, 1fr);
     }
 }
