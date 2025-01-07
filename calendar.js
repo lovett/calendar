@@ -1,8 +1,8 @@
-class CalendarGrid extends HTMLElement {
+class CalendarView extends HTMLElement {
     static get observedAttributes() { return ['date']; }
-
     connectedCallback() {
         this.renderShell();
+        this.renderSubHeader();
         this.addEventListener('click', this.onClick);
         window.addEventListener('keypress', this.onKeyPress.bind(this));
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
@@ -13,13 +13,40 @@ class CalendarGrid extends HTMLElement {
             const d = new Date(newValue);
             this.date = d;
             if (!oldValue) this.defaultDate = d;
-            this.renderMonth();
+            this.render();
         }
     }
 
-    renderShell() {
-        const now = new Date();
+    onKeyPress(e) {
+        switch (e.key) {
+        case 'n': this.querySelector('A.step.forward').click(); break;
+        case 'p': this.querySelector('A.step.backward').click(); break;
+        case 'r': this.visit('default');
+        }
+    }
 
+    * daysOfWeek() {
+        const now = new Date();
+        const weekStart = new Date(now.getTime() - now.getDay() * 86400000);
+        for (let i = 0; i < 7; i++) {
+            const node = document.createElement('div');
+            node.className = 'day-of-week';
+            const d = new Date(weekStart.getTime() + 86400000 * i);
+            node.textContent = d.toLocaleString(this.locale, {weekday: 'short'});
+            yield node;
+        }
+    }
+
+    renderIcon(parent, id) {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'icon');
+        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${id}`);
+        svg.appendChild(use);
+        parent.appendChild(svg);
+    }
+
+    renderShell() {
         this.innerHTML = `
             <svg>
                 <defs>
@@ -33,23 +60,103 @@ class CalendarGrid extends HTMLElement {
             <h1></h1>
             <div class="toolbar">
                 <a class="reset" title="Reset (r)" href="#"><svg class="icon"><use xlink:href="#reset" /></svg></a>
-                <a class="step month backward" title="Back one month (p)" data-month-step="-1" href="#"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
-                <a class="step month forward" title="Forward one month (n)" data-month-step="1" href="#"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
+                <a class="step backward" data-step="-1" href="#"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
+                <a class="step forward" data-step="1" href="#"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
             </div>
         </header>
         `;
-
-        const weekStart = new Date(now.getTime() - now.getDay() * 86400000);
-        for (let i = 0; i < 7; i++) {
-            const node = document.createElement('div');
-            node.className = 'day-of-week';
-            const d = new Date(weekStart.getTime() + 86400000 * i);
-            node.textContent = d.toLocaleString(this.locale, {weekday: 'short'});
-            this.appendChild(node);
-        }
     }
 
-    renderMonth() {
+    startOfDay(d) {
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+    }
+
+    endOfDay(d) {
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 0);
+    }
+
+
+    visit(unit, quantity) {
+        let destination = this.defaultDate;
+        if (unit === 'month-step') {
+            destination = new Date(this.date);
+            destination.setMonth(destination.getMonth() + quantity);
+        }
+        if (unit === 'year-step') {
+            destination = new Date(this.date);
+            destination.setYear(destination.getFullYear() + quantity);
+        }
+        this.setAttribute('date', destination);
+    }
+
+
+}
+
+class CalendarYear extends CalendarView {
+    renderSubHeader() {}
+
+    render() {
+        this.querySelectorAll('.month').forEach(node => node.remove());
+
+        const h1 = this.querySelector('header h1');
+        h1.textContent = this.date.getFullYear();
+        document.title = h1.innerText;
+
+        const fragment = document.createDocumentFragment();
+        const now = this.startOfDay(new Date())
+        let i, j;
+        for (i = 0; i < 366; i++) {
+            const dayOfYear = new Date(this.date.getTime() + 86400000 * i);
+            if (dayOfYear.getFullYear() !== this.date.getFullYear()) continue;
+
+            if (dayOfYear.getDate() === 1) {
+                const month = fragment.appendChild(document.createElement('div'));
+                month.className = 'month';
+                const h2 = month.appendChild(document.createElement('h2'));
+                h2.innerText = dayOfYear.toLocaleString(this.locale, {month: 'long'});
+
+                for (const dayOfWeek of this.daysOfWeek()) {
+                    fragment.lastChild.appendChild(dayOfWeek);
+                }
+
+                for (j = dayOfYear.getDay(); j > 0; j--) {
+                    const spacer = fragment.lastChild.appendChild(document.createElement('div'));
+                    spacer.className = 'day spacer';
+
+                }
+            }
+            const day = fragment.lastChild.appendChild(document.createElement('day'));
+            day.className = 'day';
+            if (dayOfYear.getTime() == now.getTime()) {
+                day.innerHTML = `<div class="today">${dayOfYear.getDate()}</div>`;
+            } else {
+                day.textContent = dayOfYear.getDate();
+            }
+
+
+        }
+        this.append(fragment);
+    }
+
+    onClick(e) {
+        if (e.target.matches('A.step')) {
+            e.preventDefault();
+            this.visit('year-step', parseInt(e.target.dataset.step, 10));
+        }
+
+        if (e.target.matches('A.reset')) {
+            e.preventDefault();
+            this.visit('default');
+        }
+    }
+}
+
+class CalendarGrid extends CalendarView {
+    renderSubHeader() {
+        this.append(...this.daysOfWeek());
+    }
+
+    render() {
         const fragment = document.createDocumentFragment();
         const monthStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
         const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
@@ -80,32 +187,15 @@ class CalendarGrid extends HTMLElement {
         this.append(fragment);
     }
 
-    visit(unit, quantity) {
-        let destination = this.defaultDate;
-        if (unit === 'month-step') {
-            destination = new Date(this.date);
-            destination.setMonth(destination.getMonth() + quantity);
-        }
-        this.setAttribute('date', destination);
-    }
-
     onClick(e) {
-        if (e.target.matches('A.step.month')) {
+        if (e.target.matches('A.step')) {
             e.preventDefault();
-            this.visit('month-step', parseInt(e.target.dataset.monthStep, 10));
+            this.visit('month-step', parseInt(e.target.dataset.step, 10));
         }
 
         if (e.target.matches('A.reset')) {
             e.preventDefault();
             this.visit('default');
-        }
-    }
-
-    onKeyPress(e) {
-        switch (e.key) {
-        case 'n': this.querySelector('A.step.month.forward').click(); break;
-        case 'p': this.querySelector('A.step.month.backward').click(); break;
-        case 'r': this.visit('default');
         }
     }
 
@@ -130,15 +220,6 @@ class CalendarGrid extends HTMLElement {
     yearmonthday(d) {
         if (!d) return;
         return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit', day: '2-digit'});
-    }
-
-    renderIcon(parent, id) {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('class', 'icon');
-        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${id}`);
-        svg.appendChild(use);
-        parent.appendChild(svg);
     }
 
     renderEvents(parent, events, d) {
@@ -173,9 +254,6 @@ class CalendarGrid extends HTMLElement {
 
             parent.appendChild(div);
         }
-    }
-
-    renderBoxes(parent) {
     }
 
     renderDayOfMonth(parent, d) {
@@ -326,14 +404,6 @@ class CalendarEvent extends HTMLElement {
         this.parsingIndex = Math.max(this.parsingIndex, match.index + match[0].length);
     }
 
-    startOfDay(d) {
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-    }
-
-    endOfDay(d) {
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 0);
-    }
-
     toString() {
         return this.start.toLocaleString(this.locale, {timeStyle: 'short'});
     }
@@ -357,10 +427,15 @@ class CalendarEvent extends HTMLElement {
 window.addEventListener('DOMContentLoaded', (e) => {
     customElements.define("c-g", CalendarGrid);
     customElements.define("c-e", CalendarEvent);
+    customElements.define("c-y", CalendarYear);
 
     const meta = document.querySelector('HEAD META[name=start]');
     const metaValue = (meta) ? meta.content : '';
     const d = new Date();
+    d.setHours(0);
+    d.setMinutes(0);
+    d.setSeconds(0);
+    d.setMilliseconds(0);
 
     let view;
 
@@ -376,6 +451,14 @@ window.addEventListener('DOMContentLoaded', (e) => {
         d.setDate(1);
     }
 
+    if (metaValue.length == 4) {
+        view = document.createElement('c-y');
+        d.setYear(parseInt(metaValue, 10));
+        d.setMonth(0);
+        d.setDate(1);
+    }
+
+    view.className = 'calendar-view';
     document.body.appendChild(view);
     view.setAttribute('date', d);
 });
