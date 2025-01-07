@@ -86,6 +86,7 @@ c-y .day-of-week {
     border-left-width: 0;
     border-right-width: 0;
     text-align: center;
+    padding: 0.25em 0;
 }
 
 c-y .today {
@@ -200,7 +201,10 @@ c-y {
 }
 
 c-y h2 {
+    font-weight: normal;
     grid-column: 1 / -1;
+    line-height: 1;
+    margin-bottom: -.5em;
 }
 
 c-y .month {
