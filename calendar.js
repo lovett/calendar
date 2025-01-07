@@ -106,35 +106,48 @@ class CalendarYear extends CalendarView {
         const now = this.startOfDay(new Date())
         let i, j;
         for (i = 0; i < 366; i++) {
-            const dayOfYear = new Date(this.date.getTime() + 86400000 * i);
-            if (dayOfYear.getFullYear() !== this.date.getFullYear()) continue;
+            const day = new Date(this.date.getTime() + 86400000 * i);
+            if (day.getFullYear() !== this.date.getFullYear()) continue;
 
-            if (dayOfYear.getDate() === 1) {
+            if (day.getDate() === 1) {
                 const month = fragment.appendChild(document.createElement('div'));
                 month.className = 'month';
                 const h2 = month.appendChild(document.createElement('h2'));
-                h2.innerText = dayOfYear.toLocaleString(this.locale, {month: 'long'});
+                h2.innerText = day.toLocaleString(this.locale, {month: 'long'});
 
                 for (const dayOfWeek of this.daysOfWeek()) {
                     fragment.lastChild.appendChild(dayOfWeek);
                 }
 
-                for (j = dayOfYear.getDay(); j > 0; j--) {
-                    const spacer = fragment.lastChild.appendChild(document.createElement('div'));
-                    spacer.className = 'day spacer';
-
+                for (j = day.getDay(); j > 0; j--) {
+                    const div = fragment.lastChild.appendChild(document.createElement('div'));
+                    div.className = 'day diminished';
+                    const lining = div.appendChild(document.createElement('div'))
+                    const d = new Date(day.getTime() - 86400000 * j);
+                    lining.textContent = d.getDate();
                 }
             }
-            const day = fragment.lastChild.appendChild(document.createElement('day'));
-            day.className = 'day';
-            if (dayOfYear.getTime() == now.getTime()) {
-                day.innerHTML = `<div class="today">${dayOfYear.getDate()}</div>`;
+
+            const div = fragment.lastChild.appendChild(document.createElement('day'));
+            div.className = 'day';
+            if (day.getTime() == now.getTime()) {
+                div.innerHTML = `<div class="today">${day.getDate()}</div>`;
             } else {
-                day.textContent = dayOfYear.getDate();
+                div.textContent = day.getDate();
             }
 
-
+            const tomorrow = new Date(day.getTime() + 86400000);
+            if (tomorrow.getMonth() !== day.getMonth()) {
+                for (j = 1; j < 7 - day.getDay(); j++) {
+                    const div = fragment.lastChild.appendChild(document.createElement('div'));
+                    div.className = 'day diminished';
+                    const inner = div.appendChild(document.createElement('div'))
+                    const d = new Date(day.getTime() + 86400000 * j);
+                    inner.textContent = d.getDate();
+                }
+            }
         }
+
         this.append(fragment);
     }
 

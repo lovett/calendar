@@ -93,11 +93,9 @@ c-y .today {
     display: inline-block;
     border-radius: .25em;
     width: 1em;
-    line-height: 1;
-    text-align: center;
-    padding: var(--padding);
     background-color: #333;
     color: #fff;
+    box-sizing: border-box;
 }
 
 .box {
@@ -222,6 +220,10 @@ c-y .day {
     text-align: center;
 }
 
+c-y .day.diminished {
+    background-color: #eee;
+    opacity: .5;
+}
 
 @media only screen and (min-width: 600px) {
     html {
