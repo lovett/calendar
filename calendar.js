@@ -229,7 +229,7 @@ class CalendarGrid extends CalendarView {
         link.href = '#';
         link.hash = this.date.getFullYear();
         link.innerText = this.date.getFullYear();
-        document.title = h1.innerText;
+        document.title = `${h1.firstChild.textContent} ${link.firstChild.textContent}`;
 
         this.querySelectorAll('.box').forEach(node => node.remove());
 
