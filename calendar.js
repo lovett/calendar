@@ -1,4 +1,75 @@
-class CalendarView extends HTMLElement {
+class CalendarBase extends HTMLElement {
+    constructor() {
+        super();
+        this.cache = new Map();
+        this.oneDay = 86_400_000;
+    }
+
+    cached(key, callback) {
+        if (!this.cache.has(key)) this.cache.set(key, callback());
+        return this.cache.get(key);
+    }
+
+    get now() {
+        return this.cached('now', () => new Date());
+    }
+
+    isToday(d) {
+        if (d.getFullYear() !== this.now.getFullYear()) return false;
+        if (d.getMonth() !== this.now.getMonth()) return false;
+        if (d.getDate() !== this.now.getDate()) return false;
+        return true;
+    }
+
+    isLastDayOfMonth(d) {
+        const tomorrow = this.nextDay(d);
+        return tomorrow.getMonth() !== d.getMonth();
+    }
+
+    yearmonth(d) {
+        if (!d) return '';
+        return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+    }
+
+    ymd(d) {
+        if (!d) return '';
+        return `${this.yearmonth(d)}-${d.getDate().toString().padStart(2, '0')}`;
+    }
+
+    startOfDay(d) {
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+    }
+
+    endOfDay(d) {
+        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 0);
+    }
+
+    startOfWeek(d) {
+        return new Date(d.getTime() - d.getDay() * this.oneDay);
+    }
+
+    nextDay(d, count = 1) {
+        return new Date(d.getTime() + this.oneDay * count);
+    }
+
+    previousDay(d, count = 1) {
+        return new Date(d.getTime() - this.oneDay * count);
+    }
+
+    * daysFromStartOfWeek(d) {
+        for (let i = d.getDay(); i > 0; i--) {
+            yield this.previousDay(d, i);
+        }
+    }
+
+    * daysToEndOfWeek(d) {
+        for (let i = 0; i < 6 - d.getDay(); i++) {
+            yield this.nextDay(d, i + 1);
+        }
+    }
+}
+
+class CalendarView extends CalendarBase {
     static get observedAttributes() { return ['date']; }
     connectedCallback() {
         this.renderShell();
@@ -17,6 +88,20 @@ class CalendarView extends HTMLElement {
         }
     }
 
+    eventFinder(start, end) {
+        const set = new Set();
+        set.add(this.yearmonth(start));
+        const d = new Date(start);
+        while (d <= (end || start)) {
+            set.add(this.yearmonth(d));
+            d.setDate(d.getDate() + 1);
+        }
+
+        const selectors = Array.from(set.values()).map(yearmonth => `c-e[group*="${yearmonth}"]`);
+        const query = Array.from(selectors).join(',');
+        return this.cached(query, () => document.querySelectorAll(query))
+    }
+
     onKeyPress(e) {
         switch (e.key) {
         case 'n': this.querySelector('A.step.forward').click(); break;
@@ -25,21 +110,23 @@ class CalendarView extends HTMLElement {
         }
     }
 
-    yearmonth(d) {
-        if (!d) return '';
-        return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-    }
+    daysOfWeek() {
+        const days = this.cached('days-of-week', () => {
+            const weekStart = this.startOfWeek(this.now);
+            const days = []
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(weekStart.getTime() + this.oneDay * i);
+                days.push(d.toLocaleString(this.locale, {weekday: 'short'}));
+            }
+            return days;
+        });
 
-    * daysOfWeek() {
-        const now = new Date();
-        const weekStart = new Date(now.getTime() - now.getDay() * 86400000);
-        for (let i = 0; i < 7; i++) {
-            const node = document.createElement('div');
-            node.className = 'day-of-week';
-            const d = new Date(weekStart.getTime() + 86400000 * i);
-            node.textContent = d.toLocaleString(this.locale, {weekday: 'short'});
-            yield node;
-        }
+        return days.map(day => {
+            const div = document.createElement('div');
+            div.className = 'day-of-week';
+            div.textContent = day;
+            return div;
+        });
     }
 
     renderIcon(parent, id) {
@@ -69,14 +156,6 @@ class CalendarView extends HTMLElement {
             </div>
         </header>
         `;
-    }
-
-    startOfDay(d) {
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
-    }
-
-    endOfDay(d) {
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 0);
     }
 
     switchView(value) {
@@ -138,11 +217,8 @@ class CalendarYear extends CalendarView {
         document.title = h1.innerText;
 
         const fragment = document.createDocumentFragment();
-        const now = this.startOfDay(new Date())
-        let i, j;
-        for (i = 0; i < 366; i++) {
-            const day = new Date(this.date.getTime() + 86400000 * i);
-            if (day.getFullYear() !== this.date.getFullYear()) continue;
+        for (let i = 0; i < 365; i++) {
+            const day = new Date(this.date.getTime() + this.oneDay * i);
 
             if (day.getDate() === 1) {
                 const month = fragment.appendChild(document.createElement('div'));
@@ -154,40 +230,39 @@ class CalendarYear extends CalendarView {
                 link.hash = this.yearmonth(day);
                 link.innerText = day.toLocaleString(this.locale, {month: 'long'});
 
-                for (const dayOfWeek of this.daysOfWeek()) {
-                    fragment.lastChild.appendChild(dayOfWeek);
-                }
+                fragment.lastChild.append(...this.daysOfWeek());
 
-                for (j = day.getDay(); j > 0; j--) {
-                    const div = fragment.lastChild.appendChild(document.createElement('div'));
-                    div.className = 'day diminished';
-                    const lining = div.appendChild(document.createElement('div'))
-                    const d = new Date(day.getTime() - 86400000 * j);
-                    lining.textContent = d.getDate();
+                for (const d of this.daysFromStartOfWeek(day)) {
+                    this.renderDay(fragment.lastChild, d, 'diminished');
                 }
             }
 
-            const div = fragment.lastChild.appendChild(document.createElement('day'));
-            div.className = 'day';
-            if (day.getTime() == now.getTime()) {
-                div.innerHTML = `<div class="today">${day.getDate()}</div>`;
-            } else {
-                div.textContent = day.getDate();
-            }
+            this.renderDay(fragment.lastChild, day);
 
-            const tomorrow = new Date(day.getTime() + 86400000);
-            if (tomorrow.getMonth() !== day.getMonth()) {
-                for (j = 1; j < 7 - day.getDay(); j++) {
-                    const div = fragment.lastChild.appendChild(document.createElement('div'));
-                    div.className = 'day diminished';
-                    const inner = div.appendChild(document.createElement('div'))
-                    const d = new Date(day.getTime() + 86400000 * j);
-                    inner.textContent = d.getDate();
+            if (this.isLastDayOfMonth(day)) {
+                for (const d of this.daysToEndOfWeek(day)) {
+                    this.renderDay(fragment.lastChild, d, 'diminished');
                 }
             }
         }
 
         this.append(fragment);
+    }
+
+    renderDay(parent, d, ...classes) {
+        const div = parent.appendChild(document.createElement('div'));
+        div.classList.add(...['day'].concat(classes));
+
+        const lining = div.appendChild(document.createElement('div'))
+        lining.classList.add('lining');
+
+        const dayNumber = lining.appendChild(document.createElement('div'));
+        dayNumber.innerText = d.getDate();
+        dayNumber.classList.add('day-number');
+
+        if (this.isToday(d)) dayNumber.classList.add('today');
+
+        if (this.hasEvents(d)) dayNumber.classList.add('has-events');
     }
 
     onClick(e) {
@@ -200,6 +275,15 @@ class CalendarYear extends CalendarView {
             this.switchView(e.target.hash);
         }
     }
+
+    hasEvents(d) {
+        const ymd = this.ymd(d);
+        // const events = this.cached('events:' + this.yearmonth(d), () => this.eventFinder(d, d));
+        for (const event of this.eventFinder(d, d)) {
+            if (event.dayList.some(item => this.ymd(item) === ymd)) return true;
+        }
+        return false;
+    }
 }
 
 class CalendarMonth extends CalendarView {
@@ -211,9 +295,9 @@ class CalendarMonth extends CalendarView {
         const fragment = document.createDocumentFragment();
         const monthStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
         const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
-        const firstDay = new Date(monthStart.getTime() - monthStart.getDay() * 86400000);
-        const lastDay = new Date(monthEnd.getTime() + (6 - monthEnd.getDay()) * 86400000);
-        const boxCount = (lastDay.getTime() - firstDay.getTime()) / 86400000;
+        const firstDay = new Date(monthStart.getTime() - monthStart.getDay() * this.oneDay);
+        const lastDay = new Date(monthEnd.getTime() + (6 - monthEnd.getDay()) * this.oneDay);
+        const boxCount = (lastDay.getTime() - firstDay.getTime()) / this.oneDay;
         const events = this.eventFinder(firstDay, lastDay);
 
         const h1 = this.querySelector('header h1');
@@ -228,7 +312,7 @@ class CalendarMonth extends CalendarView {
         this.querySelectorAll('.box').forEach(node => node.remove());
 
         for (let i=0; i <= boxCount; i++) {
-            const d = new Date(firstDay.getTime() + 86400000 * i);
+            const d = new Date(firstDay.getTime() + this.oneDay * i);
             const outer = fragment.appendChild(document.createElement('div'));
             outer.classList.add('box');
             if (d < monthStart || d > monthEnd) {
@@ -252,19 +336,6 @@ class CalendarMonth extends CalendarView {
         if (e.target.matches('A.switch-view')) {
             this.switchView(e.target.hash);
         }
-    }
-
-    eventFinder(start, end) {
-        const d = new Date(start);
-        const yearmonths = new Set();
-        while (d <= end) {
-            yearmonths.add(this.yearmonth(d));
-            d.setDate(d.getDate() + 1);
-        }
-
-        const selectors = Array.from(yearmonths.values()).map(yearmonth => `c-e[group*="${yearmonth}"]`);
-        const query = Array.from(selectors).join(',');
-        return document.querySelectorAll(query);
     }
 
     yearmonthday(d) {
@@ -325,7 +396,7 @@ class CalendarMonth extends CalendarView {
     }
 }
 
-class CalendarEvent extends HTMLElement {
+class CalendarEvent extends CalendarBase {
     constructor() {
         super();
         this.start = null;
@@ -342,10 +413,10 @@ class CalendarEvent extends HTMLElement {
 
     connectedCallback() {
         this.parseDate();
-        const yearmonths = new Set();
-        yearmonths.add(this.startYearmonth);
-        yearmonths.add(this.endYearmonth);
-        this.group = Array.from(yearmonths.values()).join(' ');
+        const set = new Set();
+        set.add(this.startYearmonth);
+        set.add(this.endYearmonth);
+        this.group = Array.from(set.values()).join(' ');
     }
 
     get description() {
@@ -359,6 +430,15 @@ class CalendarEvent extends HTMLElement {
 
     get group() {
         return this.getAttribute('group');
+    }
+
+    get dayList() {
+        if (!this.start) return [];
+        const days = [];
+        for (let i=this.start.getTime(); i <= this.end.getTime(); i += this.oneDay) {
+            days.push(new Date(i));
+        }
+        return days;
     }
 
     hasStartTime() {
@@ -378,7 +458,7 @@ class CalendarEvent extends HTMLElement {
 
     isMultiDay() {
         if (!this.start) return false;
-        return this.end.getTime() - this.start > 86400000;
+        return this.end.getTime() - this.start > this.oneDay;
     }
 
     isMultiDayStart(d) {
@@ -420,11 +500,6 @@ class CalendarEvent extends HTMLElement {
         this.parseDate = true;
     }
 
-    yearmonth(d) {
-        if (!d) return;
-        return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit'});
-    }
-
     parseTime() {
         if (this.parsedTime) return;
         if (!this.start) return;
@@ -448,7 +523,6 @@ class CalendarEvent extends HTMLElement {
         }
         this.parsedTime = true;
     }
-
 
     captureParsingIndex(match) {
         this.parsingIndex = Math.max(this.parsingIndex, match.index + match[0].length);
