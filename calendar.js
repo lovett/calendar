@@ -12,8 +12,8 @@ class CalendarView extends HTMLElement {
         if (name === 'date') {
             const d = new Date(newValue);
             this.date = d;
-            if (!oldValue) this.defaultDate = d;
-            this.render();
+            if (!oldValue && !this.defaultDate) this.defaultDate = d;
+            if (newValue) this.render();
         }
     }
 
@@ -26,8 +26,8 @@ class CalendarView extends HTMLElement {
     }
 
     yearmonth(d) {
-        if (!d) return;
-        return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit'});
+        if (!d) return '';
+        return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
     }
 
     * daysOfWeek() {
@@ -59,6 +59,7 @@ class CalendarView extends HTMLElement {
                     <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
                     <symbol id="arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
                     <symbol id="reset" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></symbol>
+                    <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 </defs>
             </svg>
             <header>
@@ -78,6 +79,25 @@ class CalendarView extends HTMLElement {
 
     endOfDay(d) {
         return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 0);
+    }
+
+    switchView(value) {
+        let date, view;
+        value = value.replace('#', '');
+        if (value.match(/^\d{4}-\d{2}$/)) {
+            date = `${value}T00:00`;
+            view = 'c-g';
+        }
+
+        if (value.match(/^\d{4}$/)) {
+            date = `${value}-01-01T00:00`;
+            view = 'c-y';
+        }
+
+        if (!view) return;
+
+        document.body.querySelector('.calendar-view[date]').removeAttribute('date');
+        document.body.querySelector(view).setAttribute('date', date);
     }
 
 
@@ -120,7 +140,9 @@ class CalendarYear extends CalendarView {
                 month.className = 'month';
                 const title = month.appendChild(document.createElement('h2'));
                 const link = title.appendChild(document.createElement('a'));
-                link.href = '#' + this.yearmonth(day);
+                link.className = 'switch-view';
+                link.href = '#';
+                link.hash = this.yearmonth(day);
                 link.innerText = day.toLocaleString(this.locale, {month: 'long'});
 
                 for (const dayOfWeek of this.daysOfWeek()) {
@@ -170,8 +192,8 @@ class CalendarYear extends CalendarView {
             this.visit('default');
         }
 
-        if (e.target.matches('.month A')) {
-            this.visit(e.target.hash);
+        if (e.target.matches('A.switch-view')) {
+            this.switchView(e.target.hash);
         }
     }
 }
@@ -191,7 +213,12 @@ class CalendarGrid extends CalendarView {
         const events = this.eventFinder(firstDay, lastDay);
 
         const h1 = this.querySelector('header h1');
-        h1.textContent = this.date.toLocaleString(this.locale, {month: 'long', year: 'numeric'});
+        h1.textContent = this.date.toLocaleString(this.locale, {month: 'long'});
+        const link = h1.appendChild(document.createElement('a'));
+        link.className = 'switch-view';
+        link.href = '#';
+        link.hash = this.date.getFullYear();
+        link.innerText = this.date.getFullYear();
         document.title = h1.innerText;
 
         this.querySelectorAll('.box').forEach(node => node.remove());
@@ -221,6 +248,10 @@ class CalendarGrid extends CalendarView {
         if (e.target.matches('A.reset')) {
             e.preventDefault();
             this.visit('default');
+        }
+
+        if (e.target.matches('A.switch-view')) {
+            this.switchView(e.target.hash);
         }
     }
 
@@ -446,8 +477,13 @@ class CalendarEvent extends HTMLElement {
 
 window.addEventListener('DOMContentLoaded', (e) => {
     customElements.define("c-g", CalendarGrid);
-    customElements.define("c-e", CalendarEvent);
     customElements.define("c-y", CalendarYear);
+    customElements.define("c-e", CalendarEvent);
+
+    for (const element of ['c-g', 'c-y']) {
+        const node = document.body.appendChild(document.createElement(element));
+        node.className = 'calendar-view';
+    }
 
     const meta = document.querySelector('HEAD META[name=start]');
     const metaValue = (meta) ? meta.content : '';
@@ -457,28 +493,18 @@ window.addEventListener('DOMContentLoaded', (e) => {
     d.setSeconds(0);
     d.setMilliseconds(0);
 
-    let view;
-
-    if (metaValue.length == 0) {
-        view = document.createElement('c-g');
-    }
-
     if (metaValue.length == 7) {
         const [year, month] = metaValue.split('-').map(x => parseInt(x, 10));
-        view = document.createElement('c-g');
         d.setYear(year);
         d.setMonth(month - 1);
         d.setDate(1);
+        document.body.querySelector('c-g').setAttribute('date', d);
     }
 
     if (metaValue.length == 4) {
-        view = document.createElement('c-y');
         d.setYear(parseInt(metaValue, 10));
         d.setMonth(0);
         d.setDate(1);
+        document.body.querySelector('c-y').setAttribute('date', d);
     }
-
-    view.className = 'calendar-view';
-    document.body.appendChild(view);
-    view.setAttribute('date', d);
 });

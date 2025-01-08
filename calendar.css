@@ -27,6 +27,11 @@ c-e {
 
 .calendar-view {
     margin: 0 0.5em;
+
+    display: none;
+}
+
+.calendar-view[date] {
     display: grid;
 }
 
@@ -46,7 +51,11 @@ c-e {
     line-height: 1;
 }
 
-.calendar-view > header a {
+.calendar-view > header h1 a {
+    padding-left: 1rem;
+}
+
+.calendar-view > header .toolbar a {
     border-radius: .25em;
     padding: var(--padding);
     margin-left: 2em;
