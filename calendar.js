@@ -485,24 +485,28 @@ window.addEventListener('DOMContentLoaded', (e) => {
         node.className = 'calendar-view';
     }
 
-    const meta = document.querySelector('HEAD META[name=start]');
-    const metaValue = (meta) ? meta.content : '';
+    let start = window.location.hash.replace('#', '');
+    if (!start) {
+        const meta = document.querySelector('HEAD META[name=start]');
+        if (meta) start = meta.content;
+    }
+
     const d = new Date();
     d.setHours(0);
     d.setMinutes(0);
     d.setSeconds(0);
     d.setMilliseconds(0);
 
-    if (metaValue.length == 7) {
-        const [year, month] = metaValue.split('-').map(x => parseInt(x, 10));
+    if (start.length == 7) {
+        const [year, month] = start.split('-').map(x => parseInt(x, 10));
         d.setYear(year);
         d.setMonth(month - 1);
         d.setDate(1);
         document.body.querySelector('c-g').setAttribute('date', d);
     }
 
-    if (metaValue.length == 4) {
-        d.setYear(parseInt(metaValue, 10));
+    if (start.length == 4) {
+        d.setYear(parseInt(start, 10));
         d.setMonth(0);
         d.setDate(1);
         document.body.querySelector('c-y').setAttribute('date', d);
