@@ -58,14 +58,12 @@ class CalendarView extends HTMLElement {
                     <symbol id="arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
                     <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
                     <symbol id="arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
-                    <symbol id="reset" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></symbol>
                     <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 </defs>
             </svg>
             <header>
             <h1></h1>
             <div class="toolbar">
-                <a class="reset" title="Reset (r)" href="#"><svg class="icon"><use xlink:href="#reset" /></svg></a>
                 <a class="step backward" data-step="-1" href="#"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
                 <a class="step forward" data-step="1" href="#"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
             </div>
@@ -198,10 +196,6 @@ class CalendarYear extends CalendarView {
             this.visit('year-step', parseInt(e.target.dataset.step, 10));
         }
 
-        if (e.target.matches('A.reset')) {
-            this.visit('default');
-        }
-
         if (e.target.matches('A.switch-view')) {
             this.switchView(e.target.hash);
         }
@@ -253,11 +247,6 @@ class CalendarMonth extends CalendarView {
         if (e.target.matches('A.step')) {
             e.preventDefault();
             this.visit('month-step', parseInt(e.target.dataset.step, 10));
-        }
-
-        if (e.target.matches('A.reset')) {
-            e.preventDefault();
-            this.visit('default');
         }
 
         if (e.target.matches('A.switch-view')) {
