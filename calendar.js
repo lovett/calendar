@@ -88,7 +88,7 @@ class CalendarView extends HTMLElement {
 
         if (value.match(/^\d{4}-\d{2}$/)) {
             date = `${value}T00:00`;
-            view = 'c-g';
+            view = 'c-m';
         }
 
         if (value.match(/^\d{4}$/)) {
@@ -208,7 +208,7 @@ class CalendarYear extends CalendarView {
     }
 }
 
-class CalendarGrid extends CalendarView {
+class CalendarMonth extends CalendarView {
     renderSubHeader() {
         this.append(...this.daysOfWeek());
     }
@@ -486,12 +486,11 @@ class CalendarEvent extends HTMLElement {
 }
 
 window.addEventListener('DOMContentLoaded', (e) => {
-    console.log('in domcontentloaded');
-    customElements.define("c-g", CalendarGrid);
+    customElements.define("c-m", CalendarMonth);
     customElements.define("c-y", CalendarYear);
     customElements.define("c-e", CalendarEvent);
 
-    for (const element of ['c-g', 'c-y']) {
+    for (const element of ['c-m', 'c-y']) {
         const node = document.body.appendChild(document.createElement(element));
         node.className = 'calendar-view';
     }
@@ -513,7 +512,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
         d.setYear(year);
         d.setMonth(month - 1);
         d.setDate(1);
-        document.body.querySelector('c-g').setAttribute('date', d);
+        document.body.querySelector('c-m').setAttribute('date', d);
     }
 
     if (start.length == 4) {

@@ -80,7 +80,7 @@ c-e {
 }
 
 
-c-g .day-of-week {
+c-m .day-of-week {
     border: 1px solid #333;
     border-left-width: 0;
     border-right-width: 0;
@@ -190,7 +190,7 @@ c-y .today {
     border-bottom-left-radius: 1em;
 }
 
-c-g {
+c-m {
     width: 100vw;
     height: 100dvh;
     grid-template-columns: repeat(7, 1fr);
