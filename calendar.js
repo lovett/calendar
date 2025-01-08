@@ -84,6 +84,8 @@ class CalendarView extends HTMLElement {
     switchView(value) {
         let date, view;
         value = value.replace('#', '');
+        this.replaceLocationHash(value);
+
         if (value.match(/^\d{4}-\d{2}$/)) {
             date = `${value}T00:00`;
             view = 'c-g';
@@ -103,18 +105,27 @@ class CalendarView extends HTMLElement {
 
     visit(unit, quantity) {
         let destination = this.defaultDate;
+        let hash = '';
         if (unit === 'month-step') {
             destination = new Date(this.date);
             destination.setMonth(destination.getMonth() + quantity);
+            hash = this.yearmonth(destination);
         }
         if (unit === 'year-step') {
             destination = new Date(this.date);
             destination.setYear(destination.getFullYear() + quantity);
+            hash = destination.getFullYear();
         }
 
         this.setAttribute('date', destination);
+
+        this.replaceLocationHash(hash);
     }
 
+    replaceLocationHash(value) {
+        const location = window.location.href.split('#')[0];
+        history.replaceState({}, "", `${location}#${value}`);
+    }
 
 }
 
@@ -188,7 +199,6 @@ class CalendarYear extends CalendarView {
         }
 
         if (e.target.matches('A.reset')) {
-            e.preventDefault();
             this.visit('default');
         }
 
@@ -476,6 +486,7 @@ class CalendarEvent extends HTMLElement {
 }
 
 window.addEventListener('DOMContentLoaded', (e) => {
+    console.log('in domcontentloaded');
     customElements.define("c-g", CalendarGrid);
     customElements.define("c-y", CalendarYear);
     customElements.define("c-e", CalendarEvent);
