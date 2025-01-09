@@ -637,9 +637,9 @@ window.addEventListener('DOMContentLoaded', (e) => {
     customElements.define("c-d", CalendarDay);
     customElements.define("c-e", CalendarEvent);
 
-    for (const element of ['c-y', 'c-m', 'c-d']) {
-        const node = document.body.appendChild(document.createElement(element));
-        node.className = 'calendar-view';
+    for (const tag of ['c-y', 'c-m', 'c-d']) {
+        const el = document.body.appendChild(document.createElement(tag));
+        el.className = 'calendar-view';
     }
 
     let start = window.location.hash.replace('#', '');
@@ -648,32 +648,31 @@ window.addEventListener('DOMContentLoaded', (e) => {
         if (meta) start = meta.content;
     }
 
-    const d = new Date();
-    d.setHours(0);
-    d.setMinutes(0);
-    d.setSeconds(0);
-    d.setMilliseconds(0);
+    const startDate = new Date();
+    startDate.setHours(0);
+    startDate.setMinutes(0);
+    startDate.setSeconds(0);
+    startDate.setMilliseconds(0);
 
-    if (start.length == 10) {
-        const [year, month, day] = start.split('-').map(x => parseInt(x, 10));
-        d.setYear(year);
-        d.setMonth(month - 1);
-        d.setDate(day);
-        document.body.querySelector('c-d').setAttribute('date', d);
+    let tag = 'c-m';
+    const [y, m, d] = start.split('-').map(x => parseInt(x, 10));
+
+    if (y) {
+        startDate.setFullYear(y);
+        startDate.setMonth(0);
+        startDate.setDate(1);
+        tag = 'c-y';
     }
 
-    if (start.length == 7) {
-        const [year, month] = start.split('-').map(x => parseInt(x, 10));
-        d.setYear(year);
-        d.setMonth(month - 1);
-        d.setDate(1);
-        document.body.querySelector('c-m').setAttribute('date', d);
+    if (y && m) {
+        startDate.setMonth(m - 1);
+        tag = 'c-m';
     }
 
-    if (start.length == 4) {
-        d.setYear(parseInt(start, 10));
-        d.setMonth(0);
-        d.setDate(1);
-        document.body.querySelector('c-y').setAttribute('date', d);
+    if (y && m && d) {
+        startDate.setDate(d);
+        tag = 'c-d';
     }
+
+    document.body.querySelector(tag).setAttribute('date', startDate);
 });
