@@ -201,6 +201,53 @@ c-y .has-events {
     border-bottom-left-radius: 1em;
 }
 
+c-d .hour {
+    display: grid;
+    min-height: 4em;
+    line-height: 1;
+    align-items: start;
+    grid-template-columns: 4em 1fr;
+    grid-template-areas:
+        "l s1"
+        "l s2"
+        "l s3"
+        "l s4";
+}
+
+C-d .hour .label {
+    grid-area: l;
+    text-align: right;
+    border-top: 1px dotted green;
+    padding-right: 1em;
+    background-color: orange;
+}
+
+c-d .hour .segment1 {
+    border-top: 1px dotted green;
+    grid-area: s1;
+}
+
+c-d .hour .segment2 {
+    border-top: 1px dotted green;
+    grid-area: s2;
+}
+
+c-d .hour .segment3 {
+    border-top: 1px dotted green;
+    grid-area: s3;
+}
+c-d .hour .segment4 {
+    border-top: 1px dotted green;
+    grid-area: s4;
+}
+
+c-d .event {
+    background-color: purple;
+    color: #fff;
+    float: left;
+    margin-right: 0.5em;
+}
+
 c-m {
     width: 100vw;
     height: 100dvh;
@@ -208,7 +255,6 @@ c-m {
     grid-template-rows: auto 2em;
     grid-auto-rows: 1fr;
     align-items: stretch;
-
 }
 
 c-y {
