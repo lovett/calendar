@@ -10,6 +10,19 @@ class CalendarBase extends HTMLElement {
         return this.cache.get(key);
     }
 
+    get dayNames() {
+        return this.cached('day-names', () => {
+            const daysBack = this.now.getDay() * this.oneDay;
+            const start = new Date(this.now.getTime() - daysBack)
+
+            const names = [];
+            for (let i = 0; i < 7; i++) {
+                names.push(this.nextDay(start, i).toLocaleString(this.locale, {weekday: 'short'}));
+            }
+            return names;
+        });
+    }
+
     get now() {
         return this.cached('now', () => new Date());
     }
@@ -42,10 +55,6 @@ class CalendarBase extends HTMLElement {
 
     endOfDay(d) {
         return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 0);
-    }
-
-    startOfWeek(d) {
-        return new Date(d.getTime() - d.getDay() * this.oneDay);
     }
 
     nextDay(d, count = 1) {
@@ -113,25 +122,6 @@ class CalendarView extends CalendarBase {
         case 'p': this.querySelector('A.step.backward').click(); break;
         case 'r': this.visit('default');
         }
-    }
-
-    daysOfWeek() {
-        const days = this.cached('days-of-week', () => {
-            const weekStart = this.startOfWeek(this.now);
-            const days = []
-            for (let i = 0; i < 7; i++) {
-                const d = new Date(weekStart.getTime() + this.oneDay * i);
-                days.push(d.toLocaleString(this.locale, {weekday: 'short'}));
-            }
-            return days;
-        });
-
-        return days.map(day => {
-            const div = document.createElement('div');
-            div.className = 'day-of-week';
-            div.textContent = day;
-            return div;
-        });
     }
 
     renderIcon(parent, id) {
@@ -243,7 +233,12 @@ class CalendarYear extends CalendarView {
                 link.hash = this.yearmonth(day);
                 link.innerText = day.toLocaleString(this.locale, {month: 'long'});
 
-                fragment.lastChild.append(...this.daysOfWeek());
+                for (const day of this.dayNames) {
+                    const div = document.createElement('div');
+                    div.className = 'day-of-week';
+                    div.innerText = day;
+                    fragment.lastChild.append(div);
+                }
 
                 for (const d of this.daysFromStartOfWeek(day)) {
                     this.renderDay(fragment.lastChild, d, 'diminished');
@@ -302,7 +297,12 @@ class CalendarYear extends CalendarView {
 
 class CalendarMonth extends CalendarView {
     renderSubHeader() {
-        this.append(...this.daysOfWeek());
+        for (const day of this.dayNames) {
+            const div = document.createElement('div');
+            div.className = 'day-of-week';
+            div.innerText = day;
+            this.append(div);
+        }
     }
 
     render() {
