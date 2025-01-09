@@ -39,14 +39,14 @@ class CalendarBase extends HTMLElement {
         return tomorrow.getMonth() !== d.getMonth();
     }
 
-    yearmonth(d) {
+    ym(d) {
         if (!d) return '';
         return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
     }
 
     ymd(d) {
         if (!d) return '';
-        return `${this.yearmonth(d)}-${d.getDate().toString().padStart(2, '0')}`;
+        return `${this.ym(d)}-${d.getDate().toString().padStart(2, '0')}`;
     }
 
     startOfDay(d) {
@@ -100,14 +100,14 @@ class CalendarView extends CalendarBase {
 
     eventFinder(start, end) {
         const set = new Set();
-        set.add(this.yearmonth(start));
+        set.add(this.ym(start));
         const d = new Date(start);
         while (d <= (end || start)) {
-            set.add(this.yearmonth(d));
+            set.add(this.ym(d));
             d.setDate(d.getDate() + 1);
         }
 
-        const selectors = Array.from(set.values()).map(yearmonth => `c-e[group*="${yearmonth}"]`);
+        const selectors = Array.from(set.values()).map(ym => `c-e[group*="${ym}"]`);
         const query = Array.from(selectors).join(',');
         return this.cached(query, () => document.querySelectorAll(query))
     }
@@ -190,7 +190,7 @@ class CalendarView extends CalendarBase {
         if (unit === 'month-step') {
             destination = new Date(this.date);
             destination.setMonth(destination.getMonth() + quantity);
-            hash = this.yearmonth(destination);
+            hash = this.ym(destination);
         }
         if (unit === 'year-step') {
             destination = new Date(this.date);
@@ -230,7 +230,7 @@ class CalendarYear extends CalendarView {
                 const title = month.appendChild(document.createElement('h2'));
                 const link = title.appendChild(document.createElement('a'));
                 link.href = '#';
-                link.hash = this.yearmonth(day);
+                link.hash = this.ym(day);
                 link.innerText = day.toLocaleString(this.locale, {month: 'long'});
 
                 for (const day of this.dayNames) {
@@ -353,11 +353,6 @@ class CalendarMonth extends CalendarView {
         }
     }
 
-    yearmonthday(d) {
-        if (!d) return;
-        return d.toLocaleString(this.locale, {year: 'numeric', month: '2-digit', day: '2-digit'});
-    }
-
     renderEvents(parent, events, d) {
         for (const event of events) {
             if (!event.occursOn(d)) continue;
@@ -393,11 +388,11 @@ class CalendarMonth extends CalendarView {
     }
 
     renderDayOfMonth(parent, d) {
-        const today = this.yearmonthday(new Date());
+        const today = this.ymd(new Date());
         const node = document.createElement('div');
         node.classList.add('day-of-month');
 
-        if (today == this.yearmonthday(d)) {
+        if (today == this.ymd(d)) {
             node.classList.add('today');
         }
 
@@ -422,7 +417,7 @@ class CalendarDay extends CalendarView {
         let month = h1.appendChild(document.createElement('a'));
         month.className = 'switch-view';
         month.href = '#';
-        month.hash = this.yearmonth(this.date);
+        month.hash = this.ym(this.date);
         month.innerText = this.date.toLocaleString(this.locale, {month: 'long', day: 'numeric'});
 
         let year = h1.appendChild(document.createElement('a'));
@@ -485,8 +480,6 @@ class CalendarEvent extends CalendarBase {
         super();
         this.start = null;
         this.end = null;
-        this.startYearmonth = null;
-        this.endYearmonth = null;
         this.startTime = [0, 0];
         this.endTime = [0,0];
         this.parsingIndex = -1;
@@ -498,8 +491,8 @@ class CalendarEvent extends CalendarBase {
     connectedCallback() {
         this.parseDate();
         const set = new Set();
-        set.add(this.startYearmonth);
-        set.add(this.endYearmonth);
+        set.add(this.ym(this.start));
+        set.add(this.ym(this.end));
         this.group = Array.from(set.values()).join(' ');
     }
 
@@ -584,10 +577,8 @@ class CalendarEvent extends CalendarBase {
             const [_, year, month, day] = match.map(x => parseInt(x, 10));
             if (i === 0) {
                 this.start = new Date(year, month - 1, day, 0, 0, 0);
-                this.startYearmonth = this.yearmonth(this.start);
             }
             this.end = new Date(year, month - 1, day, 23, 59, 59);
-            this.endYearmonth = this.yearmonth(this.end);
         }
         this.parseDate = true;
     }
