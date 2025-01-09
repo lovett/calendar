@@ -637,14 +637,16 @@ window.addEventListener('DOMContentLoaded', (e) => {
     customElements.define("c-d", CalendarDay);
     customElements.define("c-e", CalendarEvent);
 
+    const views = new Map();
     for (const tag of ['c-y', 'c-m', 'c-d']) {
         const el = document.body.appendChild(document.createElement(tag));
         el.className = 'calendar-view';
+        views.set(tag, el);
     }
 
     let start = window.location.hash.replace('#', '');
     if (!start) {
-        const meta = document.querySelector('HEAD META[name=start]');
+        const meta = document.head.querySelector('META[name=start]');
         if (meta) start = meta.content;
     }
 
@@ -655,8 +657,8 @@ window.addEventListener('DOMContentLoaded', (e) => {
     startDate.setMilliseconds(0);
 
     let tag = 'c-m';
-    const [y, m, d] = start.split('-').map(x => parseInt(x, 10));
 
+    const [y, m, d] = start.split('-').map(x => parseInt(x, 10));
     if (y) {
         startDate.setFullYear(y);
         startDate.setMonth(0);
@@ -674,5 +676,5 @@ window.addEventListener('DOMContentLoaded', (e) => {
         tag = 'c-d';
     }
 
-    document.body.querySelector(tag).setAttribute('date', startDate);
+    views.get(tag).setAttribute('date', startDate);
 });
