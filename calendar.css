@@ -25,17 +25,17 @@ c-e {
     display: none;
 }
 
-.calendar-view {
+.view {
     margin: 0 0.5em;
 
     display: none;
 }
 
-.calendar-view[date] {
+.view[date] {
     display: grid;
 }
 
-.calendar-view > header {
+.view > header {
     grid-column: 1 / -1;
     display: grid;
     grid-template-columns: auto auto;
@@ -44,18 +44,18 @@ c-e {
     padding: 1em var(--padding);
 }
 
-.calendar-view > header h1 {
+.view > header h1 {
     font-size: 2.25em;
     font-weight: normal;
     margin: 0;
     line-height: 1;
 }
 
-.calendar-view > header h1 a {
+.view > header h1 a {
     padding-left: 1rem;
 }
 
-.calendar-view > header .toolbar a {
+.view > header .toolbar a {
     border-radius: .25em;
     padding: var(--padding);
     margin-left: 2em;
@@ -65,15 +65,15 @@ c-e {
     display: inline-flex;
 }
 
-.calendar-view > svg {
+.view > svg {
     display: none;
 }
 
-.calendar-view > header a.reset {
+.view > header a.reset {
     display: none;
 }
 
-.calendar-view > header .icon {
+.view > header .icon {
     width: 2em;
     height: 2em;
     pointer-events: none;
@@ -306,12 +306,12 @@ c-y .diminished {
         font-size: 18px;
     }
 
-    .calendar-view > header .icon {
+    .view > header .icon {
         width: 1.5em;
         height: 1.5em;
     }
 
-    .calendar-view > header a.reset {
+    .view > header a.reset {
         display: inline-flex;
     }
 

@@ -84,16 +84,14 @@ class CalendarView extends CalendarBase {
         this.renderShell();
         this.renderSubHeader();
         this.addEventListener('click', this.onClick);
-        window.addEventListener('hashchange', this.onHashChange.bind(this));
         window.addEventListener('keypress', this.onKeyPress.bind(this));
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'date') {
-            const d = new Date(newValue);
-            this.date = d;
-            if (!oldValue && !this.defaultDate) this.defaultDate = d;
+        if (name === 'date' && newValue) {
+            this.date = new Date(newValue);
+            if (!this.defaultDate) this.defaultDate = this.date;
             if (newValue) this.render();
         }
     }
@@ -110,10 +108,6 @@ class CalendarView extends CalendarBase {
         const selectors = Array.from(set.values()).map(ym => `c-e[group*="${ym}"]`);
         const query = Array.from(selectors).join(',');
         return this.cached(query, () => document.querySelectorAll(query))
-    }
-
-    onHashChange(e) {
-        this.switchView(e.newURL.substring(e.newURL.indexOf('#')));
     }
 
     onKeyPress(e) {
@@ -153,32 +147,6 @@ class CalendarView extends CalendarBase {
         `;
     }
 
-    switchView(value) {
-        let date, view;
-        value = value.replace('#', '');
-        this.replaceLocationHash(value);
-
-        if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            date = `${value}T00:00`;
-            view = 'c-d';
-        }
-
-        if (value.match(/^\d{4}-\d{2}$/)) {
-            date = `${value}T00:00`;
-            view = 'c-m';
-        }
-
-        if (value.match(/^\d{4}$/)) {
-            date = `${value}-01-01T00:00`;
-            view = 'c-y';
-        }
-
-        if (!view) return;
-
-        document.body.querySelector('.calendar-view[date]').removeAttribute('date');
-        document.body.querySelector(view).setAttribute('date', date);
-    }
-
     visit(unit, quantity) {
         let destination = this.defaultDate;
         let hash = '';
@@ -200,14 +168,7 @@ class CalendarView extends CalendarBase {
 
         this.setAttribute('date', destination);
 
-        this.replaceLocationHash(hash);
     }
-
-    replaceLocationHash(value) {
-        const location = window.location.href.split('#')[0];
-        history.replaceState({}, "", `${location}#${value}`);
-    }
-
 }
 
 class CalendarYear extends CalendarView {
@@ -259,7 +220,6 @@ class CalendarYear extends CalendarView {
 
     renderDay(parent, d, ...classes) {
         const container = parent.appendChild(document.createElement('a'));
-        container.classList.add('switch-view');
         container.href = '#' + this.ymd(d);
         container.classList.add(...['day'].concat(classes));
 
@@ -279,10 +239,6 @@ class CalendarYear extends CalendarView {
         if (e.target.matches('A.step')) {
             e.preventDefault();
             this.visit('year-step', parseInt(e.target.dataset.step, 10));
-        }
-
-        if (e.target.matches('A.switch-view')) {
-            this.switchView(e.target.hash);
         }
     }
 
@@ -317,7 +273,6 @@ class CalendarMonth extends CalendarView {
         const h1 = this.querySelector('header h1');
         h1.textContent = this.date.toLocaleString(this.locale, {month: 'long'});
         const link = h1.appendChild(document.createElement('a'));
-        link.className = 'switch-view';
         link.href = '#';
         link.hash = this.date.getFullYear();
         link.innerText = this.date.getFullYear();
@@ -346,10 +301,6 @@ class CalendarMonth extends CalendarView {
         if (e.target.matches('A.step')) {
             e.preventDefault();
             this.visit('month-step', parseInt(e.target.dataset.step, 10));
-        }
-
-        if (e.target.matches('A.switch-view')) {
-            this.switchView(e.target.hash);
         }
     }
 
@@ -415,13 +366,11 @@ class CalendarDay extends CalendarView {
         const h1 = this.querySelector('header h1');
         h1.textContent = this.date.toLocaleString(this.locale, {weekday: 'long'});
         let month = h1.appendChild(document.createElement('a'));
-        month.className = 'switch-view';
         month.href = '#';
         month.hash = this.ym(this.date);
         month.innerText = this.date.toLocaleString(this.locale, {month: 'long', day: 'numeric'});
 
         let year = h1.appendChild(document.createElement('a'));
-        year.className = 'switch-view';
         year.href = '#';
         year.hash = year.innerText = this.date.getFullYear();
         document.title = `${h1.firstChild.textContent} ${year.firstChild.textContent}`;
@@ -466,10 +415,6 @@ class CalendarDay extends CalendarView {
         if (e.target.matches('A.step')) {
             e.preventDefault();
             this.visit('day-step', parseInt(e.target.dataset.step, 10));
-        }
-
-        if (e.target.matches('A.switch-view')) {
-            this.switchView(e.target.hash);
         }
     }
 
@@ -631,6 +576,44 @@ class CalendarEvent extends CalendarBase {
     }
 }
 
+window.addEventListener('hashchange', (e) => {
+    let dest = window.location.hash.replace('#', '');
+    if (!dest) {
+        const meta = document.head.querySelector('META[name=start]');
+        if (meta) dest = meta.content;
+    }
+
+    const d = new Date();
+    d.setHours(0);
+    d.setMinutes(0);
+    d.setSeconds(0);
+    d.setMilliseconds(0);
+
+    const [year, month, day] = dest.split('-').map(x => parseInt(x, 10));
+    let tag = 'c-m';
+
+    if (year) {
+        d.setFullYear(year);
+        d.setMonth(0);
+        d.setDate(1);
+        tag = 'c-y';
+    }
+
+    if (year && month) {
+        d.setMonth(month - 1);
+        tag = 'c-m';
+    }
+
+    if (year && month && day) {
+        d.setDate(day);
+        tag = 'c-d';
+    }
+
+    document.body.querySelector('.view[date]').removeAttribute('date');
+    document.body.querySelector(tag).setAttribute('date', d);
+});
+
+
 window.addEventListener('DOMContentLoaded', (e) => {
     customElements.define("c-m", CalendarMonth);
     customElements.define("c-y", CalendarYear);
@@ -640,7 +623,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     const views = new Map();
     for (const tag of ['c-y', 'c-m', 'c-d']) {
         const el = document.body.appendChild(document.createElement(tag));
-        el.className = 'calendar-view';
+        el.classList.add('view');
         views.set(tag, el);
     }
 
