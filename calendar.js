@@ -153,13 +153,14 @@ class CalendarView extends CalendarBase {
                     <symbol id="arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
                     <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
                     <symbol id="arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
-                    <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <symbol id="target"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
                 </defs>
             </svg>
             <header>
             <h1></h1>
             <div class="toolbar">
                 <a href="#previous"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
+                <a href="#today"><svg class="icon"><use xlink:href="#target" /></svg></a>
                 <a href="#next"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
             </div>
         </header>
@@ -232,6 +233,10 @@ class CalendarYear extends CalendarView {
     }
 
     onStep(e) {
+        if (e.detail.to === 'today') {
+            window.location.hash = this.now.getFullYear();
+        }
+
         if (e.detail.direction === 'next') {
             window.location.hash = this.nextYear(this.date).getFullYear();
         }
@@ -296,6 +301,10 @@ class CalendarMonth extends CalendarView {
     }
 
     onStep(e) {
+        if (e.detail.to === 'today') {
+            window.location.hash = this.ym(this.now);
+        }
+
         if (e.detail.direction === 'next') {
             window.location.hash = this.ym(this.nextMonth(this.date));
         }
@@ -415,6 +424,10 @@ class CalendarDay extends CalendarView {
     }
 
     onStep(e) {
+        if (e.detail.to === 'today') {
+            window.location.hash = this.ymd(this.now);
+        }
+
         if (e.detail.direction === 'next') {
             window.location.hash = this.ymd(this.nextDay(this.date));
         }
@@ -588,6 +601,10 @@ window.addEventListener('keypress', (e) => {
     if (e.key === 'p') {
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'previous'}}));
     }
+
+    if (e.key === 't') {
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'today'}}));
+    }
 });
 
 window.addEventListener('click', (e) => {
@@ -595,6 +612,12 @@ window.addEventListener('click', (e) => {
         e.preventDefault();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'next'}}));
     }
+
+    if (e.target.matches('A[href$="today"]')) {
+        e.preventDefault();
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'today'}}));
+    }
+
 
     if (e.target.matches('A[href$="previous"]')) {
         e.preventDefault();
