@@ -58,11 +58,39 @@ class CalendarBase extends HTMLElement {
     }
 
     nextDay(d, count = 1) {
-        return new Date(d.getTime() + this.oneDay * count);
+        const date = new Date(d);
+        date.setDate(d.getDate() + count);
+        return date;
+    }
+
+    nextMonth(d, count = 1) {
+        const date = new Date(d);
+        date.setMonth(d.getMonth() + count);
+        return date;
+    }
+
+    nextYear(d, count = 1) {
+        const date = new Date(d);
+        date.setFullYear(date.getFullYear() + count);
+        return date;
     }
 
     previousDay(d, count = 1) {
-        return new Date(d.getTime() - this.oneDay * count);
+        const date = new Date(d);
+        date.setDate(d.getDate() - count);
+        return date;
+    }
+
+    previousMonth(d, count = 1) {
+        const date = new Date(d);
+        date.setMonth(date.getMonth() - count);
+        return date;
+    }
+
+    previousYear(d, count = 1) {
+        const date = new Date(d);
+        date.setFullYear(date.getFullYear() - count);
+        return date;
     }
 
     * daysFromStartOfWeek(d) {
@@ -84,7 +112,7 @@ class CalendarView extends CalendarBase {
         this.renderShell();
         this.renderSubHeader();
         this.addEventListener('click', this.onClick);
-        window.addEventListener('keypress', this.onKeyPress.bind(this));
+        this.addEventListener('step', this.onStep);
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
     }
 
@@ -108,14 +136,6 @@ class CalendarView extends CalendarBase {
         const selectors = Array.from(set.values()).map(ym => `c-e[group*="${ym}"]`);
         const query = Array.from(selectors).join(',');
         return this.cached(query, () => document.querySelectorAll(query))
-    }
-
-    onKeyPress(e) {
-        switch (e.key) {
-        case 'n': this.querySelector('A.step.forward').click(); break;
-        case 'p': this.querySelector('A.step.backward').click(); break;
-        case 'r': this.visit('default');
-        }
     }
 
     renderIcon(parent, id) {
@@ -242,6 +262,16 @@ class CalendarYear extends CalendarView {
         }
     }
 
+    onStep(e) {
+        if (e.detail.direction === 'next') {
+            window.location.hash = this.nextYear(this.date).getFullYear();
+        }
+
+        if (e.detail.direction === 'previous') {
+            window.location.hash = this.previousYear(this.date).getFullYear();
+        }
+    }
+
     hasEvents(d) {
         const ymd = this.ymd(d);
         for (const event of this.eventFinder(d, d)) {
@@ -300,6 +330,16 @@ class CalendarMonth extends CalendarView {
         if (e.target.matches('A.step')) {
             e.preventDefault();
             this.visit('month-step', parseInt(e.target.dataset.step, 10));
+        }
+    }
+
+    onStep(e) {
+        if (e.detail.direction === 'next') {
+            window.location.hash = this.ym(this.nextMonth(this.date));
+        }
+
+        if (e.detail.direction === 'previous') {
+            window.location.hash = this.ym(this.previousMonth(this.date));
         }
     }
 
@@ -418,6 +458,17 @@ class CalendarDay extends CalendarView {
             this.visit('day-step', parseInt(e.target.dataset.step, 10));
         }
     }
+
+    onStep(e) {
+        if (e.detail.direction === 'next') {
+            window.location.hash = this.ymd(this.nextDay(this.date));
+        }
+
+        if (e.detail.direction === 'previous') {
+            window.location.hash = this.ymd(this.previousDay(this.date));
+        }
+    }
+
 
 }
 
@@ -576,6 +627,15 @@ class CalendarEvent extends CalendarBase {
         return result + this.description;
     }
 }
+
+window.addEventListener('keypress', (e) => {
+    if (e.key === 'n') {
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'next'}}));
+    }
+    if (e.key === 'p') {
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'previous'}}));
+    }
+});
 
 window.addEventListener('hashchange', (e) => {
     let dest = window.location.hash.replace('#', '');
