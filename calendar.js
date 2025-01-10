@@ -282,8 +282,7 @@ class CalendarMonth extends CalendarView {
 
         for (let i=0; i <= boxCount; i++) {
             const d = new Date(firstDay.getTime() + this.oneDay * i);
-            const outer = fragment.appendChild(document.createElement('a'));
-            outer.href = '#' + this.ymd(d);
+            const outer = fragment.appendChild(document.createElement('div'));
             outer.classList.add('box');
             if (d < monthStart || d > monthEnd) {
                 outer.classList.add('diminished');
@@ -340,7 +339,9 @@ class CalendarMonth extends CalendarView {
 
     renderDayOfMonth(parent, d) {
         const today = this.ymd(new Date());
-        const node = document.createElement('div');
+        const node = document.createElement('a');
+        node.href = '#' + this.ymd(d);
+
         node.classList.add('day-of-month');
 
         if (today == this.ymd(d)) {
