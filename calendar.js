@@ -111,7 +111,6 @@ class CalendarView extends CalendarBase {
     connectedCallback() {
         this.renderShell();
         this.renderSubHeader();
-        this.addEventListener('click', this.onClick);
         this.addEventListener('step', this.onStep);
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
     }
@@ -160,34 +159,11 @@ class CalendarView extends CalendarBase {
             <header>
             <h1></h1>
             <div class="toolbar">
-                <a class="step backward" data-step="-1" href="#"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
-                <a class="step forward" data-step="1" href="#"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
+                <a class="step backward" href="#"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
+                <a class="step forward" href="#"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
             </div>
         </header>
         `;
-    }
-
-    visit(unit, quantity) {
-        let destination = this.defaultDate;
-        let hash = '';
-        if (unit === 'day-step') {
-            destination = new Date(this.date);
-            destination.setDate(destination.getDate() + quantity);
-            hash = this.ymd(destination);
-        }
-        if (unit === 'month-step') {
-            destination = new Date(this.date);
-            destination.setMonth(destination.getMonth() + quantity);
-            hash = this.ym(destination);
-        }
-        if (unit === 'year-step') {
-            destination = new Date(this.date);
-            destination.setYear(destination.getFullYear() + quantity);
-            hash = destination.getFullYear();
-        }
-
-        this.setAttribute('date', destination);
-
     }
 }
 
@@ -255,13 +231,6 @@ class CalendarYear extends CalendarView {
         if (this.hasEvents(d)) dayNumber.classList.add('has-events');
     }
 
-    onClick(e) {
-        if (e.target.matches('A.step')) {
-            e.preventDefault();
-            this.visit('year-step', parseInt(e.target.dataset.step, 10));
-        }
-    }
-
     onStep(e) {
         if (e.detail.direction === 'next') {
             window.location.hash = this.nextYear(this.date).getFullYear();
@@ -324,13 +293,6 @@ class CalendarMonth extends CalendarView {
         }
 
         this.append(fragment);
-    }
-
-    onClick(e) {
-        if (e.target.matches('A.step')) {
-            e.preventDefault();
-            this.visit('month-step', parseInt(e.target.dataset.step, 10));
-        }
     }
 
     onStep(e) {
@@ -452,13 +414,6 @@ class CalendarDay extends CalendarView {
         }
     }
 
-    onClick(e) {
-        if (e.target.matches('A.step')) {
-            e.preventDefault();
-            this.visit('day-step', parseInt(e.target.dataset.step, 10));
-        }
-    }
-
     onStep(e) {
         if (e.detail.direction === 'next') {
             window.location.hash = this.ymd(this.nextDay(this.date));
@@ -468,8 +423,6 @@ class CalendarDay extends CalendarView {
             window.location.hash = this.ymd(this.previousDay(this.date));
         }
     }
-
-
 }
 
 class CalendarEvent extends CalendarBase {
@@ -633,6 +586,18 @@ window.addEventListener('keypress', (e) => {
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'next'}}));
     }
     if (e.key === 'p') {
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'previous'}}));
+    }
+});
+
+window.addEventListener('click', (e) => {
+    if (e.target.matches('A.step.forward')) {
+        e.preventDefault();
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'next'}}));
+    }
+
+    if (e.target.matches('A.step.backward')) {
+        e.preventDefault();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'previous'}}));
     }
 });
