@@ -37,16 +37,16 @@ c-e {
 .view > header {
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: auto auto;
-    justify-content: space-between;
+    grid-template-columns: auto;
+    gap: 1em;
+    justify-content: center;
     align-items: center;
     padding: 1em;
 }
 
 .view > header h1 {
-    font-size: 2.25em;
+    font-size: 1.75em;
     font-weight: normal;
-    margin: 0;
     line-height: 1;
 }
 
@@ -54,10 +54,14 @@ c-e {
     margin-left: 1rem;
 }
 
+.view > header .toolbar {
+    display: flex;
+    justify-content: space-around;
+}
+
 .view > header .toolbar a {
     border-radius: .25em;
     padding: var(--padding);
-    margin-left: 2em;
     font-weight: bold;
     color: #fff;
     background-color: #333;
@@ -68,13 +72,9 @@ c-e {
     display: none;
 }
 
-.view > header a.reset {
-    display: none;
-}
-
 .view > header .icon {
-    width: 2em;
-    height: 2em;
+    width: 1.5em;
+    height: 1.5em;
     pointer-events: none;
 }
 
@@ -301,13 +301,17 @@ c-y .diminished {
         font-size: 18px;
     }
 
-    .view > header .icon {
-        width: 1.5em;
-        height: 1.5em;
+    .view > header {
+        grid-template-columns: auto auto;
+        justify-content: space-between;
+        gap: 0;
+    }
+    .view > header h1 {
+        font-size: 2.25em;
     }
 
-    .view > header a.reset {
-        display: inline-flex;
+    .view > header .toolbar a {
+        margin-left: 2em;
     }
 
     c-y {
