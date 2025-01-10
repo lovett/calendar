@@ -6,15 +6,16 @@
     margin: 0;
 }
 
+*:focus {
+    outline: .25rem solid cyan;
+    outline-offset: .25rem;
+}
+
 HTML {
     font-family: "New York Medium", "Baskerville", "Liberation Serif", serif;
     color: #333;
     font-size: 16px;
     background-color: rgb(247, 247, 251);
-}
-
-EVENT {
-    display: none;
 }
 
 A {
@@ -26,8 +27,6 @@ c-e {
 }
 
 .view {
-    margin: 0 0.5em;
-
     display: none;
 }
 
@@ -41,7 +40,7 @@ c-e {
     grid-template-columns: auto auto;
     justify-content: space-between;
     align-items: center;
-    padding: 1em var(--padding);
+    padding: 1em;
 }
 
 .view > header h1 {
@@ -52,7 +51,7 @@ c-e {
 }
 
 .view > header h1 a {
-    padding-left: 1rem;
+    margin-left: 1rem;
 }
 
 .view > header .toolbar a {
@@ -82,19 +81,19 @@ c-e {
 
 c-m .day-of-week {
     border: 1px solid #333;
-    border-left-width: 0;
-    border-right-width: 0;
+    border-left: 0;
+    border-right: 0;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    padding: var(--padding);
+    padding: 0.5em;
     line-height: 1;
 }
 
 c-y .day-of-week {
     border: 1px solid currentColor;
-    border-left-width: 0;
-    border-right-width: 0;
+    border-left: 0;
+    border-right: 0;
     text-align: center;
     padding: 0.25em 0;
 }
@@ -189,12 +188,12 @@ c-y .has-events {
 
 .day-of-month {
     justify-self: end;
-    padding: var(--padding);
-    display: inline-block;
+    margin: 0.5em;
 }
 
 .day-of-month.today {
     background-color: #e01b24;
+    padding: var(--padding);
     color: #fff;
 }
 
@@ -246,7 +245,6 @@ c-d .event {
 }
 
 c-m {
-    width: 100vw;
     height: 100dvh;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: auto 2em;
