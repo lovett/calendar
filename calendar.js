@@ -608,6 +608,7 @@ window.addEventListener('keypress', (e) => {
 });
 
 window.addEventListener('click', (e) => {
+    e.target.blur();
     if (e.target.matches('A[href$="next"]')) {
         e.preventDefault();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'next'}}));
@@ -615,6 +616,7 @@ window.addEventListener('click', (e) => {
 
     if (e.target.matches('A[href$="today"]')) {
         e.preventDefault();
+        this.blur();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'today'}}));
     }
 
