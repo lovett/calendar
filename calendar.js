@@ -219,14 +219,14 @@ class CalendarYear extends CalendarView {
     }
 
     renderDay(parent, d, ...classes) {
-        const container = parent.appendChild(document.createElement('a'));
-        container.href = '#' + this.ymd(d);
+        const container = parent.appendChild(document.createElement('div'));
         container.classList.add(...['day'].concat(classes));
 
         const lining = container.appendChild(document.createElement('div'))
         lining.classList.add('lining');
 
-        const dayNumber = lining.appendChild(document.createElement('div'));
+        const dayNumber = lining.appendChild(document.createElement('a'));
+        dayNumber.href = '#' + this.ymd(d);
         dayNumber.innerText = d.getDate();
         dayNumber.classList.add('day-number');
 
