@@ -159,8 +159,8 @@ class CalendarView extends CalendarBase {
             <header>
             <h1></h1>
             <div class="toolbar">
-                <a class="step backward" href="#"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
-                <a class="step forward" href="#"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
+                <a href="#previous"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
+                <a href="#next"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
             </div>
         </header>
         `;
@@ -591,12 +591,12 @@ window.addEventListener('keypress', (e) => {
 });
 
 window.addEventListener('click', (e) => {
-    if (e.target.matches('A.step.forward')) {
+    if (e.target.matches('A[href$="next"]')) {
         e.preventDefault();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'next'}}));
     }
 
-    if (e.target.matches('A.step.backward')) {
+    if (e.target.matches('A[href$="previous"]')) {
         e.preventDefault();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'previous'}}));
     }
