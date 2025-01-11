@@ -174,7 +174,9 @@ class CalendarYear extends CalendarView {
     renderSubHeader() {}
 
     render() {
-        this.querySelectorAll('.month').forEach(node => node.remove());
+        for (const node of this.querySelectorAll('.month')) {
+            node.remove();
+        }
 
         const h1 = this.querySelector('header h1');
         h1.textContent = this.date.getFullYear();
@@ -226,7 +228,8 @@ class CalendarYear extends CalendarView {
         lining.classList.add('lining');
 
         const dayNumber = lining.appendChild(document.createElement('a'));
-        dayNumber.href = '#' + this.ymd(d);
+        dayNumber.href = '#';
+        dayNumber.hash = this.ymd(d);
         dayNumber.innerText = d.getDate();
         dayNumber.classList.add('day-number');
 
@@ -287,7 +290,9 @@ class CalendarMonth extends CalendarView {
         year.textContent = this.date.toLocaleString(this.locale, { year: 'numeric' });
         h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
 
-        this.querySelectorAll('.box').forEach(node => node.remove());
+        for (const node of this.querySelectorAll('.box')) {
+            node.remove();
+        }
 
         for (let i=0; i <= boxCount; i++) {
             const d = new Date(firstDay.getTime() + this.oneDay * i);
@@ -342,17 +347,19 @@ class CalendarMonth extends CalendarView {
     renderDayOfMonth(parent, d) {
         const today = this.ymd(new Date());
         const node = document.createElement('a');
-        node.href = '#' + this.ymd(d);
+        node.href = '#';
+        node.hash = this.ymd(d);
 
         node.classList.add('day-of-month');
 
-        if (today == this.ymd(d)) {
+        if (today === this.ymd(d)) {
             node.classList.add('today');
         }
 
         let label = '';
         if (d.getDate() === 1) {
-            label = d.toLocaleString(this.locale, {month: 'short'}) + ' ';
+            label = d.toLocaleString(this.locale, {month: 'short'});
+            label += ' ';
         }
 
         node.textContent = label + d.getDate();
@@ -364,7 +371,9 @@ class CalendarDay extends CalendarView {
     renderSubHeader() {}
 
     render() {
-        this.querySelectorAll('.event').forEach(node => node.remove());
+        for (const node of this.querySelectorAll('.event')) {
+            node.remove();
+        }
 
         const h1 = this.querySelector('header h1');
         h1.textContent = this.date.toLocaleString(this.locale, {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
@@ -382,26 +391,11 @@ class CalendarDay extends CalendarView {
         month.textContent = this.date.toLocaleString(this.locale, {month: 'long'});
         h1.innerHTML  = h1.innerHTML.replace(month.textContent, month.outerHTML);
 
-        // let month = h1.appendChild(document.createElement('a'));
-        // month.href = '#';
-        // month.hash = this.ym(this.date);
-        // month.innerText = this.date.toLocaleString(this.locale, {month: 'long', day: 'numeric'});
-
-        // let year = h1.appendChild(document.createElement('a'));
-        // year.href = '#';
-        // year.hash = year.innerText = this.date.getFullYear();
-        // document.title = this.date.toLocaleString(this.locale, {month: 'long', weekday: 'long', day: 'numeric', year: 'numeric'});
-
         const fragment = document.createDocumentFragment();
         for (const event of this.eventFinderSorted(this.date)) {
             this.renderEvent(fragment, event);
         }
 
-        // const d = new Date(this.date);
-        // for (let i = 0; i < 24; i++) {
-        //     d.setHours(i);
-        //     this.renderHour(fragment, d, i);
-        // }
         this.append(fragment);
     }
 
@@ -528,23 +522,15 @@ class CalendarEvent extends CalendarBase {
         return days;
     }
 
-    get startHour() {
-        return this.startTime[0];
-    }
-
-    get startMinute() {
-        return this.startTime[1];
-    }
-
     hasStartTime() {
         const [h, m] = this.startTime;
         return h > 0 || m > 0;
     }
 
     hasEndTime() {
-        const [h1, m1] = this.startTime;
-        const [h2, m2 ] = this.endTime;
-        return h1 !== h2 || m1 !== m2;
+        if (this.startTime[0] !== this.endTime[0]) return true;
+        if (this.startTime[1] !== this.endTime[1]) return true;
+        return false;
     }
 
     isAllDay() {
@@ -558,11 +544,11 @@ class CalendarEvent extends CalendarBase {
 
     isMultiDayStart(d) {
         if (!this.isMultiDay()) return false;
-        return this.startOfDay(d).getTime() == this.startOfDay(this.start).getTime();
+        return this.startOfDay(d).getTime() === this.startOfDay(this.start).getTime();
     }
 
     isMultiDayEnd(d) {
-        return this.isMultiDay() && this.startOfDay(d).getTime() == this.startOfDay(this.end).getTime();
+        return this.isMultiDay() && this.startOfDay(d).getTime() === this.startOfDay(this.end).getTime();
     }
 
     isMultiDayContinuation(d) {
@@ -584,7 +570,7 @@ class CalendarEvent extends CalendarBase {
         if (this.parsedDate) return;
         for (const [i, match] of this.match(/(\d{4})-(\d{2})-(\d{2})\W*/g, 2)) {
             this.captureParsingIndex(match);
-            const [_, year, month, day] = match.map(x => parseInt(x, 10));
+            const [_, year, month, day] = match.map(x => Number.parseInt(x, 10));
             if (i === 0) {
                 this.start = new Date(year, month - 1, day, 0, 0, 0);
             }
@@ -599,7 +585,7 @@ class CalendarEvent extends CalendarBase {
 
         for (const [i, match] of this.match(/(\d{1,2}):(\d{1,2})\s*([AP]M)?\W*/g, 2)) {
             this.captureParsingIndex(match);
-            let [hour, minute] = match.slice(1, 3).map(x => parseInt(x, 10));
+            let [hour, minute] = match.slice(1, 3).map(x => Number.parseInt(x, 10));
             hour += (match[3].toLowerCase() === 'pm') ? 12 : 0;
 
             if (this.start && i === 0) {
@@ -634,7 +620,8 @@ class CalendarEvent extends CalendarBase {
         let result = '';
 
         if (this.hasStartTime()) {
-            result = this.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'}) + ' ';
+            result = this.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+            result += ' ';
         }
 
         return result + this.description;
@@ -687,7 +674,7 @@ window.addEventListener('hashchange', (e) => {
     d.setSeconds(0);
     d.setMilliseconds(0);
 
-    const [year, month, day] = dest.split('-').map(x => parseInt(x, 10));
+    const [year, month, day] = dest.split('-').map(x => Number.parseInt(x, 10));
     let tag = 'c-m';
 
     if (year) {
@@ -739,7 +726,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
 
     let tag = 'c-m';
 
-    const [y, m, d] = start.split('-').map(x => parseInt(x, 10));
+    const [y, m, d] = start.split('-').map(x => Number.parseInt(x, 10));
     if (y) {
         startDate.setFullYear(y);
         startDate.setMonth(0);
