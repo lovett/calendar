@@ -168,15 +168,19 @@ class CalendarView extends CalendarBase {
         </header>
         `;
     }
+
+    removeAll(selector) {
+        for (const node of this.querySelectorAll(selector)) {
+            node.remove();
+        }
+    }
 }
 
 class CalendarYear extends CalendarView {
     renderSubHeader() {}
 
     render() {
-        for (const node of this.querySelectorAll('.month')) {
-            node.remove();
-        }
+        this.removeAll('.month');
 
         const h1 = this.querySelector('header h1');
         h1.textContent = this.date.getFullYear();
@@ -272,6 +276,8 @@ class CalendarMonth extends CalendarView {
     }
 
     render() {
+        this.removeAll('.box');
+
         const fragment = document.createDocumentFragment();
         const monthStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
         const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
@@ -289,10 +295,6 @@ class CalendarMonth extends CalendarView {
         year.hash = this.date.getFullYear();
         year.textContent = this.date.toLocaleString(this.locale, { year: 'numeric' });
         h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
-
-        for (const node of this.querySelectorAll('.box')) {
-            node.remove();
-        }
 
         for (let i=0; i <= boxCount; i++) {
             const d = new Date(firstDay.getTime() + this.oneDay * i);
@@ -371,9 +373,7 @@ class CalendarDay extends CalendarView {
     renderSubHeader() {}
 
     render() {
-        for (const node of this.querySelectorAll('.event')) {
-            node.remove();
-        }
+        this.removeAll('.event');
 
         const h1 = this.querySelector('header h1');
         h1.textContent = this.date.toLocaleString(this.locale, {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
