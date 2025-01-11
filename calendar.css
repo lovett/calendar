@@ -50,10 +50,6 @@ c-e {
     line-height: 1;
 }
 
-.view > header h1 a {
-    margin-left: 1rem;
-}
-
 .view > header .toolbar {
     display: flex;
     justify-content: space-around;

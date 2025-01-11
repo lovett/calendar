@@ -288,12 +288,14 @@ class CalendarMonth extends CalendarView {
         const events = this.eventFinder(firstDay, lastDay);
 
         const h1 = this.querySelector('header h1');
-        h1.textContent = this.date.toLocaleString(this.locale, {month: 'long'});
-        const link = h1.appendChild(document.createElement('a'));
-        link.href = '#';
-        link.hash = this.date.getFullYear();
-        link.innerText = this.date.getFullYear();
-        document.title = `${h1.firstChild.textContent} ${link.firstChild.textContent}`;
+        h1.textContent = this.date.toLocaleString(this.locale, {month: 'long', year: 'numeric'});
+        document.title = h1.textContent;
+
+        const year = document.createElement('a');
+        year.href = '#';
+        year.hash = this.date.getFullYear();
+        year.textContent = this.date.toLocaleString(this.locale, { year: 'numeric' });
+        h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
 
         this.querySelectorAll('.box').forEach(node => node.remove());
 
@@ -337,7 +339,7 @@ class CalendarMonth extends CalendarView {
                 div.setAttribute('style', event.getAttribute('style'));
             }
 
-            div.classList.add(...event.classes);
+            div.classList.add(...event.classList(d));
 
             if (event.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
             if (event.isMultiDayContinuation(d)) this.renderIcon(div, 'arrow-right');
@@ -375,16 +377,30 @@ class CalendarDay extends CalendarView {
         this.querySelectorAll('.event').forEach(node => node.remove());
 
         const h1 = this.querySelector('header h1');
-        h1.textContent = this.date.toLocaleString(this.locale, {weekday: 'long'});
-        let month = h1.appendChild(document.createElement('a'));
+        h1.textContent = this.date.toLocaleString(this.locale, {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
+        document.title = h1.textContent;
+
+        const year = document.createElement('a');
+        year.href = '#';
+        year.hash = this.date.getFullYear();
+        year.textContent = this.date.toLocaleString(this.locale, { year: 'numeric' });
+        h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
+
+        const month = document.createElement('a');
         month.href = '#';
         month.hash = this.ym(this.date);
-        month.innerText = this.date.toLocaleString(this.locale, {month: 'long', day: 'numeric'});
+        month.textContent = this.date.toLocaleString(this.locale, {month: 'long'});
+        h1.innerHTML  = h1.innerHTML.replace(month.textContent, month.outerHTML);
 
-        let year = h1.appendChild(document.createElement('a'));
-        year.href = '#';
-        year.hash = year.innerText = this.date.getFullYear();
-        document.title = `${h1.firstChild.textContent} ${year.firstChild.textContent}`;
+        // let month = h1.appendChild(document.createElement('a'));
+        // month.href = '#';
+        // month.hash = this.ym(this.date);
+        // month.innerText = this.date.toLocaleString(this.locale, {month: 'long', day: 'numeric'});
+
+        // let year = h1.appendChild(document.createElement('a'));
+        // year.href = '#';
+        // year.hash = year.innerText = this.date.getFullYear();
+        // document.title = this.date.toLocaleString(this.locale, {month: 'long', weekday: 'long', day: 'numeric', year: 'numeric'});
 
         const fragment = document.createDocumentFragment();
         for (const event of this.eventFinderSorted(this.date)) {
@@ -425,7 +441,7 @@ class CalendarDay extends CalendarView {
         }
 
         const h2 = container.appendChild(document.createElement('h2'));
-        h2.append(event.description);
+        h2.innerHTML = event.description;
 
 
         container.appendChild(event.details);
