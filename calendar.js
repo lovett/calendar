@@ -183,6 +183,7 @@ class CalendarYear extends CalendarView {
         const fragment = document.createDocumentFragment();
         for (let i = 0; i <= 365; i++) {
             const day = new Date(this.date.getTime() + this.oneDay * i);
+            if (day.getFullYear() > this.date.getFullYear()) break;
 
             if (day.getDate() === 1) {
                 const month = fragment.appendChild(document.createElement('div'));
