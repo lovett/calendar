@@ -181,7 +181,7 @@ class CalendarYear extends CalendarView {
         document.title = h1.innerText;
 
         const fragment = document.createDocumentFragment();
-        for (let i = 0; i < 365; i++) {
+        for (let i = 0; i <= 365; i++) {
             const day = new Date(this.date.getTime() + this.oneDay * i);
 
             if (day.getDate() === 1) {
