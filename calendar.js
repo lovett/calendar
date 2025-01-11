@@ -147,6 +147,28 @@ class CalendarView extends CalendarBase {
         });
     }
 
+    populateTitle(options) {
+        const h1 = this.querySelector('header h1');
+        h1.textContent = this.date.toLocaleString(this.locale, options);
+        document.title = h1.textContent;
+
+        if (options.year && Object.keys(options).length > 1) {
+            const year = document.createElement('a');
+            year.href = '#';
+            year.hash = this.date.getFullYear();
+            year.textContent = this.date.toLocaleString(this.locale, { year: 'numeric' });
+            h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
+        }
+
+        if (options.month) {
+            const month = document.createElement('a');
+            month.href = '#';
+            month.hash = this.ym(this.date);
+            month.textContent = this.date.toLocaleString(this.locale, {month: 'long'});
+            h1.innerHTML  = h1.innerHTML.replace(month.textContent, month.outerHTML);
+        }
+    }
+
     renderIcon(parent, id) {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'icon');
@@ -182,9 +204,7 @@ class CalendarYear extends CalendarView {
     render() {
         this.removeAll('.month');
 
-        const h1 = this.querySelector('header h1');
-        h1.textContent = this.date.getFullYear();
-        document.title = h1.innerText;
+        this.populateTitle({year: 'numeric'});
 
         const fragment = document.createDocumentFragment();
         for (let i = 0; i <= 365; i++) {
@@ -236,24 +256,16 @@ class CalendarYear extends CalendarView {
         dayNumber.hash = this.ymd(d);
         dayNumber.innerText = d.getDate();
         dayNumber.classList.add('day-number');
-
         if (this.isToday(d)) dayNumber.classList.add('today');
-
         if (this.hasEvents(d)) dayNumber.classList.add('has-events');
     }
 
     onStep(e) {
-        if (e.detail.to === 'today') {
-            window.location.hash = this.now.getFullYear();
-        }
-
-        if (e.detail.direction === 'next') {
-            window.location.hash = this.nextYear(this.date).getFullYear();
-        }
-
-        if (e.detail.direction === 'previous') {
-            window.location.hash = this.previousYear(this.date).getFullYear();
-        }
+        let destination;
+        if (e.detail.to === 'today') destination = this.now;
+        if (e.detail.direction === 'next') destination = this.nextYear(this.date);
+        if (e.detail.direction === 'previous') desintation = this.previousYear(this.date);
+        window.location.hash = destination.getFullYear();
     }
 
     hasEvents(d) {
@@ -286,15 +298,7 @@ class CalendarMonth extends CalendarView {
         const boxCount = (lastDay.getTime() - firstDay.getTime()) / this.oneDay;
         const events = this.eventFinder(firstDay, lastDay);
 
-        const h1 = this.querySelector('header h1');
-        h1.textContent = this.date.toLocaleString(this.locale, {month: 'long', year: 'numeric'});
-        document.title = h1.textContent;
-
-        const year = document.createElement('a');
-        year.href = '#';
-        year.hash = this.date.getFullYear();
-        year.textContent = this.date.toLocaleString(this.locale, { year: 'numeric' });
-        h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
+        this.populateTitle({month: 'long', year: 'numeric'});
 
         for (let i=0; i <= boxCount; i++) {
             const d = new Date(firstDay.getTime() + this.oneDay * i);
@@ -313,17 +317,11 @@ class CalendarMonth extends CalendarView {
     }
 
     onStep(e) {
-        if (e.detail.to === 'today') {
-            window.location.hash = this.ym(this.now);
-        }
-
-        if (e.detail.direction === 'next') {
-            window.location.hash = this.ym(this.nextMonth(this.date));
-        }
-
-        if (e.detail.direction === 'previous') {
-            window.location.hash = this.ym(this.previousMonth(this.date));
-        }
+        let destination;
+        if (e.detail.to === 'today') destination = this.now;
+        if (e.detail.direction === 'next') destination = this.nextMonth(this.date);
+        if (e.detail.direction === 'previous') destination = this.previousMonth(this.date);
+        window.location.hash = this.ym(destination);
     }
 
     renderEvents(parent, events, d) {
@@ -336,7 +334,7 @@ class CalendarMonth extends CalendarView {
                 div.setAttribute('style', event.getAttribute('style'));
             }
 
-            div.classList.add(...event.classList(d));
+            div.classList.add('event', ...event.classList(d));
 
             if (event.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
             if (event.isMultiDayContinuation(d)) this.renderIcon(div, 'arrow-right');
@@ -374,77 +372,41 @@ class CalendarDay extends CalendarView {
 
     render() {
         this.removeAll('.event');
+        this.populateTitle({weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
 
-        const h1 = this.querySelector('header h1');
-        h1.textContent = this.date.toLocaleString(this.locale, {weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
-        document.title = h1.textContent;
-
-        const year = document.createElement('a');
-        year.href = '#';
-        year.hash = this.date.getFullYear();
-        year.textContent = this.date.toLocaleString(this.locale, { year: 'numeric' });
-        h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
-
-        const month = document.createElement('a');
-        month.href = '#';
-        month.hash = this.ym(this.date);
-        month.textContent = this.date.toLocaleString(this.locale, {month: 'long'});
-        h1.innerHTML  = h1.innerHTML.replace(month.textContent, month.outerHTML);
-
-        const fragment = document.createDocumentFragment();
         for (const event of this.eventFinderSorted(this.date)) {
-            this.renderEvent(fragment, event);
+            if (!event.occursOn(this.date)) return;
+            const container = this.appendChild(document.createElement('div'));
+            container.classList.add('event', ...event.classList(this.date));
+
+            const time = container.appendChild(document.createElement('time'));
+            if (event.hasStartTime()) {
+                const div = time.appendChild(document.createElement('div'));
+                div.innerText = event.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+            }
+
+            if (event.hasEndTime()) {
+                this.renderIcon(time, 'arrow-down');
+                const div = time.appendChild(document.createElement('div'));
+                div.innerText = event.end.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+            }
+
+            if (event.isMultiDay()) this.renderIcon(time, 'star');
+            if (event.isAllDay()) this.renderIcon(time, 'zap');
+
+            const h2 = container.appendChild(document.createElement('h2'));
+            h2.innerHTML = event.description;
+
+            container.appendChild(event.details);
         }
-
-        this.append(fragment);
-    }
-
-    renderEvent(parent, event) {
-        if (!event.occursOn(this.date)) return;
-        const container = document.createElement('div');
-        container.classList.add(...event.classList(this.date));
-
-        const time = container.appendChild(document.createElement('time'));
-        if (event.hasStartTime()) {
-            const div = time.appendChild(document.createElement('div'));
-            div.innerText = event.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
-        }
-
-        if (event.hasEndTime()) {
-            this.renderIcon(time, 'arrow-down');
-            const div = time.appendChild(document.createElement('div'));
-            div.innerText = event.end.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
-        }
-
-        if (event.isMultiDay()) {
-            this.renderIcon(time, 'star');
-        }
-
-        if (event.isAllDay()) {
-            this.renderIcon(time, 'zap');
-        }
-
-        const h2 = container.appendChild(document.createElement('h2'));
-        h2.innerHTML = event.description;
-
-
-        container.appendChild(event.details);
-
-        parent.appendChild(container);
     }
 
     onStep(e) {
-        if (e.detail.to === 'today') {
-            window.location.hash = this.ymd(this.now);
-        }
-
-        if (e.detail.direction === 'next') {
-            window.location.hash = this.ymd(this.nextDay(this.date));
-        }
-
-        if (e.detail.direction === 'previous') {
-            window.location.hash = this.ymd(this.previousDay(this.date));
-        }
+        let destination;
+        if (e.detail.to === 'today') destination = this.now;
+        if (e.detail.direction === 'next') destination = this.nextDay(this.date);
+        if (e.detail.direction === 'previous') destination = this.previousDay(this.date);
+        window.location.hash = this.ymd(destination);
     }
 }
 
@@ -472,7 +434,6 @@ class CalendarEvent extends CalendarBase {
 
     classList(d) {
         const candidates = [
-            'event', true,
             'all-day', this.isAllDay(),
             'multi-day', this.isMultiDay(),
             'multi-day-start', this.isMultiDayStart(d),
