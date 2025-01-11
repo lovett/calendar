@@ -166,21 +166,22 @@ c-y .has-events {
     margin: 0 .25em;
 }
 
-.multi-day {
+c-m .multi-day {
     background-color: blue;
     color: #fff;
 }
 
-.multi-day-continuation {
+c-m .multi-day-continuation {
     text-align: center;
     border-radius: 0;
 }
 
-.multi-day-start {
+c-m .multi-day-start {
     margin-left: var(--padding);
     border-radius: .5em 0 0 .5em;
 }
-.multi-day-end {
+
+c-m .multi-day-end {
     margin-right: var(--padding);
     border-radius: 0 .5em .5em 0;
     text-align: right;
@@ -197,51 +198,34 @@ c-y .has-events {
     color: #fff;
 }
 
-c-d .hour {
-    display: grid;
-    min-height: 4em;
-    line-height: 1;
-    align-items: start;
-    grid-template-columns: 4em 1fr;
-    grid-template-areas:
-        "l s1"
-        "l s2"
-        "l s3"
-        "l s4";
-}
-
-C-d .hour .label {
-    grid-area: l;
-    text-align: right;
-    border-top: 1px dotted green;
-    padding-right: 1em;
-    background-color: orange;
-}
-
-c-d .hour .segment1 {
-    border-top: 1px dotted green;
-    grid-area: s1;
-}
-
-c-d .hour .segment2 {
-    border-top: 1px dotted green;
-    grid-area: s2;
-}
-
-c-d .hour .segment3 {
-    border-top: 1px dotted green;
-    grid-area: s3;
-}
-c-d .hour .segment4 {
-    border-top: 1px dotted green;
-    grid-area: s4;
-}
-
 c-d .event {
-    background-color: purple;
-    color: #fff;
-    float: left;
-    margin-right: 0.5em;
+    display: grid;
+    grid-template-columns: 5em 1fr;
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    gap: 0 1em;
+    margin-bottom: 2em;
+}
+
+c-d .event.multi-day, c-d .event.all-day {
+    align-items: center;
+    grid-template-rows: 3em;
+}
+
+c-d .event details {
+    margin: 1em 0;
+}
+
+c-d .event time {
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: end;
+    grid-row: 1 / -1;
+}
+
+c-d .event h2 {
+    font-weight: normal;
+    font-size: 1em;
 }
 
 c-m {

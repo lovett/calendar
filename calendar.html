@@ -8,7 +8,7 @@
         <link rel="icon" type="image/svg+xml" href="calendar.svg">
         <script defer src="calendar.js"></script>
         <style>
-            .purple { background-color: purple; }
+            .purple { background-color: purple; color: #fff }
         </style>
     </head>
     <body>
@@ -17,15 +17,22 @@
         <c-e style="background-color:red">2024-12-31 3:30 AM Early morning event</c-e>
         <c-e style="background-color:red">2024-12-31 3:30 AM Second early morning event</c-e>
         <c-e>2024-12-25 10:00 AM Date with time</c-e>
-        <c-e>2025-01-01 8:00 AM Busy day event 1</c-e>
-        <c-e>2025-01-01 8:30 PM Busy day event 2</c-e>
+        <c-e>
+            2025-01-01 8:00 AM to 8:30 AM Busy day event 1
+            <details>
+                <p>This is the extended description.</p>
+                <p>This is another paragraph.</p>
+                <p>And a third.</p>
+            </details>
+        </c-e>
+        <c-e>2025-01-01 8:30 PM to 11:00 PM Busy day event 2</c-e>
         <c-e>2025-01-01 8:00 AM Busy day event 3</c-e>
         <c-e>2025-01-01 8:30 AM Busy day event 4</c-e>
         <c-e>2025-01-01 9:30 AM Busy day event 5</c-e>
         <c-e>2025-01-01 10:30 AM Busy day event 6</c-e>
         <c-e>2025-01-01 11:30 AM Busy day event 7</c-e>
         <c-e>2025-01-02 Event with <a href="http://example.com">markup</a></c-e>
-        <c-e>2024-12-31 Nested event</c-e>
+        <c-e>2024-12-31 All-day event</c-e>
         <c-e>2025-01-15 9:00 AM Future event 1</c-e>
         <c-e>2025-02-07 9:00 AM Future event 2</c-e>
     </body>

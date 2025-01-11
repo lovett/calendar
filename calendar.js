@@ -137,6 +137,16 @@ class CalendarView extends CalendarBase {
         return this.cached(query, () => document.querySelectorAll(query))
     }
 
+    eventFinderSorted(start, end) {
+        return Array.from(this.eventFinder(start, end)).sort((a, b) => {
+            a.parseTime();
+            b.parseTime();
+            if (a.start < b.start) return -1;
+            if (a.start > b.start) return 1;
+            return 0;
+        });
+    }
+
     renderIcon(parent, id) {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'icon');
@@ -153,7 +163,10 @@ class CalendarView extends CalendarBase {
                     <symbol id="arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
                     <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
                     <symbol id="arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
-                    <symbol id="target"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+                    <symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+                    <symbol id="hash" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></symbol>
+                    <symbol id="star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></symbol>
+                    <symbol id="zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></symbol>
                 </defs>
             </svg>
             <header>
@@ -324,25 +337,11 @@ class CalendarMonth extends CalendarView {
                 div.setAttribute('style', event.getAttribute('style'));
             }
 
-            const classes = [
-                'event', true,
-                'all-day', event.isAllDay(),
-                'multi-day', event.isMultiDay(),
-                'multi-day-start', event.isMultiDayStart(d),
-                'multi-day-continuation', event.isMultiDayContinuation(d),
-                'multi-day-end', event.isMultiDayEnd(d),
-                event.className, event.hasAttribute('class'),
-            ].reduce((accumulator, value, index) => {
-                if (typeof value === 'string') accumulator.push(value);
-                if (value === false) accumulator.pop();
-                return accumulator;
-            }, []);
-
-            div.classList.add(...classes);
+            div.classList.add(...event.classes);
 
             if (event.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
             if (event.isMultiDayContinuation(d)) this.renderIcon(div, 'arrow-right');
-            if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML = event.shortLine(d);
+            if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML = event.shortLine();
 
             parent.appendChild(div);
         }
@@ -373,7 +372,7 @@ class CalendarDay extends CalendarView {
     renderSubHeader() {}
 
     render() {
-        this.querySelectorAll('.hour').forEach(node => node.remove());
+        this.querySelectorAll('.event').forEach(node => node.remove());
 
         const h1 = this.querySelector('header h1');
         h1.textContent = this.date.toLocaleString(this.locale, {weekday: 'long'});
@@ -388,39 +387,50 @@ class CalendarDay extends CalendarView {
         document.title = `${h1.firstChild.textContent} ${year.firstChild.textContent}`;
 
         const fragment = document.createDocumentFragment();
-        const d = new Date(this.date);
-        for (let i = 0; i < 24; i++) {
-            d.setHours(i);
-            this.renderHour(fragment, d, i);
+        for (const event of this.eventFinderSorted(this.date)) {
+            this.renderEvent(fragment, event);
         }
+
+        // const d = new Date(this.date);
+        // for (let i = 0; i < 24; i++) {
+        //     d.setHours(i);
+        //     this.renderHour(fragment, d, i);
+        // }
         this.append(fragment);
     }
 
-    renderHour(parent, d, hour) {
-        const container = parent.appendChild(document.createElement('div'));
-        container.className = 'hour';
+    renderEvent(parent, event) {
+        if (!event.occursOn(this.date)) return;
+        const container = document.createElement('div');
+        container.classList.add(...event.classList(this.date));
 
-        const label = container.appendChild(document.createElement('div'))
-        label.className = 'label';
-
-        label.textContent = d.toLocaleString(this.locale, {hour: 'numeric'});
-
-        const events = this.eventFinder(d);
-
-        for (let i = 0; i < 4; i++) {
-            const segment = container.appendChild(document.createElement('div'))
-            segment.className = 'segment' + (i + 1);
-
-            for (const event of events) {
-                if (!event.occursOn(d)) continue;
-                event.parseTime();
-                if (event.startHour !== hour) continue;
-                if (Math.round(event.startMinute / 15) !== i) continue;
-                const entry = segment.appendChild(document.createElement('div'))
-                entry.className = 'event';
-                entry.innerHTML = event.shortLine();
-            }
+        const time = container.appendChild(document.createElement('time'));
+        if (event.hasStartTime()) {
+            const div = time.appendChild(document.createElement('div'));
+            div.innerText = event.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
         }
+
+        if (event.hasEndTime()) {
+            this.renderIcon(time, 'arrow-down');
+            const div = time.appendChild(document.createElement('div'));
+            div.innerText = event.end.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+        }
+
+        if (event.isMultiDay()) {
+            this.renderIcon(time, 'star');
+        }
+
+        if (event.isAllDay()) {
+            this.renderIcon(time, 'zap');
+        }
+
+        const h2 = container.appendChild(document.createElement('h2'));
+        h2.append(event.description);
+
+
+        container.appendChild(event.details);
+
+        parent.appendChild(container);
     }
 
     onStep(e) {
@@ -457,11 +467,42 @@ class CalendarEvent extends CalendarBase {
         set.add(this.ym(this.start));
         set.add(this.ym(this.end));
         this.group = Array.from(set.values()).join(' ');
+
+    }
+
+    classList(d) {
+        const candidates = [
+            'event', true,
+            'all-day', this.isAllDay(),
+            'multi-day', this.isMultiDay(),
+            'multi-day-start', this.isMultiDayStart(d),
+            'multi-day-continuation', this.isMultiDayContinuation(d),
+            'multi-day-end', this.isMultiDayEnd(d),
+            this.className, this.hasAttribute('class'),
+        ];
+
+        const classes = [];
+        for (let i=0; i < candidates.length; i = i + 2) {
+            if (candidates[i+1]) {
+                classes.push(candidates[i]);
+            }
+        }
+
+        return classes;
     }
 
     get description() {
         if (this.parsingIndex < 0) return '';
-        return this.innerHTML.slice(this.parsingIndex);
+        const initialSlice = this.innerHTML.slice(this.parsingIndex);
+        const detailsIndex = initialSlice.indexOf('<details');
+        if (detailsIndex > -1) return initialSlice.slice(0, detailsIndex);
+        return initialSlice;
+    }
+
+    get details() {
+        const details = this.querySelector('details');
+        if (details) return details.cloneNode(true);
+        return document.createTextNode('');
     }
 
     set group(value) {
@@ -543,7 +584,7 @@ class CalendarEvent extends CalendarBase {
             }
             this.end = new Date(year, month - 1, day, 23, 59, 59);
         }
-        this.parseDate = true;
+        this.parsedDate = true;
     }
 
     parseTime() {
@@ -583,7 +624,7 @@ class CalendarEvent extends CalendarBase {
         return d >= this.startOfDay(this.start) && d <= this.endOfDay(this.end);
     }
 
-    shortLine(d) {
+    shortLine() {
         let result = '';
 
         if (this.hasStartTime()) {
