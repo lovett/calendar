@@ -3,6 +3,7 @@ class CalendarBase extends HTMLElement {
         super();
         this.cache = new Map();
         this.oneDay = 86_400_000;
+        this.cache.set('noevent', 'No events.');
     }
 
     cached(key, callback) {
@@ -371,11 +372,13 @@ class CalendarDay extends CalendarView {
     renderSubHeader() {}
 
     render() {
+        let counter = 0;
         this.removeAll('.event');
         this.populateTitle({weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
 
         for (const event of this.eventFinderSorted(this.date)) {
-            if (!event.occursOn(this.date)) return;
+            if (!event.occursOn(this.date)) continue;
+            counter++;
             const container = this.appendChild(document.createElement('div'));
             container.classList.add('event', ...event.classList(this.date));
 
@@ -398,6 +401,15 @@ class CalendarDay extends CalendarView {
             h2.innerHTML = event.description;
 
             container.appendChild(event.details);
+        }
+
+        if (counter === 0) {
+            const container = this.appendChild(document.createElement('div'));
+            container.classList.add('event', 'empty');
+            const time = container.appendChild(document.createElement('time'));
+            this.renderIcon(time, 'slash');
+            const h2 = container.appendChild(document.createElement('h2'));
+            h2.innerHTML = this.cached('noevent');
         }
     }
 
@@ -712,6 +724,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
     <symbol id="target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
     <symbol id="hash" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></symbol>
+    <symbol id="slash" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></symbol>
     <symbol id="star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></symbol>
     <symbol id="zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></symbol>
     </defs>`;

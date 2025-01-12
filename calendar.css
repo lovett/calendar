@@ -198,7 +198,6 @@ c-d .event {
     display: grid;
     grid-template-columns: 5em 1fr;
     grid-template-rows: auto 1fr;
-    align-items: start;
     gap: 0 1em;
     margin-bottom: 2em;
 }
@@ -206,6 +205,11 @@ c-d .event {
 c-d .event.multi-day, c-d .event.all-day {
     align-items: center;
     grid-template-rows: 3em;
+}
+
+c-d .event.empty {
+    background-color: #ccc;
+    grid-template-rows: 5em;
 }
 
 c-d .event details {
