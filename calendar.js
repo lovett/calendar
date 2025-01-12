@@ -133,7 +133,7 @@ class CalendarView extends CalendarBase {
             d.setDate(d.getDate() + 1);
         }
 
-        const selectors = Array.from(set.values()).map(ym => `c-e[group*="${ym}"]`);
+        const selectors = Array.from(set.values()).map(ym => `c-e[during*="${ym}"]`);
         const query = Array.from(selectors).join(',');
         return this.cached(query, () => document.querySelectorAll(query))
     }
@@ -440,7 +440,7 @@ class CalendarEvent extends CalendarBase {
         const set = new Set();
         set.add(this.ym(this.start));
         set.add(this.ym(this.end));
-        this.group = Array.from(set.values()).join(' ');
+        this.during = Array.from(set.values()).join(' ');
 
     }
 
@@ -478,12 +478,12 @@ class CalendarEvent extends CalendarBase {
         return document.createTextNode('');
     }
 
-    set group(value) {
-        if (value) this.setAttribute('group', value);
+    set during(value) {
+        if (value) this.setAttribute('during', value);
     }
 
-    get group() {
-        return this.getAttribute('group');
+    get during() {
+        return this.getAttribute('during');
     }
 
     get dayList() {
