@@ -149,10 +149,11 @@ class CalendarView extends CalendarBase {
 
     populateTitle(options) {
         const h1 = this.querySelector('header h1');
+        const optionCount = Object.keys(options).length;
         h1.textContent = this.date.toLocaleString(this.locale, options);
         document.title = h1.textContent;
 
-        if (options.year && Object.keys(options).length > 1) {
+        if (options.year && optionCount > 1) {
             const year = document.createElement('a');
             year.href = '#';
             year.hash = this.date.getFullYear();
@@ -160,7 +161,7 @@ class CalendarView extends CalendarBase {
             h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
         }
 
-        if (options.month) {
+        if (options.month && optionCount > 2) {
             const month = document.createElement('a');
             month.href = '#';
             month.hash = this.ym(this.date);
