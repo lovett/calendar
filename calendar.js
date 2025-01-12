@@ -440,8 +440,7 @@ class CalendarEvent extends CalendarBase {
         const set = new Set();
         set.add(this.ym(this.start));
         set.add(this.ym(this.end));
-        this.during = Array.from(set.values()).join(' ');
-
+        this.setAttribute('during', Array.from(set.values()).join(' '));
     }
 
     classList(d) {
@@ -476,14 +475,6 @@ class CalendarEvent extends CalendarBase {
         const details = this.querySelector('details');
         if (details) return details.cloneNode(true);
         return document.createTextNode('');
-    }
-
-    set during(value) {
-        if (value) this.setAttribute('during', value);
-    }
-
-    get during() {
-        return this.getAttribute('during');
     }
 
     get dayList() {
