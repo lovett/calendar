@@ -204,42 +204,6 @@ c-y .diminished {
     display: grid;
 }
 
-.view > header {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: auto;
-    gap: 1em;
-    justify-content: center;
-    align-items: center;
-    padding: 1em;
-}
-
-.view > header h1 {
-    font-size: 1.75em;
-    font-weight: normal;
-    line-height: 1;
-}
-
-.view > header .toolbar {
-    display: flex;
-    justify-content: space-around;
-}
-
-.view > header .toolbar a {
-    border-radius: .25em;
-    padding: var(--padding);
-    font-weight: bold;
-    color: #fff;
-    background-color: #333;
-    display: inline-flex;
-}
-
-.view > header .icon {
-    width: 1.5em;
-    height: 1.5em;
-    pointer-events: none;
-}
-
 .icon {
     fill: none;
     stroke: currentColor;
@@ -278,6 +242,42 @@ c-y .diminished {
     color: #fff;
 }
 
+.navigator {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto;
+    gap: 1em;
+    justify-content: center;
+    align-items: center;
+    padding: 1em;
+}
+
+.navigator h1 {
+    font-size: 1.75em;
+    font-weight: normal;
+    line-height: 1;
+}
+
+.navigator .toolbar {
+    display: flex;
+    justify-content: space-around;
+}
+
+.navigator .toolbar a {
+    border-radius: .25em;
+    padding: var(--padding);
+    font-weight: bold;
+    color: #fff;
+    background-color: #333;
+    display: inline-flex;
+}
+
+.navigator .icon {
+    width: 1.5em;
+    height: 1.5em;
+    pointer-events: none;
+}
+
 @media only screen and (min-width: 600px) {
     c-y {
         grid-template-columns: repeat(2, 1fr);
@@ -313,17 +313,17 @@ c-y .diminished {
         grid-template-columns: repeat(4, 1fr);
     }
 
-    .view > header {
+    nagivator {
         grid-template-columns: auto auto;
         justify-content: space-between;
         gap: 0;
     }
-    .view > header h1 {
+
+    .navigator h1 {
         font-size: 2.25em;
     }
 
-    .view > header .toolbar a {
+    .navigator .toolbar a {
         margin-left: 2em;
     }
-
 }

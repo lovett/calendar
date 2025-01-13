@@ -181,7 +181,7 @@ class CalendarView extends CalendarBase {
 
     renderShell() {
         this.innerHTML = `
-        <header>
+        <header class="navigator">
             <h1></h1>
             <div class="toolbar">
                 <a href="#previous"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
