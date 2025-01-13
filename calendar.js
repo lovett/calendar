@@ -289,7 +289,7 @@ class CalendarMonth extends CalendarView {
     }
 
     render() {
-        this.removeAll('.box');
+        this.removeAll('.day');
 
         const fragment = document.createDocumentFragment();
         const monthStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
@@ -307,19 +307,19 @@ class CalendarMonth extends CalendarView {
             for (const event of events) {
                 if (event.occursOn(d)) eventSubset.push(event);
             }
-            const outer = fragment.appendChild(document.createElement('div'));
-            outer.classList.add('box');
+            const day = fragment.appendChild(document.createElement('div'));
+            day.classList.add('day');
             if (eventSubset.length > 0) {
-                outer.classList.add('has-events');
+                day.classList.add('has-events');
             }
 
             if (d < monthStart || d > monthEnd) {
-                outer.classList.add('diminished');
+                day.classList.add('diminished');
             }
-            const inner = outer.appendChild(document.createElement('div'));
+            const lining = day.appendChild(document.createElement('div'));
 
-            this.renderDayOfMonth(inner, d, eventSubset.length > 0);
-            this.renderEvents(inner, eventSubset, d);
+            this.renderDayOfMonth(lining, d, eventSubset.length > 0);
+            this.renderEvents(lining, eventSubset, d);
         }
 
         this.append(fragment);

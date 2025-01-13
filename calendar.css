@@ -112,11 +112,11 @@ c-y .has-events {
     background-color: lightblue;
 }
 
-.box {
+c-m .day {
     box-shadow:1px 1px 0 0px #ddd;
 }
 
-.box > div {
+c-m .day > div {
     display: grid;
     gap: .1em;
     grid-template-columns: 1fr;
@@ -124,11 +124,11 @@ c-y .has-events {
     align-items: start;
 }
 
-.box.has-events {
+c-m .day.has-events {
     background-color: lightblue;
 }
 
-.box.diminished > div {
+c-m .day.diminished > div {
     opacity: .5;
     height: 100%;
     margin: 1px;
@@ -151,11 +151,11 @@ c-y .has-events {
     box-sizing: border-box;
 }
 
-.box .event {
+c-m .day .event {
     display: none;
 }
 
-.box .event-count {
+c-m .day .event-count {
     text-align: center;
 }
 
@@ -298,15 +298,15 @@ c-y .diminished {
         font-size: 1em;
     }
 
-    .box .event {
+    c-m .day .event {
         display: block;
     }
 
-    .box .event-count {
+    c-m .day .event-count {
         display: none;
     }
 
-    .box.has-events {
+    c-m .day.has-events {
         background-color: inherit;
     }
 
