@@ -303,15 +303,23 @@ class CalendarMonth extends CalendarView {
 
         for (let i=0; i <= boxCount; i++) {
             const d = new Date(firstDay.getTime() + this.oneDay * i);
+            const eventSubset = [];
+            for (const event of events) {
+                if (event.occursOn(d)) eventSubset.push(event);
+            }
             const outer = fragment.appendChild(document.createElement('div'));
             outer.classList.add('box');
+            if (eventSubset.length > 0) {
+                outer.classList.add('has-events');
+            }
+
             if (d < monthStart || d > monthEnd) {
                 outer.classList.add('diminished');
             }
             const inner = outer.appendChild(document.createElement('div'));
 
-            this.renderDayOfMonth(inner, d);
-            this.renderEvents(inner, events, d);
+            this.renderDayOfMonth(inner, d, eventSubset.length > 0);
+            this.renderEvents(inner, eventSubset, d);
         }
 
         this.append(fragment);
@@ -327,7 +335,6 @@ class CalendarMonth extends CalendarView {
 
     renderEvents(parent, events, d) {
         for (const event of events) {
-            if (!event.occursOn(d)) continue;
             event.parseTime();
             const div = document.createElement('div');
 
@@ -345,17 +352,16 @@ class CalendarMonth extends CalendarView {
         }
     }
 
-    renderDayOfMonth(parent, d) {
+    renderDayOfMonth(parent, d, hasEvents = false) {
         const today = this.ymd(new Date());
-        const node = document.createElement('a');
-        node.href = '#';
-        node.hash = this.ymd(d);
+        const tag = (hasEvents)? 'a' : 'div';
+        const node = document.createElement(tag);
+        if (tag === 'a') {
+            node.href = '#';
+            node.hash = this.ymd(d);
+        }
 
         node.classList.add('day-of-month');
-
-        if (today === this.ymd(d)) {
-            node.classList.add('today');
-        }
 
         let label = '';
         if (d.getDate() === 1) {
@@ -547,7 +553,7 @@ class CalendarEvent extends CalendarBase {
         if (this.parsedTime) return;
         if (!this.start) return;
 
-        for (const [i, match] of this.match(/(\d{1,2}):(\d{1,2})\s*([AP]M)?\W*/g, 2)) {
+        for (const [i, match] of this.match(/(\d{1,2}):(\d{1,2})\s*([AP]M)?\s*/g, 2)) {
             this.captureParsingIndex(match);
             let [hour, minute] = match.slice(1, 3).map(x => Number.parseInt(x, 10));
             hour += (match[3].toLowerCase() === 'pm') ? 12 : 0;
