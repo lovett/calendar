@@ -69,6 +69,22 @@ c-m {
     align-items: stretch;
 }
 
+c-m .day {
+    box-shadow:1px 1px 0 0px #ddd;
+}
+
+c-m .day-number {
+    justify-self: end;
+    margin: 0.5em;
+    font-size: .85em;
+    padding: 0.5em;
+}
+
+c-m .day-number.today {
+    background-color: #e01b24;
+    color: #fff;
+}
+
 c-m .day-of-week {
     border: 1px solid #333;
     border-left: 0;
@@ -78,10 +94,6 @@ c-m .day-of-week {
     justify-content: flex-end;
     padding: 0.5em;
     line-height: 1;
-}
-
-c-m .day {
-    box-shadow:1px 1px 0 0px #ddd;
 }
 
 c-m .day > div {
@@ -209,18 +221,6 @@ c-y .diminished {
 .all-day {
     border-radius: .5em;
     margin: 0 .25em;
-}
-
-.day-of-month {
-    justify-self: end;
-    margin: 0.5em;
-    font-size: .85em;
-}
-
-.day-of-month.today {
-    background-color: #e01b24;
-    padding: var(--padding);
-    color: #fff;
 }
 
 .icon {

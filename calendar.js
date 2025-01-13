@@ -318,7 +318,7 @@ class CalendarMonth extends CalendarView {
             }
             const lining = day.appendChild(document.createElement('div'));
 
-            this.renderDayOfMonth(lining, d, eventSubset.length > 0);
+            this.renderDayNumber(lining, d, eventSubset.length > 0);
             this.renderEvents(lining, eventSubset, d);
         }
 
@@ -352,7 +352,7 @@ class CalendarMonth extends CalendarView {
         }
     }
 
-    renderDayOfMonth(parent, d, hasEvents = false) {
+    renderDayNumber(parent, d, hasEvents = false) {
         const today = this.ymd(new Date());
         const tag = (hasEvents)? 'a' : 'div';
         const node = document.createElement(tag);
@@ -361,7 +361,11 @@ class CalendarMonth extends CalendarView {
             node.hash = this.ymd(d);
         }
 
-        node.classList.add('day-of-month');
+        node.classList.add('day-number');
+
+        if (this.isToday(d)) {
+            node.classList.add('today');
+        }
 
         let label = '';
         if (d.getDate() === 1) {
