@@ -183,11 +183,11 @@ class CalendarView extends CalendarBase {
         this.innerHTML = `
         <header class="navigator">
             <h1></h1>
-            <div class="toolbar">
+            <nav>
                 <a href="#previous"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
                 <a href="#today"><svg class="icon"><use xlink:href="#target" /></svg></a>
                 <a href="#next"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
-            </div>
+            </nav>
         </header>
         `;
     }
@@ -714,7 +714,10 @@ window.addEventListener('DOMContentLoaded', (e) => {
         tag = 'c-d';
     }
 
-    const svg = document.body.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
+    const div  = document.body.appendChild(document.createElement('div'));
+    div.hidden = true;
+
+    const svg = div.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
     svg.innerHTML = `<defs>
     <symbol id="arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
     <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
