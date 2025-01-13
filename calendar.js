@@ -135,17 +135,15 @@ class CalendarView extends CalendarBase {
 
         const selectors = Array.from(set.values()).map(ym => `c-e[during*="${ym}"]`);
         const query = Array.from(selectors).join(',');
-        return this.cached(query, () => document.querySelectorAll(query))
-    }
-
-    eventFinderSorted(start, end) {
-        return Array.from(this.eventFinder(start, end)).sort((a, b) => {
-            a.parseTime();
-            b.parseTime();
-            if (a.start < b.start) return -1;
-            if (a.start > b.start) return 1;
-            return 0;
-        });
+        return this.cached(query, () => {
+            return Array.from(document.querySelectorAll(query)).sort((a, b) => {
+                a.parseTime();
+                b.parseTime();
+                if (a.start < b.start) return -1;
+                if (a.start > b.start) return 1;
+                return 0;
+            });
+        })
     }
 
     populateTitle(options) {
@@ -397,7 +395,7 @@ class CalendarDay extends CalendarView {
         this.removeAll('.event');
         this.populateTitle({weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'});
 
-        for (const event of this.eventFinderSorted(this.date)) {
+        for (const event of this.eventFinder(this.date)) {
             if (!event.occursOn(this.date)) continue;
             counter++;
             const container = this.appendChild(document.createElement('div'));
