@@ -317,8 +317,9 @@ class CalendarMonth extends CalendarView {
                 day.classList.add('diminished');
             }
             const lining = day.appendChild(document.createElement('div'));
-
+            lining.classList.add('lining');
             this.renderDayNumber(lining, d, eventSubset.length > 0);
+            this.renderEventCount(lining, eventSubset);
             this.renderEvents(lining, eventSubset, d);
         }
 
@@ -333,6 +334,14 @@ class CalendarMonth extends CalendarView {
         window.location.hash = this.ym(destination);
     }
 
+    renderEventCount(parent, events) {
+        if (events.length === 0) return;
+        const div = parent.appendChild(document.createElement('div'));
+        div.classList.add('event-count');
+        div.innerText = events.length;
+        this.renderIcon(div, 'bookmark');
+    }
+
     renderEvents(parent, events, d) {
         for (const event of events) {
             event.parseTime();
@@ -344,9 +353,11 @@ class CalendarMonth extends CalendarView {
 
             div.classList.add('event', ...event.classList(d));
 
+            if (event.isMultiDayStart(d)) this.renderIcon(div, 'star');
+            if (event.isAllDay()) this.renderIcon(div, 'zap');
             if (event.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
             if (event.isMultiDayContinuation(d)) this.renderIcon(div, 'arrow-right');
-            if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML = event.shortLine();
+            if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML += event.shortLine();
 
             parent.appendChild(div);
         }
@@ -731,6 +742,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="slash" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></symbol>
     <symbol id="star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></symbol>
     <symbol id="zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></symbol>
+    <symbol id="bookmark" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></symbol>
     </defs>`;
 
     views.get(tag).setAttribute('date', startDate);

@@ -29,6 +29,14 @@ c-d .event {
     grid-template-rows: auto 1fr;
     gap: 0 1em;
     margin-bottom: 2em;
+    line-height: 1.5;
+    align-items: center;
+    padding: 0 var(--padding);
+    box-sizing: border-box;
+}
+
+c-d .event .icon {
+    vertical-align: middle;
 }
 
 c-d .event.multi-day, c-d .event.all-day {
@@ -96,37 +104,29 @@ c-m .day-of-week {
     line-height: 1;
 }
 
-c-m .day > div {
+c-m .day {
+    box-shadow:1px 1px 0 0px #ddd;
+}
+
+c-m .lining {
+    height: 100%;
+    margin: auto;
     display: grid;
-    gap: .1em;
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
     align-content: start;
     align-items: start;
 }
 
-c-m .day.has-events {
-    background-color: lightblue;
-}
-
-c-m .day.diminished > div {
-    opacity: .5;
-    height: 100%;
-    margin: 1px;
-    margin-top: 0;
-    background-color: #eee;
-}
-
-c-m .day .event {
+c-m .event {
     display: none;
 }
 
-c-m .day .event-count {
-    text-align: center;
-}
-
-c-m .multi-day {
-    background-color: blue;
-    color: #fff;
+c-m .event-count {
+    display: flex;
+    align-items: center;
+    justify-self: end;
+    margin: 2em 0.25em 0 0;
 }
 
 c-m .multi-day-continuation {
@@ -200,30 +200,29 @@ c-y .day {
     text-align: center;
 }
 
-c-y .diminished {
-    background-color: #eee;
-    opacity: .5;
-}
-
-.event {
-    line-height: 1.5;
-    align-items: center;
-    padding: 0 var(--padding);
-    box-sizing: border-box;
-}
-
-.event .icon {
-    width: 1em;
-    height: 1em;
-    vertical-align: middle;
-}
-
 .all-day {
     border-radius: .5em;
-    margin: 0 .25em;
+}
+
+.day-of-month {
+    justify-self: end;
+    margin: 0.5em;
+    font-size: .85em;
+}
+
+.day-of-month.today {
+    background-color: #e01b24;
+    padding: var(--padding);
+    color: #fff;
+}
+
+.diminished {
+    background-color: #ddd;
 }
 
 .icon {
+    width: 1em;
+    height: 1em;
     fill: none;
     stroke: currentColor;
     stroke-width: 2;
@@ -299,16 +298,39 @@ c-y .diminished {
         font-size: 1em;
     }
 
-    c-m .day .event {
+    c-m .lining {
+        height: auto;
+    }
+
+    c-m .event {
         display: block;
+        padding: 0 0.25em;
+        margin-bottom: .25em;
     }
 
-    c-m .day .event-count {
+    c-m .event .icon {
+        margin-bottom: -2px;
+    }
+
+    c-m .all-day {
+        margin-left: 1.5em;
+        text-indent: -1.25em;
+    }
+
+    c-m .multi-day {
+        background-color: blue;
+        color: #fff;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    c-m .multi-day-start .icon, c-m .all-day .icon {
+        margin-right: .25em;
+    }
+
+    c-m .event-count {
         display: none;
-    }
-
-    c-m .day.has-events {
-        background-color: inherit;
     }
 
     c-y {
