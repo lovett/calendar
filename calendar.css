@@ -86,7 +86,8 @@ c-m .has-events a {
 }
 
 c-m .day-number {
-    justify-self: end;
+    white-space: nowrap;
+    justify-self: center;
     margin: 0.5em;
     font-size: .85em;
     padding: 0.5em;
@@ -129,8 +130,8 @@ c-m .event {
 c-m .event-count {
     display: flex;
     align-items: center;
-    justify-self: end;
-    margin: 2em 0.25em 0 0;
+    justify-self: center;
+    margin: 1em 0.25em 0 0;
 }
 
 c-m .multi-day-continuation {
@@ -335,6 +336,10 @@ c-y .day {
 
     c-m .event-count {
         display: none;
+    }
+
+    c-m .day-number {
+        justify-self: end;
     }
 
     c-y {
