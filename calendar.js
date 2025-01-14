@@ -113,7 +113,9 @@ class CalendarView extends CalendarBase {
         this.renderShell();
         this.renderSubHeader();
         this.addEventListener('step', this.onStep);
+        this.addEventListener('swipe', this.onSwipe);
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
+        this.swipe = [0, 0];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -121,6 +123,28 @@ class CalendarView extends CalendarBase {
             this.date = new Date(newValue);
             if (!this.defaultDate) this.defaultDate = this.date;
             if (newValue) this.render();
+        }
+    }
+
+    onSwipe(e) {
+        if (e.detail.type === 'touchstart') {
+            this.swipe = [e.detail.x, e.detail.y];
+        }
+
+        if (e.detail.type === 'touchend') {
+            const xDelta = e.detail.x - this.swipe[0];
+            const yDelta = e.detail.y - this.swipe[1];
+            const step = new CustomEvent('step', {detail: {to: null}});
+
+            if (Math.abs(xDelta) < Math.abs(yDelta)) {
+                if (yDelta < 0) step.detail.to = 'today';
+            } else {
+                if (xDelta > 0) step.detail.to = 'next';
+                if (xDelta < 0) step.detail.to = 'previous';
+            }
+
+            if (step.detail.to) this.dispatchEvent(step);
+            this.swipe = [0, 0];
         }
     }
 
@@ -265,8 +289,8 @@ class CalendarYear extends CalendarView {
     onStep(e) {
         let destination;
         if (e.detail.to === 'today') destination = this.now;
-        if (e.detail.direction === 'next') destination = this.nextYear(this.date);
-        if (e.detail.direction === 'previous') desintation = this.previousYear(this.date);
+        if (e.detail.to === 'next') destination = this.nextYear(this.date);
+        if (e.detail.to === 'previous') destination = this.previousYear(this.date);
         window.location.hash = destination.getFullYear();
     }
 
@@ -330,8 +354,8 @@ class CalendarMonth extends CalendarView {
     onStep(e) {
         let destination;
         if (e.detail.to === 'today') destination = this.now;
-        if (e.detail.direction === 'next') destination = this.nextMonth(this.date);
-        if (e.detail.direction === 'previous') destination = this.previousMonth(this.date);
+        if (e.detail.to === 'next') destination = this.nextMonth(this.date);
+        if (e.detail.to === 'previous') destination = this.previousMonth(this.date);
         window.location.hash = this.ym(destination);
     }
 
@@ -437,8 +461,8 @@ class CalendarDay extends CalendarView {
     onStep(e) {
         let destination;
         if (e.detail.to === 'today') destination = this.now;
-        if (e.detail.direction === 'next') destination = this.nextDay(this.date);
-        if (e.detail.direction === 'previous') destination = this.previousDay(this.date);
+        if (e.detail.to === 'next') destination = this.nextDay(this.date);
+        if (e.detail.to === 'previous') destination = this.previousDay(this.date);
         window.location.hash = this.ymd(destination);
     }
 }
@@ -613,12 +637,42 @@ class CalendarEvent extends CalendarBase {
     }
 }
 
+document.addEventListener('touchstart', (e) => {
+    if (e.target.nodeName === 'A') return;
+    if (e.touches && e.touches.length > 1) return;
+    if (!e.changedTouches || e.changedTouches.length !== 1) return;
+
+    document.body.querySelector('.view[date]')
+        .dispatchEvent(new CustomEvent('swipe', {
+            detail: {
+                type: e.type,
+                x: e.changedTouches[0].clientX,
+                y: e.changedTouches[0].clientY
+            }
+        }));
+});
+
+document.addEventListener('touchend', (e) => {
+    if (e.target.nodeName === 'A') return;
+    if (e.touches && e.touches.length > 0) return;
+    if (!e.changedTouches || e.changedTouches.length !== 1) return;
+
+    document.body.querySelector('.view[date]')
+        .dispatchEvent(new CustomEvent('swipe', {
+            detail: {
+                type: e.type,
+                x: e.changedTouches[0].clientX,
+                y: e.changedTouches[0].clientY
+            }
+        }));
+});
+
 window.addEventListener('keypress', (e) => {
     if (e.key === 'n') {
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'next'}}));
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'next'}}));
     }
     if (e.key === 'p') {
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'previous'}}));
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'previous'}}));
     }
 
     if (e.key === 't') {
@@ -630,7 +684,7 @@ window.addEventListener('click', (e) => {
     e.target.blur();
     if (e.target.matches('A[href$="next"]')) {
         e.preventDefault();
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'next'}}));
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'next'}}));
     }
 
     if (e.target.matches('A[href$="today"]')) {
@@ -642,7 +696,7 @@ window.addEventListener('click', (e) => {
 
     if (e.target.matches('A[href$="previous"]')) {
         e.preventDefault();
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {direction: 'previous'}}));
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'previous'}}));
     }
 });
 
@@ -682,7 +736,6 @@ window.addEventListener('hashchange', (e) => {
     document.body.querySelector('.view[date]').removeAttribute('date');
     document.body.querySelector(tag).setAttribute('date', d);
 });
-
 
 window.addEventListener('DOMContentLoaded', (e) => {
     customElements.define("c-m", CalendarMonth);

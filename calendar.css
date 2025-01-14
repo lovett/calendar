@@ -35,6 +35,10 @@ c-d .event {
     box-sizing: border-box;
 }
 
+c-d .event:last-of-type {
+    margin-bottom: 0;
+}
+
 c-d .event .icon {
     vertical-align: middle;
 }
