@@ -81,6 +81,10 @@ c-m .day {
     box-shadow:1px 1px 0 0px #ddd;
 }
 
+c-m .has-events a {
+    text-decoration: underline;
+}
+
 c-m .day-number {
     justify-self: end;
     margin: 0.5em;
