@@ -156,16 +156,15 @@ c-m .multi-day-end {
 
 c-y {
     grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    grid-auto-rows: 1fr;
-    gap: 1em;
     align-items: start;
 }
 
 c-y h2 {
+    padding-left: 0.5em;
     font-weight: normal;
     grid-column: 1 / -1;
     line-height: 1;
+    margin-bottom: .5em;
 }
 
 c-y .day-of-week {
@@ -198,9 +197,13 @@ c-y .month {
     padding: 0 var(--padding);
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: 1fr 2em;
     align-items: center;
     justify-content: center;
+    margin-bottom: 2em;
+}
+
+c-y .month:last-of-type {
+    margin-bottom: 0;
 }
 
 c-y .day {
@@ -247,26 +250,25 @@ c-y .day {
     top: 0;
     grid-column: 1 / -1;
     display: grid;
-    grid-template-columns: auto;
-    gap: 1em;
-    justify-content: center;
-    padding: 1em;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+        "title toggle"
+        "subtitle toggle"
+        "panel panel";
+    justify-content: space-between;
+    align-items: start;
+    gap: 0 0.5em;
+    padding: 0.75em 0.5em;
 }
 
 .navigator h1 {
-    text-align: center;
-    font-size: 1.5em;
+    grid-area: title;
+    font-size: 1.75em;
     font-weight: normal;
     line-height: 1;
 }
 
-.navigator nav {
-    display: flex;
-    gap: 0 2em;
-    justify-content: center;
-}
-
-.navigator nav a {
+.navigator .nav {
     border-radius: .25em;
     padding: var(--padding);
     font-weight: bold;
@@ -275,9 +277,63 @@ c-y .day {
     display: inline-flex;
 }
 
-.navigator nav a .icon {
-    width: 1.5em;
-    height: 1.5em;
+.navigator .icon {
+    width: 1.75em;
+    height: 1.75em;
+    vertical-align: middle;
+}
+
+.navigator .next {
+    display: none;
+    grid-area: next;
+}
+
+.navigator .previous {
+    display: none;
+    grid-area: previous;
+}
+
+.navigator .panel {
+    grid-area: panel;
+    display: none;
+}
+
+.navigator .toggle {
+    grid-area: toggle;
+}
+
+.navigator .toggle .up {
+    display: none;
+}
+
+.navigator .toggle .down {
+    display: block;
+}
+
+.navigator.open .toggle .up {
+    display: block;
+}
+
+.navigator.open .toggle .down {
+    display: none;
+}
+
+.navigator.open .panel {
+    display: block;
+    padding: 1em 0;
+}
+
+.navigator .today {
+    display: none;
+    grid-area: today;
+}
+
+
+.navigator .subtitle {
+    align-self: end;
+    font-style: italic;
+    padding-top: .25em;
+    grid-area: subtitle;
 }
 
 .view {
@@ -351,16 +407,40 @@ c-y .day {
     }
 
     .navigator {
-        grid-template-columns: auto auto;
-        justify-content: space-between;
-    }
-
-    .navigator nav {
-        gap: 0 1em;
+        grid-template-columns: auto 1fr auto auto auto;
+        grid-template-areas: "title subtitle previous today next";
+        gap: 0 2em;
+        padding: 1em;
     }
 
     .navigator h1 {
         text-align: left;
         font-size: 2.5em;
     }
+
+    .navigator .icon {
+        width: 1.5em;
+        height: 1.5em;
+    }
+
+    .navigator .subtitle {
+        font-size: 1.5em;
+    }
+
+    .navigator .toggle {
+        display: none;
+    }
+
+    .navigator .previous {
+        display: block;
+    }
+
+    .navigator .next {
+        display: block;
+    }
+
+    .navigator .today {
+        display: block;
+    }
+
 }
