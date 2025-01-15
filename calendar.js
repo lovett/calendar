@@ -2,7 +2,6 @@ class CalendarBase extends HTMLElement {
     constructor() {
         super();
         this.cache = new Map();
-        this.oneDay = 86_400_000;
         this.cache.set('noevent', 'No events.');
     }
 
@@ -13,12 +12,13 @@ class CalendarBase extends HTMLElement {
 
     get dayNames() {
         return this.cached('day-names', () => {
-            const daysBack = this.now.getDay() * this.oneDay;
-            const start = new Date(this.now.getTime() - daysBack)
+            const d = new Date(this.now.getTime());
+            d.setDate(d.getDate() - d.getDay() - 1);
 
-            const names = [];
-            for (let i = 0; i < 7; i++) {
-                names.push(this.nextDay(start, i).toLocaleString(this.locale, {weekday: 'short'}));
+            const names = new Array(7);
+            for (let i = 0; i < names.length; i++) {
+                d.setDate(d.getDate() + 1);
+                names[i] = d.toLocaleString(this.locale, {weekday: 'short'});
             }
             return names;
         });
@@ -35,9 +35,8 @@ class CalendarBase extends HTMLElement {
         return true;
     }
 
-    isLastDayOfMonth(d) {
-        const tomorrow = this.nextDay(d);
-        return tomorrow.getMonth() !== d.getMonth();
+    isLastDayOfMonth(date) {
+        return this.nextDay(date).getMonth() !== date.getMonth();
     }
 
     ym(d) {
@@ -50,42 +49,24 @@ class CalendarBase extends HTMLElement {
         return `${this.ym(d)}-${d.getDate().toString().padStart(2, '0')}`;
     }
 
-    startOfDay(d) {
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+    startOfDayMs(d) {
+        return d.getTime() - (d.getHours() * 3_600_000) - (d.getMinutes() * 60_000) - (d.getSeconds() * 1_000) - d.getMilliseconds();
     }
 
-    endOfDay(d) {
-        return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 0);
+    endOfDayMs(d) {
+        return this.startOfDayMs(d) + (23 * 3_600_000) + (59 * 60_000) + (59 * 1_000) + 999;
     }
 
-    nextDay(d, count = 1) {
-        const date = new Date(d);
-        date.setDate(d.getDate() + count);
-        return date;
+    nextDay(date, count = 1) {
+        const d = new Date(date.getTime());
+        d.setDate(d.getDate() + count);
+        return d;
     }
 
-    nextMonth(d, count = 1) {
-        const date = new Date(d);
-        date.setMonth(d.getMonth() + count);
-        return date;
-    }
-
-    previousDay(d, count = 1) {
-        const date = new Date(d);
-        date.setDate(d.getDate() - count);
-        return date;
-    }
-
-    * daysFromStartOfWeek(d) {
-        for (let i = d.getDay(); i > 0; i--) {
-            yield this.previousDay(d, i);
-        }
-    }
-
-    * daysToEndOfWeek(d) {
-        for (let i = 0; i < 6 - d.getDay(); i++) {
-            yield this.nextDay(d, i + 1);
-        }
+    previousDay(date, count = 1) {
+        const d = new Date(date.getTime());
+        d.setDate(d.getDate() - count);
+        return d;
     }
 }
 
@@ -149,16 +130,19 @@ class CalendarView extends CalendarBase {
     }
 
     eventFinder(start, end) {
-        const set = new Set();
-        set.add(this.ym(start));
+        const selectors = new Set();
         const d = new Date(start);
         while (d <= (end || start)) {
-            set.add(this.ym(d));
+            selectors.add(`c-e[during*="${this.ym(d)}"]`);
             d.setDate(d.getDate() + 1);
         }
 
-        const selectors = Array.from(set.values()).map(ym => `c-e[during*="${ym}"]`);
-        const query = Array.from(selectors).join(',');
+        let query = '';
+        for (const selector of selectors.values()) {
+            query += `${selector},`;
+        }
+        query = query.slice(0, -1);
+
         return this.cached(query, () => {
             return Array.from(document.querySelectorAll(query)).sort((a, b) => {
                 a.parseTime();
@@ -258,18 +242,19 @@ class CalendarYear extends CalendarView {
         this.removeAll('.month');
 
         const fragment = document.createDocumentFragment();
+        const d = this.previousDay(this.date);
         for (let i = 0; i <= 365; i++) {
-            const day = new Date(this.date.getTime() + this.oneDay * i);
-            if (day.getFullYear() > this.date.getFullYear()) break;
+            d.setDate(d.getDate() + 1);
+            if (d.getFullYear() > this.date.getFullYear()) break;
 
-            if (day.getDate() === 1) {
+            if (d.getDate() === 1) {
                 const month = fragment.appendChild(document.createElement('div'));
                 month.className = 'month';
                 const title = month.appendChild(document.createElement('h2'));
                 const link = title.appendChild(document.createElement('a'));
                 link.href = '#';
-                link.hash = this.ym(day);
-                link.innerText = day.toLocaleString(this.locale, {month: 'long'});
+                link.hash = this.ym(d);
+                link.innerText = d.toLocaleString(this.locale, {month: 'long'});
 
                 for (const day of this.dayNames) {
                     const div = document.createElement('div');
@@ -278,16 +263,22 @@ class CalendarYear extends CalendarView {
                     fragment.lastChild.append(div);
                 }
 
-                for (const d of this.daysFromStartOfWeek(day)) {
-                    this.renderDay(fragment.lastChild, d, 'diminished');
+                if (d.getDay() > 0) {
+                    const temp = new Date(d.getTime());
+                    for (let i = 0; i < d.getDay(); i++) {
+                        temp.setDate(temp.getDate() - temp.getDay() + i);
+                        this.renderDay(fragment.lastChild, temp, 'diminished');
+                    }
                 }
             }
 
-            this.renderDay(fragment.lastChild, day);
+            this.renderDay(fragment.lastChild, d);
 
-            if (this.isLastDayOfMonth(day)) {
-                for (const d of this.daysToEndOfWeek(day)) {
-                    this.renderDay(fragment.lastChild, d, 'diminished');
+            if (this.isLastDayOfMonth(d)) {
+                const temp = new Date(d.getTime());
+                for (let i = temp.getDay(); i < 6; i++) {
+                    temp.setDate(temp.getDate() + 1);
+                    this.renderDay(fragment.lastChild, temp, 'diminished');
                 }
             }
         }
@@ -315,9 +306,10 @@ class CalendarYear extends CalendarView {
     }
 
     hasEvents(d) {
-        const ymd = this.ymd(d);
-        for (const event of this.eventFinder(d, d)) {
-            if (event.dayList.some(item => this.ymd(item) === ymd)) return true;
+        for (const event of this.eventFinder(d)) {
+            if (d.getTime() < this.startOfDayMs(event.start)) continue;
+            if (d.getTime() > this.endOfDayMs(event.end)) continue;
+            return true;
         }
         return false;
     }
@@ -353,43 +345,51 @@ class CalendarMonth extends CalendarView {
     render() {
         this.removeAll('.day');
 
-        const fragment = document.createDocumentFragment();
-        const monthStart = new Date(this.date.getFullYear(), this.date.getMonth(), 1);
-        const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
-        const firstDay = new Date(monthStart.getTime() - monthStart.getDay() * this.oneDay);
-        const lastDay = new Date(monthEnd.getTime() + (6 - monthEnd.getDay()) * this.oneDay);
-        const boxCount = (lastDay.getTime() - firstDay.getTime()) / this.oneDay;
+        const firstDay = new Date(this.date);
+        firstDay.setDate(1 - firstDay.getDay());
+
+        const lastDay = new Date(this.date);
+        lastDay.setMonth(lastDay.getMonth() + 1);
+        lastDay.setDate(lastDay.getDate() - 1);
+        lastDay.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
+
         const events = this.eventFinder(firstDay, lastDay);
+
+        const fragment = document.createDocumentFragment();
 
         if (!this.querySelector('.day-of-week')) {
             for (const day of this.dayNames) {
                 const div = document.createElement('div');
                 div.className = 'day-of-week';
                 div.innerText = day;
-                this.append(div);
+                fragment.append(div);
             }
         }
 
-        for (let i=0; i <= boxCount; i++) {
-            const d = new Date(firstDay.getTime() + this.oneDay * i);
+        const d = new Date(firstDay);
+        while (d <= lastDay) {
             const eventSubset = [];
             for (const event of events) {
                 if (event.occursOn(d)) eventSubset.push(event);
             }
+
             const day = fragment.appendChild(document.createElement('div'));
             day.classList.add('day');
             if (eventSubset.length > 0) {
                 day.classList.add('has-events');
             }
 
-            if (d < monthStart || d > monthEnd) {
+            if (d.getMonth() !== this.date.getMonth()) {
                 day.classList.add('diminished');
             }
+
             const lining = day.appendChild(document.createElement('div'));
             lining.classList.add('lining');
             this.renderDayNumber(lining, d, eventSubset.length > 0);
             this.renderEventCount(lining, eventSubset);
             this.renderEvents(lining, eventSubset, d);
+
+            d.setDate(d.getDate() + 1);
         }
 
         this.append(fragment);
@@ -425,7 +425,7 @@ class CalendarMonth extends CalendarView {
     }
 
     renderDayNumber(parent, d, hasEvents = false) {
-        const today = this.ymd(new Date());
+        const today = this.ymd(this.now);
         const tag = (hasEvents)? 'a' : 'div';
         const dayNumber = parent.appendChild(document.createElement(tag));
         if (tag === 'a') {
@@ -568,15 +568,6 @@ class CalendarEvent extends CalendarBase {
         return document.createTextNode('');
     }
 
-    get dayList() {
-        if (!this.start) return [];
-        const days = [];
-        for (let i=this.start.getTime(); i <= this.end.getTime(); i += this.oneDay) {
-            days.push(new Date(i));
-        }
-        return days;
-    }
-
     hasStartTime() {
         const [h, m] = this.startTime;
         return h > 0 || m > 0;
@@ -589,21 +580,26 @@ class CalendarEvent extends CalendarBase {
     }
 
     isAllDay() {
-        return !this.hasStartTime() && !this.isMultiDay();
+        if (this.hasStartTime()) return false;
+        if (this.isMultiDay()) return false;
+        return true;
     }
 
     isMultiDay() {
         if (!this.start) return false;
-        return this.end.getTime() - this.start > this.oneDay;
+        if (this.start.getMonth() !== this.end.getMonth()) return true;
+        if (this.start.getDay() !== this.end.getDay()) return true;
+        return false;
     }
 
     isMultiDayStart(d) {
         if (!this.isMultiDay()) return false;
-        return this.startOfDay(d).getTime() === this.startOfDay(this.start).getTime();
+        return this.startOfDayMs(d) === this.startOfDayMs(this.start);
     }
 
     isMultiDayEnd(d) {
-        return this.isMultiDay() && this.startOfDay(d).getTime() === this.startOfDay(this.end).getTime();
+        if (!this.isMultiDay()) return false;
+        return this.startOfDayMs(d) === this.startOfDayMs(this.end);
     }
 
     isMultiDayContinuation(d) {
@@ -668,7 +664,9 @@ class CalendarEvent extends CalendarBase {
 
     occursOn(d) {
         if (!this.start) return false;
-        return d >= this.startOfDay(this.start) && d <= this.endOfDay(this.end);
+        if (d.getTime() < this.startOfDayMs(this.start)) return false;
+        if (d.getTime() > this.endOfDayMs(this.end)) return false;
+        return true;
     }
 
     shortLine() {
@@ -758,6 +756,7 @@ window.addEventListener('hashchange', (e) => {
         const meta = document.head.querySelector('META[name=start]');
         if (meta) dest = meta.content;
     }
+    const [year, month, day] = dest.split('-').map(x => Number.parseInt(x, 10));
 
     const d = new Date();
     d.setHours(0);
@@ -765,7 +764,6 @@ window.addEventListener('hashchange', (e) => {
     d.setSeconds(0);
     d.setMilliseconds(0);
 
-    const [year, month, day] = dest.split('-').map(x => Number.parseInt(x, 10));
     let tag = 'c-m';
 
     if (year) {
