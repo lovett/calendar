@@ -257,8 +257,6 @@ class CalendarYear extends CalendarView {
     render() {
         this.removeAll('.month');
 
-        //this.populateTitle();
-
         const fragment = document.createDocumentFragment();
         for (let i = 0; i <= 365; i++) {
             const day = new Date(this.date.getTime() + this.oneDay * i);
@@ -362,8 +360,6 @@ class CalendarMonth extends CalendarView {
         const lastDay = new Date(monthEnd.getTime() + (6 - monthEnd.getDay()) * this.oneDay);
         const boxCount = (lastDay.getTime() - firstDay.getTime()) / this.oneDay;
         const events = this.eventFinder(firstDay, lastDay);
-
-        //this.populateTitle();
 
         if (!this.querySelector('.day-of-week')) {
             for (const day of this.dayNames) {
@@ -475,7 +471,6 @@ class CalendarDay extends CalendarView {
     render() {
         let counter = 0;
         this.removeAll('.event');
-        //this.populateTitle();
 
         const day = this.date.toLocaleString(this.locale, {weekday: 'long'});
         this.querySelector('.navigator .subtitle').innerText = day;
@@ -732,7 +727,8 @@ window.addEventListener('keypress', (e) => {
 });
 
 window.addEventListener('click', (e) => {
-    //if (e.target.nodeName === 'A') e.target.blur();
+    if (e.target.nodeName === 'A') e.target.blur();
+
     if (e.target.matches('A.next')) {
         e.preventDefault();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'next'}}));
