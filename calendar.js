@@ -92,21 +92,25 @@ class CalendarBase extends HTMLElement {
 class CalendarView extends CalendarBase {
     static get observedAttributes() { return ['date']; }
 
-    connectedCallback() {
-        this.renderShell();
-        this.renderSubHeader();
-        this.addEventListener('step', this);
-        this.addEventListener('swipe', this);
-        this.add
+    constructor() {
+        super();
+        this.titleLinks = [];
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
         this.swipe = [0, 0];
+        this.addEventListener('step', this);
+        this.addEventListener('swipe', this);
+    }
+
+    connectedCallback() {
+        this.renderShell();
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'date' && newValue) {
             this.date = new Date(newValue);
             if (!this.defaultDate) this.defaultDate = this.date;
-            if (newValue) this.render();
+            this.render();
+            this.populateTitle();
         }
     }
 
@@ -166,12 +170,12 @@ class CalendarView extends CalendarBase {
         })
     }
 
-    populateTitle(options) {
+    populateTitle() {
         const h1 = this.querySelector('.navigator h1');
-        h1.textContent = this.date.toLocaleString(this.locale, options);
+        h1.textContent = this.date.toLocaleString(this.locale, this.titleFormat);
         document.title = h1.textContent;
 
-        if (options.year && this.constructor.name !== 'CalendarYear') {
+        if (this.titleLinks.indexOf('year') > -1) {
             const year = document.createElement('a');
             year.href = '#';
             year.hash = this.date.getFullYear();
@@ -179,7 +183,7 @@ class CalendarView extends CalendarBase {
             h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
         }
 
-        if (options.month && this.constructor.name !== 'CalendarMonth') {
+        if (this.titleLinks.indexOf('month') > -1) {
             const month = document.createElement('a');
             month.href = '#';
             month.hash = this.ym(this.date);
@@ -225,6 +229,11 @@ class CalendarView extends CalendarBase {
 }
 
 class CalendarYear extends CalendarView {
+    constructor() {
+        super();
+        this.titleFormat = {year: 'numeric'}
+    }
+
     get next() {
         const d = new Date(this.date);
         d.setFullYear(d.getFullYear() + 1);
@@ -241,12 +250,14 @@ class CalendarYear extends CalendarView {
         return d.getFullYear();
     }
 
-    renderSubHeader() {}
+    titleLinker(node) {
+        return node;
+    }
 
     render() {
         this.removeAll('.month');
 
-        this.populateTitle({year: 'numeric'});
+        //this.populateTitle();
 
         const fragment = document.createDocumentFragment();
         for (let i = 0; i <= 365; i++) {
@@ -315,6 +326,12 @@ class CalendarYear extends CalendarView {
 }
 
 class CalendarMonth extends CalendarView {
+    constructor() {
+        super();
+        this.titleLinks = ['year'];
+        this.titleFormat = {month: 'long', year: 'numeric'}
+    }
+
     get next() {
         const d = new Date(this.date);
         d.setMonth(d.getMonth() + 1);
@@ -331,13 +348,8 @@ class CalendarMonth extends CalendarView {
         return this.ym(d);
     }
 
-    renderSubHeader() {
-        for (const day of this.dayNames) {
-            const div = document.createElement('div');
-            div.className = 'day-of-week';
-            div.innerText = day;
-            this.append(div);
-        }
+    titleLinker(node) {
+
     }
 
     render() {
@@ -351,7 +363,16 @@ class CalendarMonth extends CalendarView {
         const boxCount = (lastDay.getTime() - firstDay.getTime()) / this.oneDay;
         const events = this.eventFinder(firstDay, lastDay);
 
-        this.populateTitle({month: 'long', year: 'numeric'});
+        //this.populateTitle();
+
+        if (!this.querySelector('.day-of-week')) {
+            for (const day of this.dayNames) {
+                const div = document.createElement('div');
+                div.className = 'day-of-week';
+                div.innerText = day;
+                this.append(div);
+            }
+        }
 
         for (let i=0; i <= boxCount; i++) {
             const d = new Date(firstDay.getTime() + this.oneDay * i);
@@ -433,6 +454,12 @@ class CalendarMonth extends CalendarView {
 }
 
 class CalendarDay extends CalendarView {
+    constructor() {
+        super();
+        this.titleLinks = ['year', 'month'];
+        this.titleFormat = {month: 'long', day: 'numeric', year: 'numeric'}
+    }
+
     get next() {
         return this.nextDay(this.date);
     }
@@ -445,13 +472,13 @@ class CalendarDay extends CalendarView {
         return this.ymd(d);
     }
 
-    renderSubHeader() {}
-
     render() {
         let counter = 0;
         this.removeAll('.event');
-        this.populateTitle({month: 'long', day: 'numeric', year: 'numeric'});
-        this.populateSubtitle();
+        //this.populateTitle();
+
+        const day = this.date.toLocaleString(this.locale, {weekday: 'long'});
+        this.querySelector('.navigator .subtitle').innerText = day;
 
         for (const event of this.eventFinder(this.date)) {
             if (!event.occursOn(this.date)) continue;
@@ -488,11 +515,6 @@ class CalendarDay extends CalendarView {
             const h2 = container.appendChild(document.createElement('h2'));
             h2.innerHTML = this.cached('noevent');
         }
-    }
-
-    populateSubtitle() {
-        const day = this.date.toLocaleString(this.locale, {weekday: 'long'});
-        this.querySelector('.navigator .subtitle').innerText = day;
     }
 }
 
@@ -829,7 +851,6 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="slash" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></symbol>
     <symbol id="star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></symbol>
     <symbol id="zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></symbol>
-    <symbol id="bookmark" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></symbol>
     <symbol id="bookmark" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></symbol>
     <symbol id="chevron-up" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></symbol>
     <symbol id="chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></symbol>
