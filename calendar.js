@@ -1,33 +1,20 @@
-class CalendarBase extends HTMLElement {
+class CalendarCache {
     constructor() {
-        super();
         this.cache = new Map();
         this.cache.set('noevent', 'No events.');
     }
 
-    cached(key, callback) {
+    set(key, value) {
+        this.cache.set(key, value);
+    }
+
+    get(key, callback) {
         if (!this.cache.has(key)) this.cache.set(key, callback());
         return this.cache.get(key);
     }
+}
 
-    get dayNames() {
-        return this.cached('day-names', () => {
-            const d = new Date(this.now.getTime());
-            d.setDate(d.getDate() - d.getDay() - 1);
-
-            const names = new Array(7);
-            for (let i = 0; i < names.length; i++) {
-                d.setDate(d.getDate() + 1);
-                names[i] = d.toLocaleString(this.locale, {weekday: 'short'});
-            }
-            return names;
-        });
-    }
-
-    get now() {
-        return this.cached('now', () => new Date());
-    }
-
+class CalendarBase extends HTMLElement {
     isToday(d) {
         if (d.getFullYear() !== this.now.getFullYear()) return false;
         if (d.getMonth() !== this.now.getMonth()) return false;
@@ -75,6 +62,8 @@ class CalendarView extends CalendarBase {
 
     constructor() {
         super();
+        this.cache = null;
+        this.classList.add('view');
         this.titleLinks = [];
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
         this.swipe = [0, 0];
@@ -129,6 +118,24 @@ class CalendarView extends CalendarBase {
         }
     }
 
+    get dayNames() {
+        return this.cache.get('day-names', () => {
+            const d = new Date(this.now.getTime());
+            d.setDate(d.getDate() - d.getDay() - 1);
+
+            const names = new Array(7);
+            for (let i = 0; i < names.length; i++) {
+                d.setDate(d.getDate() + 1);
+                names[i] = d.toLocaleString(this.locale, {weekday: 'short'});
+            }
+            return names;
+        });
+    }
+
+    get now() {
+        return this.cache.get('now', () => new Date());
+    }
+
     eventFinder(start, end) {
         const selectors = new Set();
         const d = new Date(start);
@@ -143,7 +150,7 @@ class CalendarView extends CalendarBase {
         }
         query = query.slice(0, -1);
 
-        return this.cached(query, () => {
+        return this.cache.get(query, () => {
             return Array.from(document.querySelectorAll(query)).sort((a, b) => {
                 a.parseTime();
                 b.parseTime();
@@ -213,8 +220,9 @@ class CalendarView extends CalendarBase {
 }
 
 class CalendarYear extends CalendarView {
-    constructor() {
+    constructor(cache) {
         super();
+        this.cache = cache;
         this.titleFormat = {year: 'numeric'}
     }
 
@@ -316,8 +324,9 @@ class CalendarYear extends CalendarView {
 }
 
 class CalendarMonth extends CalendarView {
-    constructor() {
+    constructor(cache) {
         super();
+        this.cache = cache;
         this.titleLinks = ['year'];
         this.titleFormat = {month: 'long', year: 'numeric'}
     }
@@ -450,8 +459,9 @@ class CalendarMonth extends CalendarView {
 }
 
 class CalendarDay extends CalendarView {
-    constructor() {
+    constructor(cache) {
         super();
+        this.cache = cache;
         this.titleLinks = ['year', 'month'];
         this.titleFormat = {month: 'long', day: 'numeric', year: 'numeric'}
     }
@@ -508,7 +518,7 @@ class CalendarDay extends CalendarView {
             const time = container.appendChild(document.createElement('time'));
             this.renderIcon(time, 'slash');
             const h2 = container.appendChild(document.createElement('h2'));
-            h2.innerHTML = this.cached('noevent');
+            h2.innerHTML = this.cache.get('noevent');
         }
     }
 }
@@ -793,43 +803,36 @@ window.addEventListener('DOMContentLoaded', (e) => {
     customElements.define("c-d", CalendarDay);
     customElements.define("c-e", CalendarEvent);
 
-    const views = new Map();
-    for (const tag of ['c-y', 'c-m', 'c-d']) {
-        const el = document.body.appendChild(document.createElement(tag));
-        el.classList.add('view');
-        views.set(tag, el);
+    let defaultView = CalendarMonth;
+
+    const defaultDate = new Date();
+    defaultDate.setHours(0);
+    defaultDate.setMinutes(0);
+    defaultDate.setSeconds(0);
+    defaultDate.setMilliseconds(0);
+
+    let startDate = window.location.hash.replace('#', '');
+    if (!startDate) {
+        const meta = document.head.querySelector('META[name=startDate]');
+        if (meta) startDate = meta.content;
     }
 
-    let start = window.location.hash.replace('#', '');
-    if (!start) {
-        const meta = document.head.querySelector('META[name=start]');
-        if (meta) start = meta.content;
-    }
-
-    const startDate = new Date();
-    startDate.setHours(0);
-    startDate.setMinutes(0);
-    startDate.setSeconds(0);
-    startDate.setMilliseconds(0);
-
-    let tag = 'c-m';
-
-    const [y, m, d] = start.split('-').map(x => Number.parseInt(x, 10));
+    const [y, m, d] = startDate.split('-').map(x => Number.parseInt(x, 10));
     if (y) {
-        startDate.setFullYear(y);
-        startDate.setMonth(0);
-        startDate.setDate(1);
-        tag = 'c-y';
+        defaultDate.setFullYear(y);
+        defaultDate.setMonth(0);
+        defaultDate.setDate(1);
+        defaultView = CalendarYear;
     }
 
     if (y && m) {
-        startDate.setMonth(m - 1);
-        tag = 'c-m';
+        defaultDate.setMonth(m - 1);
+        defaultView = CalendarMonth;
     }
 
     if (y && m && d) {
-        startDate.setDate(d);
-        tag = 'c-d';
+        defaultDate.setDate(d);
+        defaultView = CalendarDay;
     }
 
     const div  = document.body.appendChild(document.createElement('div'));
@@ -850,5 +853,17 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></symbol>
     </defs>`;
 
-    views.get(tag).setAttribute('date', startDate);
+    const cache = new CalendarCache();
+    const views = [
+        document.body.appendChild(new CalendarDay(cache)),
+        document.body.appendChild(new CalendarMonth(cache)),
+        document.body.appendChild(new CalendarYear(cache))
+    ];
+
+    for (const view of views) {
+        if (view.constructor.name === defaultView.name) {
+            view.setAttribute('date', defaultDate);
+            break;
+        }
+    }
 });
