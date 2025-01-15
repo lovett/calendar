@@ -70,27 +70,9 @@ class CalendarBase extends HTMLElement {
         return date;
     }
 
-    nextYear(d, count = 1) {
-        const date = new Date(d);
-        date.setFullYear(date.getFullYear() + count);
-        return date;
-    }
-
     previousDay(d, count = 1) {
         const date = new Date(d);
         date.setDate(d.getDate() - count);
-        return date;
-    }
-
-    previousMonth(d, count = 1) {
-        const date = new Date(d);
-        date.setMonth(date.getMonth() - count);
-        return date;
-    }
-
-    previousYear(d, count = 1) {
-        const date = new Date(d);
-        date.setFullYear(date.getFullYear() - count);
         return date;
     }
 
@@ -109,11 +91,13 @@ class CalendarBase extends HTMLElement {
 
 class CalendarView extends CalendarBase {
     static get observedAttributes() { return ['date']; }
+
     connectedCallback() {
         this.renderShell();
         this.renderSubHeader();
-        this.addEventListener('step', this.onStep);
-        this.addEventListener('swipe', this.onSwipe);
+        this.addEventListener('step', this);
+        this.addEventListener('swipe', this);
+        this.add
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
         this.swipe = [0, 0];
     }
@@ -126,12 +110,12 @@ class CalendarView extends CalendarBase {
         }
     }
 
-    onSwipe(e) {
-        if (e.detail.type === 'touchstart') {
+    handleEvent(e) {
+        if (e.type === 'swipe' && e.detail.type === 'touchstart') {
             this.swipe = [e.detail.x, e.detail.y];
         }
 
-        if (e.detail.type === 'touchend') {
+        if (e.type === 'swipe' && e.detail.type === 'touchend') {
             const xDelta = e.detail.x - this.swipe[0];
             const yDelta = e.detail.y - this.swipe[1];
             const step = new CustomEvent('step', {detail: {to: null}});
@@ -145,6 +129,18 @@ class CalendarView extends CalendarBase {
 
             if (step.detail.to) this.dispatchEvent(step);
             this.swipe = [0, 0];
+        }
+
+        if (e.type === 'step' && e.detail.to === 'today') {
+            window.location.hash = this.hasher(this.now);
+        }
+
+        if (e.type === 'step' && e.detail.to === 'next') {
+            window.location.hash = this.hasher(this.next);
+        }
+
+        if (e.type === 'step' && e.detail.to === 'previous') {
+            window.location.hash = this.hasher(this.previous);
         }
     }
 
@@ -171,7 +167,7 @@ class CalendarView extends CalendarBase {
     }
 
     populateTitle(options) {
-        const h1 = this.querySelector('header h1');
+        const h1 = this.querySelector('.navigator h1');
         h1.textContent = this.date.toLocaleString(this.locale, options);
         document.title = h1.textContent;
 
@@ -229,6 +225,22 @@ class CalendarView extends CalendarBase {
 }
 
 class CalendarYear extends CalendarView {
+    get next() {
+        const d = new Date(this.date);
+        d.setFullYear(d.getFullYear() + 1);
+        return d;
+    }
+
+    get previous() {
+        const d = new Date(this.date);
+        d.setFullYear(d.getFullYear() - 1);
+        return d;
+    }
+
+    hasher(d) {
+        return d.getFullYear();
+    }
+
     renderSubHeader() {}
 
     render() {
@@ -293,14 +305,6 @@ class CalendarYear extends CalendarView {
         if (this.hasEvents(d)) dayNumber.classList.add('has-events');
     }
 
-    onStep(e) {
-        let destination;
-        if (e.detail.to === 'today') destination = this.now;
-        if (e.detail.to === 'next') destination = this.nextYear(this.date);
-        if (e.detail.to === 'previous') destination = this.previousYear(this.date);
-        window.location.hash = destination.getFullYear();
-    }
-
     hasEvents(d) {
         const ymd = this.ymd(d);
         for (const event of this.eventFinder(d, d)) {
@@ -311,6 +315,22 @@ class CalendarYear extends CalendarView {
 }
 
 class CalendarMonth extends CalendarView {
+    get next() {
+        const d = new Date(this.date);
+        d.setMonth(d.getMonth() + 1);
+        return d;
+    }
+
+    get previous() {
+        const d = new Date(this.date);
+        d.setMonth(d.getMonth() - 1);
+        return d;
+    }
+
+    hasher(d) {
+        return this.ym(d);
+    }
+
     renderSubHeader() {
         for (const day of this.dayNames) {
             const div = document.createElement('div');
@@ -356,14 +376,6 @@ class CalendarMonth extends CalendarView {
         }
 
         this.append(fragment);
-    }
-
-    onStep(e) {
-        let destination;
-        if (e.detail.to === 'today') destination = this.now;
-        if (e.detail.to === 'next') destination = this.nextMonth(this.date);
-        if (e.detail.to === 'previous') destination = this.previousMonth(this.date);
-        window.location.hash = this.ym(destination);
     }
 
     renderEventCount(parent, events) {
@@ -421,6 +433,18 @@ class CalendarMonth extends CalendarView {
 }
 
 class CalendarDay extends CalendarView {
+    get next() {
+        return this.nextDay(this.date);
+    }
+
+    get previous() {
+        return this.previousDay(this.date);
+    }
+
+    hasher(d) {
+        return this.ymd(d);
+    }
+
     renderSubHeader() {}
 
     render() {
@@ -464,14 +488,6 @@ class CalendarDay extends CalendarView {
             const h2 = container.appendChild(document.createElement('h2'));
             h2.innerHTML = this.cached('noevent');
         }
-    }
-
-    onStep(e) {
-        let destination;
-        if (e.detail.to === 'today') destination = this.now;
-        if (e.detail.to === 'next') destination = this.nextDay(this.date);
-        if (e.detail.to === 'previous') destination = this.previousDay(this.date);
-        window.location.hash = this.ymd(destination);
     }
 
     populateSubtitle() {
