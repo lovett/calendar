@@ -165,6 +165,8 @@ class CalendarView extends CalendarBase {
     populateTitle() {
         const formatter = new Intl.DateTimeFormat(this.locale, this.titleFormat);
 
+        document.title = formatter.format(this.date);
+
         this.querySelector('.navigator h1').innerHTML = formatter.formatToParts(this.date)
             .map(({ type, value }) => {
                 if (this.linkedTitleParts.indexOf(type) === -1) return value;
