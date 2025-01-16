@@ -1,7 +1,15 @@
 class CalendarCache {
-    constructor() {
+    constructor(storage, version) {
         this.cache = new Map();
         this.cache.set('noevent', 'No events.');
+        this.version = version;
+        this.storage = storage;
+        if (!this.version) this.storage.clear();
+    }
+
+    versionedKey(key) {
+        if (!this.version) return null;
+        return `${this.version}:${key}`;
     }
 
     set(key, value) {
@@ -9,8 +17,20 @@ class CalendarCache {
     }
 
     get(key, callback) {
-        if (!this.cache.has(key)) this.cache.set(key, callback());
+        if (callback && !this.cache.has(key)) this.cache.set(key, callback());
         return this.cache.get(key);
+    }
+
+    storageSet(key, value) {
+        this.storage.setItem(key, value);
+    }
+
+    storageGet(key) {
+        return this.storage.getItem(key);
+    }
+
+    storageHas(key) {
+        return this.storage.hasOwnProperty(key);
     }
 }
 
@@ -73,16 +93,32 @@ class CalendarView extends CalendarBase {
         this.addEventListener('swipe', this);
     }
 
-    connectedCallback() {
-        this.renderShell();
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name !== 'date') return;
+        if (!newValue) return;
+
+        this.date = new Date(newValue);
+        if (this.renderFromCache()) return;
+
+        if (this.children.length === 0) this.renderShell();
+        this.populateTitle();
+        this.render();
+        this.cachePage();
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
-        if (name === 'date' && newValue) {
-            this.date = new Date(newValue);
-            this.render();
-            this.populateTitle();
-        }
+    cachePage() {
+        const hash = this.hasher(this.date);
+        const key = this.cache.versionedKey(hash);
+        if (!key) return;
+        this.cache.storageSet(key, this.innerHTML);
+    }
+
+    renderFromCache() {
+        const hash = this.hasher(this.date);
+        const key = this.cache.versionedKey(hash);
+        if (!this.cache.storageHas(key)) return false;
+        this.innerHTML = this.cache.storageGet(key);
+        return true;
     }
 
     handleEvent(e) {
@@ -848,7 +884,10 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></symbol>
     </defs>`;
 
-    const cache = new CalendarCache();
+    const versionMeta = document.head.querySelector('META[name=version]');
+    const version = (versionMeta) ? versionMeta.content: null;
+    const cache = new CalendarCache(window.sessionStorage, version);
+
     const views = [
         document.body.appendChild(new CalendarDay(cache)),
         document.body.appendChild(new CalendarMonth(cache)),
