@@ -139,7 +139,7 @@ class CalendarView extends CalendarBase {
         const selectors = new Set();
         const d = new Date(start);
         while (d <= (end || start)) {
-            selectors.add(`c-e[during*="${this.ym(d)}"]`);
+            selectors.add(`cal-event[during*="${this.ym(d)}"]`);
             d.setDate(d.getDate() + 1);
         }
 
@@ -773,23 +773,23 @@ window.addEventListener('hashchange', (e) => {
     d.setSeconds(0);
     d.setMilliseconds(0);
 
-    let tag = 'c-m';
+    let tag = 'cal-month';
 
     if (year) {
         d.setFullYear(year);
         d.setMonth(0);
         d.setDate(1);
-        tag = 'c-y';
+        tag = 'cal-year';
     }
 
     if (year && month) {
         d.setMonth(month - 1);
-        tag = 'c-m';
+        tag = 'cal-month';
     }
 
     if (year && month && day) {
         d.setDate(day);
-        tag = 'c-d';
+        tag = 'cal-day';
     }
 
     document.body.querySelector('.view[date]').removeAttribute('date');
@@ -797,10 +797,10 @@ window.addEventListener('hashchange', (e) => {
 });
 
 window.addEventListener('DOMContentLoaded', (e) => {
-    customElements.define("c-m", CalendarMonth);
-    customElements.define("c-y", CalendarYear);
-    customElements.define("c-d", CalendarDay);
-    customElements.define("c-e", CalendarEvent);
+    customElements.define("cal-month", CalendarMonth);
+    customElements.define("cal-year", CalendarYear);
+    customElements.define("cal-day", CalendarDay);
+    customElements.define("cal-event", CalendarEvent);
 
     let defaultView = CalendarMonth;
 

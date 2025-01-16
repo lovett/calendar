@@ -23,7 +23,7 @@ a {
     color: currentColor;
 }
 
-c-d .event {
+cal-day .event {
     display: grid;
     grid-template-columns: 5em 1fr;
     grid-template-rows: auto 1fr;
@@ -35,45 +35,45 @@ c-d .event {
     box-sizing: border-box;
 }
 
-c-d .event:last-of-type {
+cal-day .event:last-of-type {
     margin-bottom: 0;
 }
 
-c-d .event .icon {
+cal-day .event .icon {
     vertical-align: middle;
 }
 
-c-d .event.multi-day, c-d .event.all-day {
+cal-day .event.multi-day, cal-day .event.all-day {
     align-items: center;
     grid-template-rows: 3em;
 }
 
-c-d .event.empty {
+cal-day .event.empty {
     background-color: #ccc;
     grid-template-rows: 5em;
 }
 
-c-d .event details {
+cal-day .event details {
     margin: 1em 0;
 }
 
-c-d .event time {
+cal-day .event time {
     display: grid;
     grid-template-columns: 1fr;
     justify-items: end;
     grid-row: 1 / -1;
 }
 
-c-d .event h2 {
+cal-day .event h2 {
     font-weight: normal;
     font-size: 1em;
 }
 
-c-e {
+cal-event {
     display: none;
 }
 
-c-m {
+cal-month {
     height: 100dvh;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: auto 2em;
@@ -81,15 +81,15 @@ c-m {
     align-items: stretch;
 }
 
-c-m .day {
+cal-month .day {
     box-shadow:1px 1px 0 0px #ddd;
 }
 
-c-m .has-events a {
+cal-month .has-events a {
     text-decoration: underline;
 }
 
-c-m .day-number {
+cal-month .day-number {
     white-space: nowrap;
     justify-self: center;
     margin: 0.5em;
@@ -97,12 +97,12 @@ c-m .day-number {
     padding: 0.5em;
 }
 
-c-m .day-number.today {
+cal-month .day-number.today {
     background-color: #e01b24;
     color: #fff;
 }
 
-c-m .day-of-week {
+cal-month .day-of-week {
     border: 1px solid #333;
     border-left: 0;
     border-right: 0;
@@ -113,11 +113,11 @@ c-m .day-of-week {
     line-height: 1;
 }
 
-c-m .day {
+cal-month .day {
     box-shadow:1px 1px 0 0px #ddd;
 }
 
-c-m .lining {
+cal-month .lining {
     height: 100%;
     margin: auto;
     display: grid;
@@ -127,39 +127,39 @@ c-m .lining {
     align-items: start;
 }
 
-c-m .event {
+cal-month .event {
     display: none;
 }
 
-c-m .event-count {
+cal-month .event-count {
     display: flex;
     align-items: center;
     justify-self: center;
     margin: 1em 0.25em 0 0;
 }
 
-c-m .multi-day-continuation {
+cal-month .multi-day-continuation {
     text-align: center;
     border-radius: 0;
 }
 
-c-m .multi-day-start {
+cal-month .multi-day-start {
     margin-left: var(--padding);
     border-radius: .5em 0 0 .5em;
 }
 
-c-m .multi-day-end {
+cal-month .multi-day-end {
     margin-right: var(--padding);
     border-radius: 0 .5em .5em 0;
     text-align: right;
 }
 
-c-y {
+cal-year {
     grid-template-columns: 1fr;
     align-items: start;
 }
 
-c-y h2 {
+cal-year h2 {
     padding-left: 0.5em;
     font-weight: normal;
     grid-column: 1 / -1;
@@ -167,7 +167,7 @@ c-y h2 {
     margin-bottom: .5em;
 }
 
-c-y .day-of-week {
+cal-year .day-of-week {
     border: 1px solid currentColor;
     border-left: 0;
     border-right: 0;
@@ -175,7 +175,7 @@ c-y .day-of-week {
     padding: 0.25em 0;
 }
 
-c-y .day-number {
+cal-year .day-number {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -184,16 +184,16 @@ c-y .day-number {
     box-sizing: border-box;
 }
 
-c-y .has-events {
+cal-year .has-events {
     background-color: lightblue;
 }
 
-c-y .today {
+cal-year .today {
     background-color: #e01b24;
     color: #fff;
 }
 
-c-y .month {
+cal-year .month {
     padding: 0 var(--padding);
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -202,11 +202,11 @@ c-y .month {
     margin-bottom: 2em;
 }
 
-c-y .month:last-of-type {
+cal-year .month:last-of-type {
     margin-bottom: 0;
 }
 
-c-y .day {
+cal-year .day {
     padding: 0.25em;
     box-sizing: border-box;
     text-align: center;
@@ -345,7 +345,7 @@ c-y .day {
 }
 
 @media only screen and (min-width: 600px) {
-    c-y {
+    cal-year {
         grid-template-columns: repeat(2, 1fr);
     }
 }
@@ -363,26 +363,26 @@ c-y .day {
         font-size: 1em;
     }
 
-    c-m .lining {
+    cal-month .lining {
         height: auto;
     }
 
-    c-m .event {
+    cal-month .event {
         display: block;
         padding: 0 0.25em;
         margin-bottom: .25em;
     }
 
-    c-m .event .icon {
+    cal-month .event .icon {
         margin-bottom: -2px;
     }
 
-    c-m .all-day {
+    cal-month .all-day {
         margin-left: 1.5em;
         text-indent: -1.25em;
     }
 
-    c-m .multi-day {
+    cal-month .multi-day {
         background-color: blue;
         color: #fff;
         overflow: hidden;
@@ -390,19 +390,19 @@ c-y .day {
         text-overflow: ellipsis;
     }
 
-    c-m .multi-day-start .icon, c-m .all-day .icon {
+    cal-month .multi-day-start .icon, cal-month .all-day .icon {
         margin-right: .25em;
     }
 
-    c-m .event-count {
+    cal-month .event-count {
         display: none;
     }
 
-    c-m .day-number {
+    cal-month .day-number {
         justify-self: end;
     }
 
-    c-y {
+    cal-year {
         grid-template-columns: repeat(4, 1fr);
     }
 
