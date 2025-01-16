@@ -275,10 +275,6 @@ class CalendarYear extends CalendarView {
         return d.getFullYear();
     }
 
-    titleLinker(node) {
-        return node;
-    }
-
     render() {
         this.removeAll('.month');
 
@@ -378,10 +374,6 @@ class CalendarMonth extends CalendarView {
 
     hasher(d) {
         return this.ym(d);
-    }
-
-    titleLinker(node) {
-
     }
 
     render() {
