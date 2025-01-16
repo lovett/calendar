@@ -15,6 +15,8 @@ class CalendarCache {
 }
 
 class CalendarBase extends HTMLElement {
+    static get tag() { return this.name.toLowerCase().replace('calendar', 'cal-') }
+
     isToday(d) {
         if (d.getFullYear() !== this.now.getFullYear()) return false;
         if (d.getMonth() !== this.now.getMonth()) return false;
@@ -139,7 +141,7 @@ class CalendarView extends CalendarBase {
         const selectors = new Set();
         const d = new Date(start);
         while (d <= (end || start)) {
-            selectors.add(`cal-event[during*="${this.ym(d)}"]`);
+            selectors.add(`${CalendarEvent.tag}[during*="${this.ym(d)}"]`);
             d.setDate(d.getDate() + 1);
         }
 
@@ -773,34 +775,34 @@ window.addEventListener('hashchange', (e) => {
     d.setSeconds(0);
     d.setMilliseconds(0);
 
-    let tag = 'cal-month';
+    let view = CalendarMonth;
 
     if (year) {
         d.setFullYear(year);
         d.setMonth(0);
         d.setDate(1);
-        tag = 'cal-year';
+        view = CalendarYear;
     }
 
     if (year && month) {
         d.setMonth(month - 1);
-        tag = 'cal-month';
+        view = CalendarMonth;
     }
 
     if (year && month && day) {
         d.setDate(day);
-        tag = 'cal-day';
+        view = CalendarDay;
     }
 
     document.body.querySelector('.view[date]').removeAttribute('date');
-    document.body.querySelector(tag).setAttribute('date', d);
+    document.body.querySelector(view.tag).setAttribute('date', d);
 });
 
 window.addEventListener('DOMContentLoaded', (e) => {
-    customElements.define("cal-month", CalendarMonth);
-    customElements.define("cal-year", CalendarYear);
-    customElements.define("cal-day", CalendarDay);
-    customElements.define("cal-event", CalendarEvent);
+    customElements.define(CalendarMonth.tag, CalendarMonth);
+    customElements.define(CalendarYear.tag, CalendarYear);
+    customElements.define(CalendarDay.tag, CalendarDay);
+    customElements.define(CalendarEvent.tag, CalendarEvent);
 
     let defaultView = CalendarMonth;
 
