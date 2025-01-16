@@ -66,7 +66,7 @@ class CalendarView extends CalendarBase {
         super();
         this.cache = null;
         this.classList.add('view');
-        this.titleLinks = [];
+        this.linkedTitleParts = [];
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
         this.swipe = [0, 0];
         this.addEventListener('step', this);
@@ -163,25 +163,19 @@ class CalendarView extends CalendarBase {
     }
 
     populateTitle() {
-        const h1 = this.querySelector('.navigator h1');
-        h1.textContent = this.date.toLocaleString(this.locale, this.titleFormat);
-        document.title = h1.textContent;
+        const formatter = new Intl.DateTimeFormat(this.locale, this.titleFormat);
 
-        if (this.titleLinks.indexOf('year') > -1) {
-            const year = document.createElement('a');
-            year.href = '#';
-            year.hash = this.date.getFullYear();
-            year.textContent = this.date.toLocaleString(this.locale, { year: 'numeric' });
-            h1.innerHTML = h1.innerHTML.replace(year.textContent, year.outerHTML);
-        }
+        this.querySelector('.navigator h1').innerHTML = formatter.formatToParts(this.date)
+            .map(({ type, value }) => {
+                if (this.linkedTitleParts.indexOf(type) === -1) return value;
 
-        if (this.titleLinks.indexOf('month') > -1) {
-            const month = document.createElement('a');
-            month.href = '#';
-            month.hash = this.ym(this.date);
-            month.textContent = this.date.toLocaleString(this.locale, {month: 'long'});
-            h1.innerHTML  = h1.innerHTML.replace(month.textContent, month.outerHTML);
-        }
+                const link = document.createElement('a');
+                link.href = '#';
+                link.textContent = value;
+                if (type === 'year') link.hash = this.date.getFullYear();
+                if (type === 'month') link.hash = this.ym(this.date);
+                return link.outerHTML;
+            }).join('');
     }
 
     renderIcon(parent, id) {
@@ -328,7 +322,7 @@ class CalendarMonth extends CalendarView {
     constructor(cache) {
         super();
         this.cache = cache;
-        this.titleLinks = ['year'];
+        this.linkedTitleParts = ['year'];
         this.titleFormat = {month: 'long', year: 'numeric'}
     }
 
@@ -463,7 +457,7 @@ class CalendarDay extends CalendarView {
     constructor(cache) {
         super();
         this.cache = cache;
-        this.titleLinks = ['year', 'month'];
+        this.linkedTitleParts = ['year', 'month'];
         this.titleFormat = {month: 'long', day: 'numeric', year: 'numeric'}
     }
 
@@ -824,7 +818,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
         defaultDate.setMonth(0);
         defaultDate.setDate(1);
         defaultView = CalendarYear;
-    }
+   }
 
     if (y && m) {
         defaultDate.setMonth(m - 1);
