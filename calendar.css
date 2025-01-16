@@ -184,13 +184,13 @@ c-y .day-number {
     box-sizing: border-box;
 }
 
+c-y .has-events {
+    background-color: lightblue;
+}
+
 c-y .today {
     background-color: #e01b24;
     color: #fff;
-}
-
-c-y .has-events {
-    background-color: lightblue;
 }
 
 c-y .month {
