@@ -734,24 +734,22 @@ window.addEventListener('keypress', (e) => {
 window.addEventListener('click', (e) => {
     if (e.target.nodeName === 'A') e.target.blur();
 
-    if (e.target.matches('A.next')) {
+    if (e.target.matches('.nav.next')) {
         e.preventDefault();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'next'}}));
     }
 
-    if (e.target.matches('A.today')) {
+    if (e.target.matches('.nav.today')) {
         e.preventDefault();
-        this.blur();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'today'}}));
     }
 
-
-    if (e.target.matches('A.previous')) {
+    if (e.target.matches('.nav.previous')) {
         e.preventDefault();
         document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'previous'}}));
     }
 
-    if (e.target.matches('A.toggle')) {
+    if (e.target.matches('.nav.toggle')) {
         e.preventDefault();
         e.target.parentElement.classList.toggle('open');
     }
