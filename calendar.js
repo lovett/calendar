@@ -78,7 +78,6 @@ class CalendarView extends CalendarBase {
     attributeChangedCallback(name, oldValue, newValue) {
         if (name === 'date' && newValue) {
             this.date = new Date(newValue);
-            if (!this.defaultDate) this.defaultDate = this.date;
             this.render();
             this.populateTitle();
         }
