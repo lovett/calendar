@@ -1,7 +1,6 @@
 class CalendarCache {
     constructor(storage, version) {
         this.cache = new Map();
-        this.cache.set('noevent', 'No events.');
         this.version = version;
         this.storage = storage;
         if (!this.version) this.storage.clear();
@@ -541,7 +540,7 @@ class CalendarDay extends CalendarView {
             const time = container.appendChild(document.createElement('time'));
             this.renderIcon(time, 'slash');
             const h2 = container.appendChild(document.createElement('h2'));
-            h2.innerHTML = this.cache.get('noevent');
+            h2.innerHTML = 'No events';
         }
     }
 }
