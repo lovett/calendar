@@ -97,11 +97,6 @@ cal-month .day-number {
     padding: 0.5em;
 }
 
-cal-month .day-number.today {
-    background-color: #e01b24;
-    color: #fff;
-}
-
 cal-month .day-of-week {
     border: 1px solid #333;
     border-left: 0;
@@ -188,11 +183,6 @@ cal-year .has-events {
     background-color: lightblue;
 }
 
-cal-year .today {
-    background-color: #e01b24;
-    color: #fff;
-}
-
 cal-year .month {
     padding: 0 var(--padding);
     display: grid;
@@ -216,15 +206,8 @@ cal-year .day {
     border-radius: .5em;
 }
 
-.day-of-month {
-    justify-self: end;
-    margin: 0.5em;
-    font-size: .85em;
-}
-
-.day-of-month.today {
+.day.today .day-number {
     background-color: #e01b24;
-    padding: var(--padding);
     color: #fff;
 }
 
@@ -395,10 +378,6 @@ cal-year .day {
 
     html {
         font-size: 18px;
-    }
-
-    .day-of-month {
-        font-size: 1em;
     }
 
     cal-month .lining {

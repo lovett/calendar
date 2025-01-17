@@ -34,13 +34,6 @@ class CalendarCache {
 }
 
 class CalendarBase extends HTMLElement {
-    isToday(d) {
-        if (d.getFullYear() !== this.now.getFullYear()) return false;
-        if (d.getMonth() !== this.now.getMonth()) return false;
-        if (d.getDate() !== this.now.getDate()) return false;
-        return true;
-    }
-
     isLastDayOfMonth(date) {
         return this.nextDay(date).getMonth() !== date.getMonth();
     }
@@ -95,12 +88,14 @@ class CalendarView extends CalendarBase {
         if (!newValue) return;
 
         this.date = new Date(newValue);
-        if (this.renderFromCache()) return;
-
-        if (this.children.length === 0) this.renderShell();
-        this.populateTitle();
-        this.render();
-        this.cachePage();
+        if (!this.renderFromCache()) {
+            this.renderShell();
+            this.populateTitle();
+            this.renderView();
+            this.cachePage();
+        }
+        document.title = document.querySelector('.navigator h1').innerText;
+        this.markToday();
     }
 
     cachePage() {
@@ -108,6 +103,16 @@ class CalendarView extends CalendarBase {
         const key = this.cache.versionedKey(hash);
         if (!key) return;
         this.cache.storageSet(key, this.innerHTML);
+    }
+
+    markToday() {
+        for (const tag of this.querySelectorAll('.day.today')) {
+            tag.classList.remove('today');
+        }
+
+        if (this.ym(this.now) !== this.ym(this.date)) return;
+        const tag = this.querySelector(`.day[data-ymd="${this.ymd(this.now)}"]`);
+        if (tag) tag.classList.add('today');
     }
 
     renderFromCache() {
@@ -198,8 +203,6 @@ class CalendarView extends CalendarBase {
     populateTitle() {
         const formatter = new Intl.DateTimeFormat(this.locale, this.titleFormat);
 
-        document.title = formatter.format(this.date);
-
         this.querySelector('.navigator h1').innerHTML = formatter.formatToParts(this.date)
             .map(({ type, value }) => {
                 if (this.linkedTitleParts.indexOf(type) === -1) return value;
@@ -223,6 +226,7 @@ class CalendarView extends CalendarBase {
     }
 
     renderShell() {
+        if (this.querySelector('.navigator')) return;
         this.innerHTML = `
         <header class="navigator">
             <h1></h1>
@@ -274,7 +278,7 @@ class CalendarYear extends CalendarView {
         return d.getFullYear();
     }
 
-    render() {
+    renderView() {
         this.removeAll('.month');
 
         const fragment = document.createDocumentFragment();
@@ -326,6 +330,8 @@ class CalendarYear extends CalendarView {
         const container = parent.appendChild(document.createElement('div'));
         container.classList.add(...['day'].concat(classes));
 
+        container.dataset.ymd = this.ymd(d);
+
         const lining = container.appendChild(document.createElement('div'))
         lining.classList.add('lining');
 
@@ -337,7 +343,6 @@ class CalendarYear extends CalendarView {
         }
         dayNumber.innerText = d.getDate();
         dayNumber.classList.add('day-number');
-        if (this.isToday(d)) dayNumber.classList.add('today');
         if (this.hasEvents(d)) dayNumber.classList.add('has-events');
     }
 
@@ -377,7 +382,7 @@ class CalendarMonth extends CalendarView {
         return this.ym(d);
     }
 
-    render() {
+    renderView() {
         this.removeAll('.day');
 
         const firstDay = new Date(this.date.getFullYear(), this.date.getMonth(), 1, 0, 0, 0, 0);
@@ -408,6 +413,8 @@ class CalendarMonth extends CalendarView {
 
             const day = fragment.appendChild(document.createElement('div'));
             day.classList.add('day');
+            day.dataset.ymd = this.ymd(d);
+
             if (eventSubset.length > 0) {
                 day.classList.add('has-events');
             }
@@ -458,7 +465,6 @@ class CalendarMonth extends CalendarView {
     }
 
     renderDayNumber(parent, d, hasEvents = false) {
-        const today = this.ymd(this.now);
         const tag = (hasEvents)? 'a' : 'div';
         const dayNumber = parent.appendChild(document.createElement(tag));
         if (tag === 'a') {
@@ -467,10 +473,6 @@ class CalendarMonth extends CalendarView {
         }
 
         dayNumber.classList.add('day-number');
-
-        if (this.isToday(d)) {
-            dayNumber.classList.add('today');
-        }
 
         let label = '';
         if (d.getDate() === 1) {
@@ -504,7 +506,7 @@ class CalendarDay extends CalendarView {
         return this.ymd(d);
     }
 
-    render() {
+    renderView() {
         let counter = 0;
         this.removeAll('.event');
 
