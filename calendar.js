@@ -752,34 +752,34 @@ document.addEventListener('touchend', (e) => {
 });
 
 window.addEventListener('keypress', (e) => {
-    if (e.key === 'n') {
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'next'}}));
-    }
-    if (e.key === 'p') {
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'previous'}}));
-    }
-
-    if (e.key === 't') {
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'today'}}));
-    }
+    let to;
+    if (e.key === 'n') to = 'next';
+    if (e.key === 'p') to = 'previous';
+    if (e.key === 't') to = 'today';
+    document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'next'}}));
 });
 
 window.addEventListener('click', (e) => {
     if (e.target.nodeName === 'A') e.target.blur();
 
+    const stepTo = (keyword) => {
+        const event = new CustomEvent('step', {detail: {to: keyword}});
+        document.body.querySelector('.view[date]').dispatchEvent(event);
+    }
+
     if (e.target.matches('.nav.next')) {
         e.preventDefault();
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'next'}}));
+        stepTo('next');
     }
 
     if (e.target.matches('.nav.today')) {
         e.preventDefault();
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'today'}}));
+        stepTo('today');
     }
 
     if (e.target.matches('.nav.previous')) {
         e.preventDefault();
-        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'previous'}}));
+        stepTo('previous');
     }
 
     if (e.target.matches('.nav.toggle')) {
