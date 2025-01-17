@@ -34,8 +34,6 @@ class CalendarCache {
 }
 
 class CalendarBase extends HTMLElement {
-    static get tag() { return this.name.toLowerCase().replace('calendar', 'cal-') }
-
     isToday(d) {
         if (d.getFullYear() !== this.now.getFullYear()) return false;
         if (d.getMonth() !== this.now.getMonth()) return false;
@@ -252,6 +250,8 @@ class CalendarView extends CalendarBase {
 }
 
 class CalendarYear extends CalendarView {
+    static get tag() { return 'cal-year' }
+
     constructor(cache) {
         super();
         this.cache = cache;
@@ -352,6 +352,8 @@ class CalendarYear extends CalendarView {
 }
 
 class CalendarMonth extends CalendarView {
+    static get tag() { return 'cal-month' }
+
     constructor(cache) {
         super();
         this.cache = cache;
@@ -481,6 +483,8 @@ class CalendarMonth extends CalendarView {
 }
 
 class CalendarDay extends CalendarView {
+    static get tag() { return 'cal-day' }
+
     constructor(cache) {
         super();
         this.cache = cache;
@@ -546,6 +550,8 @@ class CalendarDay extends CalendarView {
 }
 
 class CalendarEvent extends CalendarBase {
+    static get tag() { return 'cal-event' }
+
     constructor() {
         super();
         this.start = null;
