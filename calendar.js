@@ -379,12 +379,10 @@ class CalendarMonth extends CalendarView {
     render() {
         this.removeAll('.day');
 
-        const firstDay = new Date(this.date);
+        const firstDay = new Date(this.date.getFullYear(), this.date.getMonth(), 1, 0, 0, 0, 0);
         firstDay.setDate(1 - firstDay.getDay());
 
-        const lastDay = new Date(this.date);
-        lastDay.setMonth(lastDay.getMonth() + 1);
-        lastDay.setDate(lastDay.getDate() - 1);
+        const lastDay = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0, 0, 0, 0, 0);
         lastDay.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
 
         const events = this.eventFinder(firstDay, lastDay);
