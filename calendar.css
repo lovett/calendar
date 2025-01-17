@@ -256,7 +256,7 @@ cal-year .day {
         "subtitle toggle"
         "panel panel";
     justify-content: space-between;
-    align-items: start;
+    align-items: center;
     gap: 0 0.5em;
     padding: 0.75em 0.5em;
 }
@@ -344,6 +344,44 @@ cal-year .day {
     display: grid;
 }
 
+@media only screen and (min-width: 440px) {
+    .navigator {
+        grid-template-columns: auto 1fr auto auto auto;
+        grid-template-areas: "title subtitle previous today next";
+        gap: 0 2em;
+        padding: 1em;
+    }
+
+    .navigator h1 {
+        text-align: left;
+    }
+
+    .navigator .icon {
+        width: 1.5em;
+        height: 1.5em;
+    }
+
+    .navigator .subtitle {
+        font-size: 1.5em;
+    }
+
+    .navigator .toggle {
+        display: none;
+    }
+
+    .navigator .previous {
+        display: block;
+    }
+
+    .navigator .next {
+        display: block;
+    }
+
+    .navigator .today {
+        display: block;
+    }
+}
+
 @media only screen and (min-width: 600px) {
     cal-year {
         grid-template-columns: repeat(2, 1fr);
@@ -406,41 +444,7 @@ cal-year .day {
         grid-template-columns: repeat(4, 1fr);
     }
 
-    .navigator {
-        grid-template-columns: auto 1fr auto auto auto;
-        grid-template-areas: "title subtitle previous today next";
-        gap: 0 2em;
-        padding: 1em;
-    }
-
     .navigator h1 {
-        text-align: left;
         font-size: 2.5em;
     }
-
-    .navigator .icon {
-        width: 1.5em;
-        height: 1.5em;
-    }
-
-    .navigator .subtitle {
-        font-size: 1.5em;
-    }
-
-    .navigator .toggle {
-        display: none;
-    }
-
-    .navigator .previous {
-        display: block;
-    }
-
-    .navigator .next {
-        display: block;
-    }
-
-    .navigator .today {
-        display: block;
-    }
-
 }
