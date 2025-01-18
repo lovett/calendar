@@ -16,7 +16,15 @@ class CalendarCache {
     }
 
     get(key, missingCallback) {
-        if (missingCallback && !this.cache.has(key)) this.cache.set(key, missingCallback());
+        if (missingCallback && !this.cache.has(key)) {
+            const result = missingCallback();
+            if (Array.isArray(result) && result.length === 2) {
+                this.cache.set(key, result[0]);
+                setTimeout(() => this.cache.delete(key), result[1]);
+            } else {
+                this.cache.set(key, result);
+            }
+        }
         return this.cache.get(key);
     }
 
@@ -172,7 +180,10 @@ class CalendarView extends CalendarBase {
     }
 
     get now() {
-        return this.cache.get('now', () => new Date());
+        return this.cache.get('now', () => {
+            const d = new Date();
+            return [d, this.endOfDayMs(d) - d.getTime()];
+        });
     }
 
     eventFinder(start, end) {
