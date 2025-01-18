@@ -15,8 +15,8 @@ class CalendarCache {
         this.cache.set(key, value);
     }
 
-    get(key, callback) {
-        if (callback && !this.cache.has(key)) this.cache.set(key, callback());
+    get(key, missingCallback) {
+        if (missingCallback && !this.cache.has(key)) this.cache.set(key, missingCallback());
         return this.cache.get(key);
     }
 
@@ -24,12 +24,10 @@ class CalendarCache {
         this.storage.setItem(key, value);
     }
 
-    storageGet(key) {
-        return this.storage.getItem(key);
-    }
-
-    storageHas(key) {
-        return this.storage.hasOwnProperty(key);
+    storageGet(key, foundCallback, missingCallback) {
+        const value = this.storage.getItem(key);
+        if (value) return foundCallback(value);
+        return missingCallback();
     }
 }
 
@@ -118,9 +116,11 @@ class CalendarView extends CalendarBase {
     renderFromCache() {
         const hash = this.hasher(this.date);
         const key = this.cache.versionedKey(hash);
-        if (!this.cache.storageHas(key)) return false;
-        this.innerHTML = this.cache.storageGet(key);
-        return true;
+        return this.cache.storageGet(
+            key,
+            (value) => { this.innerHTML = value; return true },
+            () => false
+        );
     }
 
     handleEvent(e) {
