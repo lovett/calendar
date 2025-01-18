@@ -87,6 +87,7 @@ class CalendarView extends CalendarBase {
         this.swipe = [0, 0];
         this.addEventListener('step', this);
         this.addEventListener('swipe', this);
+        this.addEventListener('clock', this);
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -132,6 +133,13 @@ class CalendarView extends CalendarBase {
     }
 
     handleEvent(e) {
+        if (e.type === 'clock') {
+            const now = new Date();
+            if (now.getDate() !== this.now.getDate()) {
+                this.markToday();
+            }
+        }
+
         if (e.type === 'swipe' && e.detail.type === 'touchstart') {
             this.swipe = [e.detail.x, e.detail.y];
         }
@@ -908,4 +916,9 @@ window.addEventListener('DOMContentLoaded', (e) => {
             break;
         }
     }
+
+    window.setInterval(() => {
+        document.body.querySelector('.view[date]')
+            .dispatchEvent(new CustomEvent('clock'));
+    }, 5 * 60 * 1000);
 });
