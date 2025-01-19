@@ -276,9 +276,18 @@ cal-year .day {
     grid-area: previous;
 }
 
+.navigator .jump {
+    display: none;
+    grid-area: jump;
+}
+
 .navigator .panel {
     grid-area: panel;
     display: none;
+}
+
+.navigator .panel > .nav {
+    display: inline-block;
 }
 
 .navigator .toggle {
@@ -306,12 +315,6 @@ cal-year .day {
     padding: 1em 0;
 }
 
-.navigator .today {
-    display: none;
-    grid-area: today;
-}
-
-
 .navigator .subtitle {
     align-self: end;
     font-style: italic;
@@ -330,7 +333,7 @@ cal-year .day {
 @media only screen and (min-width: 440px) {
     .navigator {
         grid-template-columns: auto 1fr auto auto auto;
-        grid-template-areas: "title subtitle previous today next";
+        grid-template-areas: "title subtitle previous jump next";
         gap: 0 2em;
         padding: 1em;
     }
@@ -360,7 +363,7 @@ cal-year .day {
         display: block;
     }
 
-    .navigator .today {
+    .navigator .jump {
         display: block;
     }
 }

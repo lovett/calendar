@@ -86,6 +86,7 @@ class CalendarView extends CalendarBase {
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
         this.swipe = [0, 0];
         this.addEventListener('step', this);
+        this.addEventListener('jump', this);
         this.addEventListener('swipe', this);
         this.addEventListener('clock', this);
     }
@@ -183,6 +184,10 @@ class CalendarView extends CalendarBase {
         if (e.type === 'step' && e.detail.to === 'year') {
             window.location.hash = this.date.getFullYear();
         }
+
+        if (e.type === 'jump') {
+            window.location.hash = prompt("Jump to:", this.hasher(this.now));
+        }
     }
 
     get dayNames() {
@@ -263,15 +268,15 @@ class CalendarView extends CalendarBase {
             <h1></h1>
             <div class="subtitle"></div>
             <a href="#previous" class="nav previous"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
+            <a href="#jump" class="nav jump"><svg class="icon"><use xlink:href="#compass" /></svg></a>
             <a href="#next" class="nav next"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
-            <a href="#today" class="nav today"><svg class="icon"><use xlink:href="#reset" /></svg></a>
             <a href="#" class="nav toggle">
                 <svg class="icon"><use class="up" xlink:href="#chevron-up" />
                 <svg class="icon"><use class="down" xlink:href="#chevron-down" />
             </svg>
             </a>
             <div class="panel" hidden>
-                <a href="#today" class="nav"><svg class="icon"><use xlink:href="#reset" /></svg></a>
+                <a href="#jump" class="nav jump"><svg class="icon"><use xlink:href="#compass" /></svg></a>
             </div>
         </header>
         `;
@@ -783,14 +788,16 @@ document.addEventListener('touchend', (e) => {
 });
 
 window.addEventListener('keypress', (e) => {
-    let to;
+    let event, to;
     if (e.key === 'n') to = 'next';
     if (e.key === 'p') to = 'previous';
     if (e.key === 't') to = 'today';
     if (e.key === 'd') to = 'day';
     if (e.key === 'm') to = 'month';
     if (e.key === 'y') to = 'year';
-    document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: to}}));
+    if (e.key === 'j') event = new CustomEvent('jump');
+    if (to) event = new CustomEvent('step', {detail: {to: to}});
+    if (event) document.body.querySelector('.view[date]').dispatchEvent(event);
 });
 
 window.addEventListener('click', (e) => {
@@ -809,6 +816,11 @@ window.addEventListener('click', (e) => {
     if (e.target.matches('.nav.today')) {
         e.preventDefault();
         stepTo('today');
+    }
+
+    if (e.target.matches('.nav.jump')) {
+        e.preventDefault();
+        document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('jump'));
     }
 
     if (e.target.matches('.nav.previous')) {
@@ -905,7 +917,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
     <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
     <symbol id="arrow-down" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
-    <symbol id="reset" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></symbol>
+    <symbol id="compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></symbol>
     <symbol id="hash" viewBox="0 0 24 24"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></symbol>
     <symbol id="slash" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></symbol>
     <symbol id="star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></symbol>
