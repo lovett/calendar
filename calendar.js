@@ -171,6 +171,18 @@ class CalendarView extends CalendarBase {
         if (e.type === 'step' && e.detail.to === 'previous') {
             window.location.hash = this.hasher(this.previous);
         }
+
+        if (e.type === 'step' && e.detail.to === 'day') {
+            window.location.hash = this.ymd(this.date);
+        }
+
+        if (e.type === 'step' && e.detail.to === 'month') {
+            window.location.hash = this.ym(this.date);
+        }
+
+        if (e.type === 'step' && e.detail.to === 'year') {
+            window.location.hash = this.date.getFullYear();
+        }
     }
 
     get dayNames() {
@@ -775,6 +787,9 @@ window.addEventListener('keypress', (e) => {
     if (e.key === 'n') to = 'next';
     if (e.key === 'p') to = 'previous';
     if (e.key === 't') to = 'today';
+    if (e.key === 'd') to = 'day';
+    if (e.key === 'm') to = 'month';
+    if (e.key === 'y') to = 'year';
     document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: to}}));
 });
 
