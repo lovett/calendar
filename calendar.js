@@ -775,7 +775,7 @@ window.addEventListener('keypress', (e) => {
     if (e.key === 'n') to = 'next';
     if (e.key === 'p') to = 'previous';
     if (e.key === 't') to = 'today';
-    document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: 'next'}}));
+    document.body.querySelector('.view[date]').dispatchEvent(new CustomEvent('step', {detail: {to: to}}));
 });
 
 window.addEventListener('click', (e) => {
