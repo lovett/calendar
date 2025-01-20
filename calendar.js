@@ -81,14 +81,17 @@ class CalendarView extends CalendarBase {
     constructor() {
         super();
         this.cache = null;
-        this.classList.add('view');
         this.linkedTitleParts = [];
+    }
+
+    connectedCallback() {
+        this.classList.add('view');
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
-        this.swipe = [0, 0];
         this.addEventListener('step', this);
         this.addEventListener('jump', this);
         this.addEventListener('swipe', this);
         this.addEventListener('clock', this);
+        this.swipe = [0, 0];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
