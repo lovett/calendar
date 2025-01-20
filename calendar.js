@@ -791,7 +791,8 @@ document.addEventListener('touchend', (e) => {
 });
 
 window.addEventListener('keypress', (e) => {
-    let event, to;
+    let event;
+    let to;
     if (e.key === 'n') to = 'next';
     if (e.key === 'p') to = 'previous';
     if (e.key === 't') to = 'today';
