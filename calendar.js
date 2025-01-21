@@ -79,6 +79,7 @@ class CalendarView extends CalendarBase {
     constructor() {
         super();
         this.cache = null;
+        this.title = null;
         this.linkedTitleParts = [];
     }
 
@@ -239,18 +240,19 @@ class CalendarView extends CalendarBase {
 
     populateTitle() {
         const formatter = new Intl.DateTimeFormat(this.locale, this.titleFormat);
+        const prefix = (this.title)? [this.title, ' '] : [];
 
-        this.querySelector('.navigator h1').innerHTML = formatter.formatToParts(this.date)
-            .map(({ type, value }) => {
+        this.querySelector('.navigator h1').innerHTML = prefix.concat(
+            formatter.formatToParts(this.date).map(({ type, value }) => {
                 if (this.linkedTitleParts.indexOf(type) === -1) return value;
-
                 const link = document.createElement('a');
                 link.href = '#';
                 link.textContent = value;
                 if (type === 'year') link.hash = this.date.getFullYear();
                 if (type === 'month') link.hash = this.ym(this.date);
                 return link.outerHTML;
-            }).join('');
+            })
+        ).join('');
     }
 
     renderIcon(parent, id) {
@@ -293,9 +295,10 @@ class CalendarView extends CalendarBase {
 class CalendarYear extends CalendarView {
     static get tag() { return 'cal-year' }
 
-    constructor(cache) {
+    constructor(cache, config) {
         super();
         this.cache = cache;
+        this.title = config.title;
         this.titleFormat = {year: 'numeric'}
     }
 
@@ -397,9 +400,10 @@ class CalendarYear extends CalendarView {
 class CalendarMonth extends CalendarView {
     static get tag() { return 'cal-month' }
 
-    constructor(cache) {
+    constructor(cache, config) {
         super();
         this.cache = cache;
+        this.title = config.title;
         this.linkedTitleParts = ['year'];
         this.titleFormat = {month: 'long', year: 'numeric'}
     }
@@ -525,9 +529,10 @@ class CalendarMonth extends CalendarView {
 class CalendarDay extends CalendarView {
     static get tag() { return 'cal-day' }
 
-    constructor(cache) {
+    constructor(cache, config) {
         super();
         this.cache = cache;
+        this.title = config.title;
         this.linkedTitleParts = ['year', 'month'];
         this.titleFormat = {month: 'long', day: 'numeric', year: 'numeric'}
     }
@@ -926,18 +931,31 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></symbol>
     </defs>`;
 
-    const versionMeta = document.head.querySelector('META[name=version]');
-    const version = (versionMeta) ? versionMeta.content: null;
-    const cache = new CalendarCache(window.sessionStorage, version);
+    const config = {
+        title: null,
+        version: null,
+        appVersion: '!dev!'
+    };
+    for (const meta of document.head.querySelectorAll('meta')) {
+        if (meta.name === 'version' && meta.content) {
+            config.version = meta.content;
+        }
+
+        if (meta.name === 'title') {
+            config.title = meta.content;
+        }
+    }
 
     const appVersionMeta = document.head.appendChild(document.createElement('META'));
     appVersionMeta.name = 'app-version';
-    appVersionMeta.content = '!dev!';
+    appVersionMeta.content = config.appVersion;
+
+    const cache = new CalendarCache(window.sessionStorage, config.version);
 
     const views = [
-        document.body.appendChild(new CalendarDay(cache)),
-        document.body.appendChild(new CalendarMonth(cache)),
-        document.body.appendChild(new CalendarYear(cache))
+        document.body.appendChild(new CalendarDay(cache, config)),
+        document.body.appendChild(new CalendarMonth(cache, config)),
+        document.body.appendChild(new CalendarYear(cache, config))
     ];
 
     for (const view of views) {
