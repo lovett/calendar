@@ -937,7 +937,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
 
     const appVersionMeta = document.head.appendChild(document.createElement('META'));
     appVersionMeta.name = 'app-version';
-    appVersionMeta.content = 'dev';
+    appVersionMeta.content = '!dev!';
 
     const views = [
         document.body.appendChild(new CalendarDay(cache)),
