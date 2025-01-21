@@ -74,6 +74,7 @@ cal-event {
 }
 
 cal-month {
+    height: 100vh;
     height: 100dvh;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: auto 2em;
