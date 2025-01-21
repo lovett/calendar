@@ -156,8 +156,8 @@ class CalendarView extends CalendarBase {
             if (Math.abs(xDelta) < Math.abs(yDelta)) {
                 if (yDelta < 0) step.detail.to = 'today';
             } else {
-                if (xDelta > 0) step.detail.to = 'next';
-                if (xDelta < 0) step.detail.to = 'previous';
+                if (xDelta > 0) step.detail.to = 'previous';
+                if (xDelta < 0) step.detail.to = 'next';
             }
 
             if (step.detail.to) this.dispatchEvent(step);
