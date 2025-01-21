@@ -17,12 +17,10 @@ class CalendarCache {
 
     get(key, missingCallback) {
         if (missingCallback && !this.cache.has(key)) {
-            const result = missingCallback();
-            if (Array.isArray(result) && result.length === 2) {
-                this.cache.set(key, result[0]);
-                setTimeout(() => this.cache.delete(key), result[1]);
-            } else {
-                this.cache.set(key, result);
+            const [result, expiration] = missingCallback();
+            this.cache.set(key, result);
+            if (expiration) {
+                setTimeout(() => this.cache.delete(key), expiration);
             }
         }
         return this.cache.get(key);
@@ -203,7 +201,7 @@ class CalendarView extends CalendarBase {
                 d.setDate(d.getDate() + 1);
                 names[i] = d.toLocaleString(this.locale, {weekday: 'short'});
             }
-            return names;
+            return [names, null];
         });
     }
 
@@ -229,13 +227,13 @@ class CalendarView extends CalendarBase {
         query = query.slice(0, -1);
 
         return this.cache.get(query, () => {
-            return Array.from(document.querySelectorAll(query)).sort((a, b) => {
+            return [Array.from(document.querySelectorAll(query)).sort((a, b) => {
                 a.parseTime();
                 b.parseTime();
                 if (a.start < b.start) return -1;
                 if (a.start > b.start) return 1;
                 return 0;
-            });
+            }), null];
         })
     }
 
@@ -366,6 +364,7 @@ class CalendarYear extends CalendarView {
     }
 
     renderDay(parent, d, ...classes) {
+        const hasEvents = this.hasEvents(d);
         const container = parent.appendChild(document.createElement('div'));
         container.classList.add(...['day'].concat(classes));
 
@@ -374,7 +373,7 @@ class CalendarYear extends CalendarView {
         const lining = container.appendChild(document.createElement('div'))
         lining.classList.add('lining');
 
-        const tag = (this.hasEvents(d))? 'a' : 'div';
+        const tag = (hasEvents)? 'a' : 'div';
         const dayNumber = lining.appendChild(document.createElement(tag));
         if (tag === 'a') {
             dayNumber.href = '#';
@@ -382,7 +381,7 @@ class CalendarYear extends CalendarView {
         }
         dayNumber.innerText = d.getDate();
         dayNumber.classList.add('day-number');
-        if (this.hasEvents(d)) dayNumber.classList.add('has-events');
+        if (hasEvents) dayNumber.classList.add('has-events');
     }
 
     hasEvents(d) {
