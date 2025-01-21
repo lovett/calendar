@@ -935,6 +935,10 @@ window.addEventListener('DOMContentLoaded', (e) => {
     const version = (versionMeta) ? versionMeta.content: null;
     const cache = new CalendarCache(window.sessionStorage, version);
 
+    const appVersionMeta = document.head.appendChild(document.createElement('META'));
+    appVersionMeta.name = 'app-version';
+    appVersionMeta.content = 'dev';
+
     const views = [
         document.body.appendChild(new CalendarDay(cache)),
         document.body.appendChild(new CalendarMonth(cache)),
