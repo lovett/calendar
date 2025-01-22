@@ -138,17 +138,9 @@ cal-month .event-count {
 
 cal-month .multi-day-continuation {
     text-align: center;
-    border-radius: 0;
-}
-
-cal-month .multi-day-start {
-    margin-left: var(--padding);
-    border-radius: .5em 0 0 .5em;
 }
 
 cal-month .multi-day-end {
-    margin-right: var(--padding);
-    border-radius: 0 .5em .5em 0;
     text-align: right;
 }
 
@@ -203,10 +195,6 @@ cal-year .day {
     padding: 0.25em;
     box-sizing: border-box;
     text-align: center;
-}
-
-.all-day {
-    border-radius: .5em;
 }
 
 .day.today .day-number {
@@ -405,13 +393,9 @@ cal-year .day {
         margin-bottom: -2px;
     }
 
-    cal-month .all-day {
-        margin-left: 1.5em;
-        text-indent: -1.25em;
-    }
-
     cal-month .multi-day {
         background-color: blue;
+        padding: 0.25em 0.5em;
         color: #fff;
         overflow: hidden;
         white-space: nowrap;
