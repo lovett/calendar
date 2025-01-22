@@ -30,7 +30,7 @@ cal-day .event {
     gap: 0 1em;
     margin-bottom: 2em;
     line-height: 1.5;
-    align-items: center;
+    align-items: start;
     padding: 0 var(--padding);
     box-sizing: border-box;
 }
@@ -49,6 +49,7 @@ cal-day .event.multi-day, cal-day .event.all-day {
 }
 
 cal-day .event.empty {
+    align-items: center;
     background-color: #ccc;
     grid-template-rows: 5em;
 }
