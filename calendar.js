@@ -79,7 +79,7 @@ class CalendarView extends CalendarBase {
     constructor() {
         super();
         this.cache = null;
-        this.title = null;
+        this.title = '';
         this.linkedTitleParts = [];
     }
 
@@ -948,8 +948,8 @@ window.addEventListener('DOMContentLoaded', (e) => {
     </defs>`;
 
     const config = {
-        title: null,
-        version: null,
+        title: '',
+        version: '',
         appVersion: '!dev!'
     };
     for (const meta of document.head.querySelectorAll('meta')) {
