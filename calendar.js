@@ -217,7 +217,7 @@ class CalendarView extends CalendarBase {
         const selectors = new Set();
         const d = new Date(start);
         while (d <= (end || start)) {
-            selectors.add(`${CalendarEvent.tag}[during*="${this.ym(d)}"]`);
+            selectors.add(`${CalendarEvent.tag}[data-ym*="${this.ym(d)}"]`);
             d.setDate(d.getDate() + 1);
         }
 
@@ -629,7 +629,7 @@ class CalendarEvent extends CalendarBase {
         const set = new Set();
         set.add(this.ym(this.start));
         set.add(this.ym(this.end));
-        this.setAttribute('during', Array.from(set.values()).join(' '));
+        this.dataset.ym = Array.from(set.values()).join(' ');
     }
 
     classList(d) {
