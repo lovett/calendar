@@ -496,6 +496,12 @@ class CalendarMonth extends CalendarView {
 
             div.classList.add('event', ...event.classList(d));
 
+            let eventParent = event.parentElement;
+            while (eventParent) {
+                div.classList.add(...eventParent.classList.values());
+                eventParent = eventParent.parentElement;
+            }
+
             if (event.isMultiDayStart(d)) this.renderIcon(div, 'calendar');
             if (event.isAllDay()) this.renderIcon(div, 'calendar');
             if (event.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
@@ -561,6 +567,16 @@ class CalendarDay extends CalendarView {
             counter++;
             const container = this.appendChild(document.createElement('div'));
             container.classList.add('event', ...event.classList(this.date));
+
+            let eventParent = event.parentElement;
+            while (eventParent) {
+                container.classList.add(...eventParent.classList.values());
+                eventParent = eventParent.parentElement;
+            }
+
+            if (event.hasAttribute('style')) {
+                container.setAttribute('style', event.getAttribute('style'));
+            }
 
             const time = container.appendChild(document.createElement('time'));
             if (event.hasStartTime()) {
