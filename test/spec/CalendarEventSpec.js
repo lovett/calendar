@@ -3,22 +3,29 @@ describe('CalendarEvent', function() {
         document.body.querySelectorAll(CalendarEvent.tag).forEach(event => event.remove());
     });
 
-    describe("Markup", function() {
-        it("populates data-ym", function() {
+    describe("data-ym attribute", function() {
+        it("is populated with a single value", function() {
             const event = document.createElement('cal-event');
             event.textContent = '2025-01-01 test';
             document.body.appendChild(event);
             expect(event.dataset.ym).toBe('2025-01');
         });
 
-        it("does not duplicate values in data-ym", function() {
+        it("is populated with multiple values", function() {
+            const event = document.createElement('cal-event');
+            event.textContent = '2025-01-01 to 2025-02-01 test';
+            document.body.appendChild(event);
+            expect(event.dataset.ym).toBe('2025-01 2025-02');
+        });
+
+        it("does not duplicate values", function() {
             const event = document.createElement('cal-event');
             event.textContent = '2025-01-01 to 2025-01-02 test';
             document.body.appendChild(event);
             expect(event.dataset.ym).toBe('2025-01');
         });
 
-        it("allows data-ym to be empty", function() {
+        it("can be empty", function() {
             const event = document.createElement('cal-event');
             document.body.appendChild(event);
             expect(event.dataset.ym).toBe('');

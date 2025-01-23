@@ -626,10 +626,9 @@ class CalendarEvent extends CalendarBase {
 
     connectedCallback() {
         this.parseDate();
-        const set = new Set();
-        set.add(this.ym(this.start));
-        set.add(this.ym(this.end));
-        this.dataset.ym = Array.from(set.values()).join(' ');
+        const start = this.ym(this.start);
+        const end = this.ym(this.end);
+        this.dataset.ym = (start === end) ? start : `${start} ${end}`;
     }
 
     classList(d) {
