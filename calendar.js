@@ -721,9 +721,9 @@ class CalendarEvent extends CalendarBase {
             this.captureParsingIndex(match);
             const [_, year, month, day] = match.map(x => Number.parseInt(x, 10));
             if (i === 0) {
-                this.start = new Date(year, month - 1, day, 0, 0, 0);
+                this.start = new Date(year, month - 1, day, 0, 0, 0, 0);
             }
-            this.end = new Date(year, month - 1, day, 23, 59, 59);
+            this.end = new Date(year, month - 1, day, 23, 59, 59, 999);
         }
         this.parsedDate = true;
     }
@@ -733,9 +733,16 @@ class CalendarEvent extends CalendarBase {
         if (!this.start) return;
 
         for (const [i, match] of this.match(/(\d{1,2}):(\d{1,2})\s*([AP]M)?\s*/g, 2)) {
+            if (i > 0) {
+                const wordsSinceLastMatch = this.innerHTML.slice(this.parsingIndex, match.index)
+                    .trim()
+                    .split(/\s+/);
+                if (wordsSinceLastMatch.length > 1) continue;
+            }
             this.captureParsingIndex(match);
+
             let [hour, minute] = match.slice(1, 3).map(x => Number.parseInt(x, 10));
-            hour += (match[3].toLowerCase() === 'pm') ? 12 : 0;
+            hour += (match[3] && match[3].toLowerCase() === 'pm') ? 12 : 0;
 
             if (this.start && i === 0) {
                 this.start.setHours(hour);
@@ -743,11 +750,11 @@ class CalendarEvent extends CalendarBase {
                 this.startTime = [hour, minute];
             }
 
-            if (this.end) {
-                this.end.setHours(hour);
-                this.end.setMinutes(minute);
-                this.endTime = [hour, minute];
-            }
+            this.end.setHours(hour);
+            this.end.setMinutes(minute);
+            this.end.setSeconds(0);
+            this.end.setMilliseconds(0);
+            this.endTime = [hour, minute];
         }
         this.parsedTime = true;
     }
@@ -899,6 +906,10 @@ window.addEventListener('DOMContentLoaded', (e) => {
     customElements.define(CalendarYear.tag, CalendarYear);
     customElements.define(CalendarDay.tag, CalendarDay);
     customElements.define(CalendarEvent.tag, CalendarEvent);
+
+    if (!document.body.querySelector(CalendarEvent.tag)) {
+        return;
+    }
 
     let defaultView = CalendarMonth;
 
