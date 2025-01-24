@@ -197,6 +197,12 @@ cal-year .day {
     text-align: center;
 }
 
+body > svg  {
+    position: absolute;
+    width: 0;
+    height: 0;
+}
+
 .day.today .day-number {
     background-color: #e01b24;
     color: #fff;

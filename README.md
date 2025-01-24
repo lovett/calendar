@@ -7,3 +7,4 @@ An HTML-centric calendar application.
 This project gratefully makes use of the following projects:
 
 * [Feather icons](https://feathericons.com)
+* [Phosphor icons](https://github.com/phosphor-icons/core)

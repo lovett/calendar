@@ -489,6 +489,9 @@ class CalendarMonth extends CalendarView {
     renderEvents(parent, events, d) {
         for (const event of events) {
             event.parseTime();
+
+            let eventIcon = event.dataset.icon;
+
             const div = document.createElement('div');
 
             if (event.hasAttribute('style')) {
@@ -500,11 +503,14 @@ class CalendarMonth extends CalendarView {
             let eventParent = event.parentElement;
             while (eventParent) {
                 div.classList.add(...eventParent.classList.values());
+                if (eventIcon === undefined) eventIcon = eventParent.dataset.icon;
                 eventParent = eventParent.parentElement;
             }
 
-            if (event.isMultiDayStart(d)) this.renderIcon(div, 'calendar');
-            if (event.isAllDay()) this.renderIcon(div, 'calendar');
+            if (!eventIcon) eventIcon = 'calendar';
+
+            if (event.isMultiDayStart(d)) this.renderIcon(div, eventIcon);
+            if (event.isAllDay()) this.renderIcon(div, eventIcon);
             if (event.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
             if (event.isMultiDayContinuation(d)) this.renderIcon(div, 'arrow-right');
             if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML += event.shortLine(this.locale);
@@ -902,7 +908,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     const classes = [CalendarMonth, CalendarYear, CalendarDay, CalendarEvent];
 
     for (const c of classes) {
-        if (customElements.getName(c)) continue;
+        //if (customElements.getName(c)) continue;
         customElements.define(c.tag, c);
     }
 
@@ -938,10 +944,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
         defaultView = CalendarDay;
     }
 
-    const div  = document.body.appendChild(document.createElement('div'));
-    div.hidden = true;
-
-    const svg = div.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
+    const svg = document.body.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
     svg.innerHTML = `<defs>
     <symbol id="arrow-left" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></symbol>
     <symbol id="arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></symbol>
