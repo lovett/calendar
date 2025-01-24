@@ -905,13 +905,6 @@ window.addEventListener('hashchange', (e) => {
 });
 
 window.addEventListener('DOMContentLoaded', (e) => {
-    const classes = [CalendarMonth, CalendarYear, CalendarDay, CalendarEvent];
-
-    for (const c of classes) {
-        //if (customElements.getName(c)) continue;
-        customElements.define(c.tag, c);
-    }
-
     let defaultView = CalendarMonth;
 
     const defaultDate = new Date();
@@ -974,11 +967,10 @@ window.addEventListener('DOMContentLoaded', (e) => {
 
     const cache = new CalendarCache(window.sessionStorage, config.version);
 
-    for (const c of classes) {
-        if (c.prototype instanceof CalendarView === false) continue;
-        document.body.querySelectorAll(c.tag).forEach(node => node.remove());
-        const view = document.body.appendChild(new c(cache, config));
-        if (c === defaultView) view.setAttribute('date', defaultDate);
+    for (const viewClass of [CalendarMonth, CalendarYear, CalendarDay]) {
+        for (const node of document.body.querySelectorAll(viewClass.tag)) node.remove();
+        const view = document.body.appendChild(new viewClass(cache, config));
+        if (viewClass === defaultView) view.setAttribute('date', defaultDate);
     }
 
     window.setInterval(() => {
@@ -986,3 +978,12 @@ window.addEventListener('DOMContentLoaded', (e) => {
             .dispatchEvent(new CustomEvent('clock'));
     }, 5 * 60 * 1000);
 });
+
+if (!window.customElements || !window.customElements.define) {
+    alert('Cannot display the calendar in this browser.');
+} else {
+    customElements.define(CalendarMonth.tag, CalendarMonth);
+    customElements.define(CalendarDay.tag, CalendarDay);
+    customElements.define(CalendarYear.tag, CalendarYear);
+    customElements.define(CalendarEvent.tag, CalendarEvent);
+}
