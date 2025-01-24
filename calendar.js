@@ -85,7 +85,6 @@ class CalendarView extends CalendarBase {
 
     connectedCallback() {
         this.classList.add('view');
-        this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
         this.addEventListener('step', this);
         this.addEventListener('jump', this);
         this.addEventListener('swipe', this);
@@ -299,6 +298,7 @@ class CalendarYear extends CalendarView {
         super();
         this.cache = cache;
         this.title = config.title;
+        this.locale = config.locale;
         this.titleFormat = {year: 'numeric'}
     }
 
@@ -404,6 +404,7 @@ class CalendarMonth extends CalendarView {
         super();
         this.cache = cache;
         this.title = config.title;
+        this.locale = config.locale;
         this.linkedTitleParts = ['year'];
         this.titleFormat = {month: 'long', year: 'numeric'}
     }
@@ -506,7 +507,7 @@ class CalendarMonth extends CalendarView {
             if (event.isAllDay()) this.renderIcon(div, 'calendar');
             if (event.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
             if (event.isMultiDayContinuation(d)) this.renderIcon(div, 'arrow-right');
-            if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML += event.shortLine();
+            if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML += event.shortLine(this.locale);
 
             parent.appendChild(div);
         }
@@ -539,6 +540,7 @@ class CalendarDay extends CalendarView {
         super();
         this.cache = cache;
         this.title = config.title;
+        this.locale = config.locale;
         this.linkedTitleParts = ['year', 'month'];
         this.titleFormat = {month: 'long', day: 'numeric', year: 'numeric'}
     }
@@ -762,10 +764,6 @@ class CalendarEvent extends CalendarBase {
         this.parsingIndex = Math.max(this.parsingIndex, match.index + match[0].length);
     }
 
-    toString() {
-        return this.start.toLocaleString(this.locale, {timeStyle: 'short'});
-    }
-
     occursOn(d) {
         if (!this.start) return false;
         if (d.getTime() < this.startOfDayMs(this.start)) return false;
@@ -773,11 +771,11 @@ class CalendarEvent extends CalendarBase {
         return true;
     }
 
-    shortLine() {
+    shortLine(locale) {
         let result = '';
 
         if (this.hasStartTime()) {
-            result = this.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+            result = this.start.toLocaleString(locale, {hour: 'numeric', minute: 'numeric'});
             result += ' ';
         }
 
@@ -901,13 +899,11 @@ window.addEventListener('hashchange', (e) => {
 });
 
 window.addEventListener('DOMContentLoaded', (e) => {
-    customElements.define(CalendarMonth.tag, CalendarMonth);
-    customElements.define(CalendarYear.tag, CalendarYear);
-    customElements.define(CalendarDay.tag, CalendarDay);
-    customElements.define(CalendarEvent.tag, CalendarEvent);
+    const classes = [CalendarMonth, CalendarYear, CalendarDay, CalendarEvent];
 
-    if (!document.body.querySelector(CalendarEvent.tag)) {
-        return;
+    for (const c of classes) {
+        if (customElements.getName(c)) continue;
+        customElements.define(c.tag, c);
     }
 
     let defaultView = CalendarMonth;
@@ -958,18 +954,15 @@ window.addEventListener('DOMContentLoaded', (e) => {
     </defs>`;
 
     const config = {
+        locale: Intl.DateTimeFormat().resolvedOptions().locale,
         title: '',
         version: '',
-        appVersion: '!dev!'
+        appVersion: '!dev!',
     };
-    for (const meta of document.head.querySelectorAll('meta')) {
-        if (meta.name === 'version' && meta.content) {
-            config.version = meta.content;
-        }
 
-        if (meta.name === 'title') {
-            config.title = meta.content;
-        }
+    for (const meta of document.head.querySelectorAll('meta')) {
+        if (!meta.content) continue;
+        config[meta.name] = meta.content;
     }
 
     const appVersionMeta = document.head.appendChild(document.createElement('META'));
@@ -978,17 +971,11 @@ window.addEventListener('DOMContentLoaded', (e) => {
 
     const cache = new CalendarCache(window.sessionStorage, config.version);
 
-    const views = [
-        document.body.appendChild(new CalendarDay(cache, config)),
-        document.body.appendChild(new CalendarMonth(cache, config)),
-        document.body.appendChild(new CalendarYear(cache, config))
-    ];
-
-    for (const view of views) {
-        if (view.constructor.name === defaultView.name) {
-            view.setAttribute('date', defaultDate);
-            break;
-        }
+    for (const c of classes) {
+        if (c.prototype instanceof CalendarView === false) continue;
+        document.body.querySelectorAll(c.tag).forEach(node => node.remove());
+        const view = document.body.appendChild(new c(cache, config));
+        if (c === defaultView) view.setAttribute('date', defaultDate);
     }
 
     window.setInterval(() => {

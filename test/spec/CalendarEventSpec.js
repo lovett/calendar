@@ -1,6 +1,6 @@
 describe('CalendarEvent', function() {
     afterEach(function() {
-        document.body.querySelectorAll(CalendarEvent.tag).forEach(event => event.remove());
+        document.body.querySelectorAll(CalendarEvent.tag).forEach(node => node.remove());
     });
 
     describe("data-ym attribute", function() {
@@ -149,7 +149,7 @@ describe('CalendarEvent', function() {
             event.textContent = '2025-01-01 8:30 AM rest of text';
             event.parseDate();
             event.parseTime();
-            expect(event.shortLine()).toBe('8:30 AM rest of text');
+            expect(event.shortLine('en-US')).toBe('8:30 AM rest of text');
         });
 
         it("omits start time for all-day and multi-day events", function() {
@@ -163,7 +163,7 @@ describe('CalendarEvent', function() {
                 event.textContent = value;
                 event.parseDate();
                 event.parseTime();
-                expect(event.shortLine()).toBe('rest of text');
+                expect(event.shortLine('en-US')).toBe('rest of text');
             }
         });
     });
