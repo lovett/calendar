@@ -255,6 +255,7 @@ class CalendarView extends CalendarBase {
     }
 
     renderIcon(parent, id) {
+        if (!id) return;
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         svg.setAttribute('class', 'icon');
         const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
@@ -490,29 +491,15 @@ class CalendarMonth extends CalendarView {
         for (const event of events) {
             event.parseTime();
 
-            let eventIcon = event.dataset.icon;
-
             const div = document.createElement('div');
 
             if (event.hasAttribute('style')) {
                 div.setAttribute('style', event.getAttribute('style'));
             }
 
-            div.classList.add('event', ...event.classList(d));
+            div.classList.add('event', ...event.classes(d));
 
-            let eventParent = event.parentElement;
-            while (eventParent) {
-                div.classList.add(...eventParent.classList.values());
-                if (eventIcon === undefined) eventIcon = eventParent.dataset.icon;
-                eventParent = eventParent.parentElement;
-            }
-
-            if (!eventIcon) eventIcon = 'calendar';
-
-            if (event.isMultiDayStart(d)) this.renderIcon(div, eventIcon);
-            if (event.isAllDay()) this.renderIcon(div, eventIcon);
-            if (event.isMultiDayEnd(d)) this.renderIcon(div, 'arrow-down');
-            if (event.isMultiDayContinuation(d)) this.renderIcon(div, 'arrow-right');
+            this.renderIcon(div, event.icon(d));
             if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML += event.shortLine(this.locale);
 
             parent.appendChild(div);
@@ -574,13 +561,7 @@ class CalendarDay extends CalendarView {
             if (!event.occursOn(this.date)) continue;
             counter++;
             const container = this.appendChild(document.createElement('div'));
-            container.classList.add('event', ...event.classList(this.date));
-
-            let eventParent = event.parentElement;
-            while (eventParent) {
-                container.classList.add(...eventParent.classList.values());
-                eventParent = eventParent.parentElement;
-            }
+            container.classList.add('event', ...event.classes(this.date));
 
             if (event.hasAttribute('style')) {
                 container.setAttribute('style', event.getAttribute('style'));
@@ -598,7 +579,7 @@ class CalendarDay extends CalendarView {
                 div.innerText = event.end.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
             }
 
-            if (event.isMultiDay() || event.isAllDay()) this.renderIcon(time, 'calendar');
+            this.renderIcon(time, event.icon(this.date));
 
             const h2 = container.appendChild(document.createElement('h2'));
             h2.innerHTML = event.description;
@@ -637,9 +618,33 @@ class CalendarEvent extends CalendarBase {
         const start = this.ym(this.start);
         const end = this.ym(this.end);
         this.dataset.ym = (start === end) ? start : `${start} ${end}`;
+
+        for (const parent of this.parents()) {
+            if (this.dataset.icon !== undefined) continue;
+            if (parent.dataset.icon === undefined) continue;
+            this.dataset.icon = parent.dataset.icon;
+            break;
+        }
     }
 
-    classList(d) {
+    * parents() {
+        let parent = this.parentElement;
+        while (parent) {
+            yield parent;
+            parent = parent.parentElement;
+        }
+    }
+
+    icon(d) {
+        if (this.isMultiDayEnd(d)) return 'arrow-down';
+        if (this.isMultiDayContinuation(d)) return 'arrow-right';
+        if (this.hasStartTime()) return null;
+        if (this.dataset.icon) return this.dataset.icon;
+        return 'calendar';
+    }
+
+    classes(d) {
+        const classes = [];
         const candidates = [
             'all-day', this.isAllDay(),
             'multi-day', this.isMultiDay(),
@@ -649,11 +654,14 @@ class CalendarEvent extends CalendarBase {
             this.className, this.hasAttribute('class'),
         ];
 
-        const classes = [];
         for (let i=0; i < candidates.length; i = i + 2) {
             if (candidates[i+1]) {
                 classes.push(candidates[i]);
             }
+        }
+
+        for (const parent of this.parents()) {
+            classes.push(...parent.classList.values());
         }
 
         return classes;
