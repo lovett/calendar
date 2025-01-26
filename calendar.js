@@ -81,6 +81,7 @@ class CalendarView extends CalendarBase {
         this.cache = null;
         this.title = '';
         this.linkedTitleParts = [];
+        this.emojiPattern = /\p{Emoji}/u;
     }
 
     connectedCallback() {
@@ -256,12 +257,20 @@ class CalendarView extends CalendarBase {
 
     renderIcon(parent, id) {
         if (!id) return;
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('class', 'icon');
-        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
-        use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${id}`);
-        svg.appendChild(use);
-        parent.appendChild(svg);
+
+        let node;
+        if (this.emojiPattern.test(id)) {
+            node = document.createElement('span')
+            node.classList.add('icon');
+            node.innerText = id;
+        }  else {
+            node = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            node.setAttribute('class', 'icon');
+            const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+            use.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', `#${id}`);
+            node.appendChild(use);
+        }
+        parent.appendChild(node);
     }
 
     renderShell() {
