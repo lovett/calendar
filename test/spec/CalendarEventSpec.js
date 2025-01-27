@@ -166,5 +166,25 @@ describe('CalendarEvent', function() {
                 expect(event.shortLine('en-US')).toBe('rest of text');
             }
         });
+
+        it("preserves markup", function() {
+            const date = '2025-01-01';
+            const link = '<a href="http://example.com">link</a>';
+            const scenarios = [
+                [`${date} ${link}`, link],
+                [`${date} test ${link}`, `test ${link}`],
+                [`${date} test ${link} test`, `test ${link} test`],
+                [`${date} 8:30PM ${link}`, `8:30 PM ${link}`],
+
+            ];
+
+            for (const [text, description] of scenarios) {
+                const event = new CalendarEvent();
+                event.innerHTML = text;
+                event.parseDate();
+                event.parseTime();
+                expect(event.shortLine('en-US')).toBe(description);
+            }
+        });
     });
 });

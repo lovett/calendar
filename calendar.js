@@ -741,7 +741,7 @@ class CalendarEvent extends CalendarBase {
 
     parseDate() {
         if (this.parsedDate) return;
-        for (const [i, match] of this.match(/(\d{4})-(\d{2})-(\d{2})\W*/g, 2)) {
+        for (const [i, match] of this.match(/(\d{4})-(\d{2})-(\d{2})\s*/g, 2)) {
             this.captureParsingIndex(match);
             const [_, year, month, day] = match.map(x => Number.parseInt(x, 10));
             if (i === 0) {
