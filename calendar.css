@@ -1,6 +1,12 @@
 :root {
     --padding: 0.25em;
     --bg: rgb(247, 247, 251);
+    --multi-day: #00A878;
+    --today: #FE5E41;
+    --diminished: #ddd;
+    --has-events: #A1B5D8;
+    --default: #333;
+    --default-inverse: #fff;
 }
 
 * {
@@ -8,13 +14,13 @@
 }
 
 *:focus {
-    outline: .25rem solid cyan;
+    outline: .25rem solid var(--today);
     outline-offset: .25rem;
 }
 
 html {
     font-family: "New York Medium", "Baskerville", "Liberation Serif", serif;
-    color: #333;
+    color: var(--default);
     font-size: 16px;
     background-color: var(--bg);
 }
@@ -50,7 +56,7 @@ cal-day .event.multi-day, cal-day .event.all-day {
 
 cal-day .event.empty {
     align-items: center;
-    background-color: #ccc;
+    background-color: var(--diminished);
     grid-template-rows: 5em;
 }
 
@@ -84,7 +90,7 @@ cal-month {
 }
 
 cal-month .day {
-    box-shadow:1px 1px 0 0px #ddd;
+    box-shadow:1px 1px 0 0px var(--diminished);
 }
 
 cal-month .has-events a {
@@ -100,18 +106,18 @@ cal-month .day-number {
 }
 
 cal-month .day-of-week {
-    border: 1px solid #333;
+    border: 1px solid currentColor;
     border-left: 0;
     border-right: 0;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
-    padding: 0.5em;
+    padding: 0.75em;
     line-height: 1;
 }
 
 cal-month .day {
-    box-shadow:1px 1px 0 0px #ddd;
+    box-shadow:1px 1px 0 0px var(--diminished);
 }
 
 cal-month .lining {
@@ -175,7 +181,7 @@ cal-year .day-number {
 }
 
 cal-year .has-events {
-    background-color: lightblue;
+    background-color: var(--has-events);
 }
 
 cal-year .month {
@@ -184,7 +190,7 @@ cal-year .month {
     grid-template-columns: repeat(7, 1fr);
     align-items: center;
     justify-content: center;
-    margin-bottom: 2em;
+    margin: 1em 0;
 }
 
 cal-year .month:last-of-type {
@@ -204,12 +210,12 @@ body > svg  {
 }
 
 .day.today .day-number {
-    background-color: #e01b24;
-    color: #fff;
+    background-color: var(--today);
+    color: var(--default-inverse);
 }
 
 .diminished {
-    background-color: #ddd;
+    background-color: var(--diminished);
 }
 
 .icon {
@@ -238,7 +244,7 @@ body > svg  {
     justify-content: space-between;
     align-items: center;
     gap: 0 0.5em;
-    padding: 0.75em 0.5em;
+    padding: 0.5em;
 }
 
 .navigator h1 {
@@ -252,8 +258,8 @@ body > svg  {
     border-radius: .25em;
     padding: var(--padding);
     font-weight: bold;
-    color: #fff;
-    background-color: #333;
+    color: var(--default-inverse);
+    background-color: var(--default);
     display: inline-flex;
 }
 
@@ -399,15 +405,6 @@ body > svg  {
         margin-bottom: -2px;
     }
 
-    cal-month .multi-day {
-        background-color: blue;
-        padding: 0.25em 0.5em;
-        color: #fff;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
-
     cal-month .multi-day-start .icon, cal-month .all-day .icon {
         margin-right: .25em;
     }
@@ -422,6 +419,15 @@ body > svg  {
 
     cal-year {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    .multi-day {
+        background-color: var(--multi-day);
+        padding: 0.25em 0.5em;
+        color: var(--default-inverse);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
     }
 
     .navigator h1 {
