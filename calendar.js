@@ -120,7 +120,6 @@ class CalendarView extends CalendarBase {
             tag.classList.remove('today');
         }
 
-        if (this.ym(this.now) !== this.ym(this.date)) return;
         const tag = this.querySelector(`.day[data-ymd="${this.ymd(this.now)}"]`);
         if (tag) tag.classList.add('today');
     }
