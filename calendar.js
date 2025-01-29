@@ -187,7 +187,8 @@ class CalendarView extends CalendarBase {
         }
 
         if (e.type === 'jump') {
-            window.location.hash = prompt("Jump to:", this.hasher(this.now));
+            const destination = prompt("Jump to:", this.hasher(this.now));
+            if (destination) window.location.hash = destination;
         }
     }
 
