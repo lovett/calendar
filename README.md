@@ -52,6 +52,25 @@ The rest of the tag content is treated as the event title and description. It ca
 
 Although `cal-event` is a custom tag, it inherits behavior from standard HTML tags. You can define CSS classes or inline styles in your HTML file to jazz up an event's presentation to whatever extent you like. There's also a special `data-icon` attribute that can be used to set a custom Emoji as the icon for an event. You can also reference SVG symbols if you've added an SVG `<defs>` tag to the page.
 
+## Customization
+A couple things can be customized by adding special meta tags to the HTML document:
+
+*Title*: displayed in the header, useful when switching between multiple HTML files:
+```
+<meta name="title" content="Title of My Calendar" />
+```
+
+*Locale*: normally determined by the browser, but able to be overridden:
+```
+<meta name="locale" content="FR_fr" />
+```
+
+*Version*: when set, turns on caching for a slight speedup. The cache only lasts while the browser window is open. Ideally, the version is changed whenever events are added or changed.
+
+```
+<meta name="version" content="anything" />
+```
+
 
 ## Acknowledgements
 
