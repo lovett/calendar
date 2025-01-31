@@ -242,6 +242,12 @@ class CalendarView extends CalendarBase {
         const formatter = new Intl.DateTimeFormat(this.locale, this.titleFormat);
         const prefix = (this.name)? [this.name, ' '] : [];
 
+        if (prefix.length > 0) {
+            const span = document.createElement('span');
+            span.innerText = prefix[0];
+            prefix[0] = span.outerHTML;
+        }
+
         this.querySelector('.navigator h1').innerHTML = prefix.concat(
             formatter.formatToParts(this.date).map(({ type, value }) => {
                 if (this.linkedTitleParts.indexOf(type) === -1) return value;
@@ -253,6 +259,19 @@ class CalendarView extends CalendarBase {
                 return link.outerHTML;
             })
         ).join('');
+    }
+
+    relativeAge(d) {
+        const formatter = this.cache.get('relativeTimeFormatter', () => {
+            if (!window.Intl.RelativeTimeFormat) return [null, null];
+            return [new Intl.RelativeTimeFormat(this.locale, { numeric: "auto" }), null];
+        });
+
+        if (!formatter) return '';
+        const ms = d.getTime() - this.now.getTime();
+        const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
+        if (Math.abs(days) > 365) return '';
+        return formatter.format(days, 'day');
     }
 
     renderIcon(parent, id) {
@@ -278,7 +297,6 @@ class CalendarView extends CalendarBase {
         this.innerHTML = `
         <header class="navigator">
             <h1></h1>
-            <div class="subtitle"></div>
             <a href="#previous" class="nav previous"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
             <a href="#jump" class="nav jump"><svg class="icon"><use xlink:href="#compass" /></svg></a>
             <a href="#next" class="nav next"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
@@ -380,6 +398,7 @@ class CalendarYear extends CalendarView {
         const hasEvents = this.hasEvents(d);
         const container = parent.appendChild(document.createElement('div'));
         container.classList.add(...['day'].concat(classes));
+        container.setAttribute('title', this.relativeAge(d));
 
         container.dataset.ymd = this.ymd(d);
 
@@ -524,6 +543,7 @@ class CalendarMonth extends CalendarView {
         }
 
         dayNumber.classList.add('day-number');
+        dayNumber.setAttribute('title', this.relativeAge(d));
 
         let label = '';
         if (d.getDate() === 1) {
@@ -561,10 +581,11 @@ class CalendarDay extends CalendarView {
 
     renderView() {
         let counter = 0;
-        this.removeAll('.event');
+        this.removeAll('.event, .day-of-week');
 
-        const day = this.date.toLocaleString(this.locale, {weekday: 'long'});
-        this.querySelector('.navigator .subtitle').innerText = day;
+        const div = this.appendChild(document.createElement('div'));
+        div.classList.add('day-of-week');
+        div.innerText = `${this.date.toLocaleString(this.locale, {weekday: 'long'})}, ${this.relativeAge(this.date)}`;
 
         for (const event of this.eventFinder(this.date)) {
             if (!event.occursOn(this.date)) continue;

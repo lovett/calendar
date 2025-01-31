@@ -29,6 +29,12 @@ a {
     color: currentColor;
 }
 
+cal-day .day-of-week {
+    font-size: 1.5em;
+    font-style: italic;
+    padding: 0.75em;
+}
+
 cal-day .event {
     display: grid;
     grid-template-columns: 5em 1fr;
@@ -239,7 +245,6 @@ body > svg  {
     grid-template-columns: 1fr auto;
     grid-template-areas:
         "title toggle"
-        "subtitle toggle"
         "panel panel";
     justify-content: space-between;
     align-items: center;
@@ -249,9 +254,13 @@ body > svg  {
 
 .navigator h1 {
     grid-area: title;
-    font-size: 1.75em;
+    font-size: 1.25em;
     font-weight: normal;
-    line-height: 1;
+    line-height: 1.3;
+}
+
+.navigator h1 span {
+    display: block;
 }
 
 .navigator .nav {
@@ -379,6 +388,10 @@ body > svg  {
 @media only screen and (min-width: 600px) {
     cal-year {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .navigator h1 span {
+        display: revert;
     }
 }
 
