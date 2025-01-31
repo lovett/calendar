@@ -79,7 +79,7 @@ class CalendarView extends CalendarBase {
     constructor() {
         super();
         this.cache = null;
-        this.title = '';
+        this.name = '';
         this.linkedTitleParts = [];
         this.emojiPattern = /\p{Emoji}/u;
     }
@@ -240,7 +240,7 @@ class CalendarView extends CalendarBase {
 
     populateTitle() {
         const formatter = new Intl.DateTimeFormat(this.locale, this.titleFormat);
-        const prefix = (this.title)? [this.title, ' '] : [];
+        const prefix = (this.name)? [this.name, ' '] : [];
 
         this.querySelector('.navigator h1').innerHTML = prefix.concat(
             formatter.formatToParts(this.date).map(({ type, value }) => {
@@ -307,7 +307,7 @@ class CalendarYear extends CalendarView {
     constructor(cache, config) {
         super();
         this.cache = cache;
-        this.title = config.title;
+        this.name = config.name;
         this.locale = config.locale;
         this.titleFormat = {year: 'numeric'}
     }
@@ -413,7 +413,7 @@ class CalendarMonth extends CalendarView {
     constructor(cache, config) {
         super();
         this.cache = cache;
-        this.title = config.title;
+        this.name = config.name;
         this.locale = config.locale;
         this.linkedTitleParts = ['year'];
         this.titleFormat = {month: 'long', year: 'numeric'}
@@ -541,7 +541,7 @@ class CalendarDay extends CalendarView {
     constructor(cache, config) {
         super();
         this.cache = cache;
-        this.title = config.title;
+        this.name = config.name;
         this.locale = config.locale;
         this.linkedTitleParts = ['year', 'month'];
         this.titleFormat = {month: 'long', day: 'numeric', year: 'numeric'}
@@ -968,7 +968,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
 
     const config = {
         locale: Intl.DateTimeFormat().resolvedOptions().locale,
-        title: '',
+        name: '',
         version: '',
         appVersion: '!dev!',
     };

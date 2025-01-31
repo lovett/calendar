@@ -55,9 +55,9 @@ Although `cal-event` is a custom tag, it inherits behavior from standard HTML ta
 ## Customization
 A couple things can be customized by adding special meta tags to the HTML document:
 
-*Title*: displayed in the header, useful when switching between multiple HTML files:
+*Name*: displayed in the header, useful when switching between multiple HTML files:
 ```
-<meta name="title" content="Title of My Calendar" />
+<meta name="name" content="Name of My Calendar" />
 ```
 
 *Locale*: normally determined by the browser, but able to be overridden:
