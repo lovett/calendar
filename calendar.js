@@ -614,7 +614,9 @@ class CalendarDay extends CalendarView {
             const h2 = container.appendChild(document.createElement('h2'));
             h2.innerHTML = event.description;
 
-            container.appendChild(event.details);
+            const details = container.appendChild(document.createElement('div'));
+            details.classList.add('details');
+            details.innerHTML = event.details;
         }
 
         if (counter === 0) {
@@ -677,6 +679,7 @@ class CalendarEvent extends CalendarBase {
         const classes = [];
         const candidates = [
             'all-day', this.isAllDay(),
+            'at-time', this.hasStartTime(),
             'multi-day', this.isMultiDay(),
             'multi-day-start', this.isMultiDayStart(d),
             'multi-day-continuation', this.isMultiDayContinuation(d),
@@ -707,8 +710,8 @@ class CalendarEvent extends CalendarBase {
 
     get details() {
         const details = this.querySelector('details');
-        if (details) return details.cloneNode(true);
-        return document.createTextNode('');
+        if (details) return details.innerHTML;
+        return '';
     }
 
     hasStartTime() {

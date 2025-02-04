@@ -30,20 +30,20 @@ a {
 }
 
 cal-day .day-of-week {
-    font-size: 1.5em;
+    font-size: 1em;
     font-style: italic;
-    padding: 0.75em;
+    padding: 1em 0.5em;
 }
 
 cal-day .event {
     display: grid;
-    grid-template-columns: 5em 1fr;
+    grid-template-columns: 6em 1fr;
     grid-template-rows: auto 1fr;
     gap: 0 1em;
-    margin-bottom: 2em;
+    margin-bottom: 1em;
     line-height: 1.5;
-    align-items: start;
-    padding: 0 var(--padding);
+    align-items: center;
+    padding: var(--padding);
     box-sizing: border-box;
 }
 
@@ -51,35 +51,48 @@ cal-day .event:last-of-type {
     margin-bottom: 0;
 }
 
+cal-day .event.at-time {
+    align-items: start;
+}
+
 cal-day .event .icon {
     vertical-align: middle;
 }
 
-cal-day .event.multi-day, cal-day .event.all-day {
-    align-items: center;
-    grid-template-rows: 3em;
-}
-
-cal-day .event.empty {
-    align-items: center;
-    background-color: var(--diminished);
-    grid-template-rows: 5em;
-}
-
 cal-day .event details {
+    padding-top: 1em;
     margin: 1em 0;
 }
 
 cal-day .event time {
     display: grid;
     grid-template-columns: 1fr;
-    justify-items: end;
     grid-row: 1 / -1;
+    padding-right: 0;
+    justify-items: end;
+}
+
+cal-day .event.at-time time {
+    justify-items: center;
+    background-color: var(--default);
+    color: var(--default-inverse);
+    font-size: .85em;
+    padding: 0.25em 0;
 }
 
 cal-day .event h2 {
     font-weight: inherit;
-    font-size: 1em;
+    font-size: 1.1em;
+}
+
+cal-day .event .details p {
+    margin-bottom: 1em;
+}
+
+cal-day .event.multi-day {
+    background-color: var(--multi-day);
+    padding: 0.25em 0.5em;
+    color: var(--default-inverse);
 }
 
 cal-event {
@@ -404,6 +417,19 @@ body > svg  {
         font-size: 18px;
     }
 
+    cal-day .day-of-week {
+        font-size: 1.25em;
+        padding: 1em;
+    }
+
+    cal-day .event.at-time time {
+        margin-top: .5em;
+    }
+
+    cal-day .event h2 {
+        font-size: 1.25em;
+    }
+
     cal-month .lining {
         height: auto;
     }
@@ -430,17 +456,14 @@ body > svg  {
         justify-self: end;
     }
 
-    cal-year {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
-    .multi-day {
-        background-color: var(--multi-day);
-        padding: 0.25em 0.5em;
-        color: var(--default-inverse);
+    cal-month .multi-day {
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+    }
+
+    cal-year {
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .navigator h1 {
