@@ -355,7 +355,7 @@ class CalendarYear extends CalendarView {
 
             if (d.getDate() === 1) {
                 const month = fragment.appendChild(document.createElement('div'));
-                month.className = 'month';
+                month.classList.add('month');
                 const title = month.appendChild(document.createElement('h2'));
                 const link = title.appendChild(document.createElement('a'));
                 link.href = '#';
@@ -364,7 +364,7 @@ class CalendarYear extends CalendarView {
 
                 for (const day of this.dayNames) {
                     const div = document.createElement('div');
-                    div.className = 'day-of-week';
+                    div.classList.add('day-of-week');
                     div.innerText = day;
                     fragment.lastChild.append(div);
                 }
@@ -468,7 +468,7 @@ class CalendarMonth extends CalendarView {
         if (!this.querySelector('.day-of-week')) {
             for (const day of this.dayNames) {
                 const div = document.createElement('div');
-                div.className = 'day-of-week';
+                div.classList.add('day-of-week');
                 div.innerText = day;
                 fragment.append(div);
             }
