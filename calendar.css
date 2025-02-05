@@ -89,12 +89,6 @@ cal-day .event .details p {
     margin-bottom: 1em;
 }
 
-cal-day .event.multi-day {
-    background-color: var(--multi-day);
-    padding: 0.25em 0.5em;
-    color: var(--default-inverse);
-}
-
 cal-event {
     display: none;
 }
@@ -118,10 +112,9 @@ cal-month .has-events a {
 
 cal-month .day-number {
     white-space: nowrap;
-    justify-self: center;
-    margin: 0.5em;
+    justify-self: end;
     font-size: .85em;
-    padding: 0.5em;
+    padding: var(--padding);
 }
 
 cal-month .day-of-week {
@@ -130,8 +123,9 @@ cal-month .day-of-week {
     border-right: 0;
     display: inline-flex;
     align-items: center;
-    justify-content: flex-end;
-    padding: 0.75em;
+    justify-content: end;
+    padding: var(--padding);
+    box-sizing: border-box;
     line-height: 1;
 }
 
@@ -155,10 +149,11 @@ cal-month .event {
 
 cal-month .event-count {
     display: flex;
-    align-items: center;
-    justify-self: center;
-    margin-top: 0.5em;
+    align-self: center;
+    justify-self: end;
+    padding: var(--padding);
     gap: 0 0.25em;
+    font-size: .85em;
 }
 
 cal-month .multi-day-continuation {
@@ -235,6 +230,12 @@ body > svg  {
 
 .diminished {
     background-color: var(--diminished);
+}
+
+.event.multi-day {
+    background-color: var(--multi-day);
+    padding: 0.25em 0.5em;
+    color: var(--default-inverse);
 }
 
 .icon {
