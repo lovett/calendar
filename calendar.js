@@ -151,9 +151,7 @@ class CalendarView extends CalendarBase {
             const yDelta = e.detail.y - this.swipe[1];
             const step = new CustomEvent('step', {detail: {to: null}});
 
-            if (Math.abs(xDelta) < Math.abs(yDelta)) {
-                if (yDelta < 0) step.detail.to = 'today';
-            } else {
+            if (Math.abs(xDelta) > Math.abs(yDelta)) {
                 if (xDelta > 0) step.detail.to = 'previous';
                 if (xDelta < 0) step.detail.to = 'next';
             }
