@@ -356,6 +356,7 @@ class CalendarYear extends CalendarView {
             if (d.getDate() === 1) {
                 const month = fragment.appendChild(document.createElement('div'));
                 month.classList.add('month');
+                month.id = this.ym(d);
                 const title = month.appendChild(document.createElement('h2'));
                 const link = title.appendChild(document.createElement('a'));
                 link.href = '#';
@@ -390,6 +391,11 @@ class CalendarYear extends CalendarView {
         }
 
         this.append(fragment);
+
+        const currentMonth = document.getElementById(this.ym(this.now));
+        if (currentMonth && window.scrollY === 0) {
+            currentMonth.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
     }
 
     renderDay(parent, d, ...classes) {
