@@ -439,6 +439,7 @@ body > svg  {
     cal-month .event {
         display: block;
         padding: 0.5em 0.25em;
+        box-sizing: border-box;
         margin-bottom: .25em;
     }
 
@@ -462,7 +463,27 @@ body > svg  {
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+        height: 2em;
+        --displayIndex: 0;
     }
+
+    cal-month .event.multi-day:not(.multi-day-start) {
+        margin-top: calc(var(--displayIndex) * 2.25em);
+    }
+
+    cal-month .event.multi-day ~ .event {
+        margin-top: 0;
+    }
+
+    .event[data-display-index="1"] { --displayIndex: 1; }
+    .event[data-display-index="2"] { --displayIndex: 2; }
+    .event[data-display-index="3"] { --displayIndex: 3; }
+    .event[data-display-index="4"] { --displayIndex: 4; }
+    .event[data-display-index="5"] { --displayIndex: 5; }
+    .event[data-display-index="6"] { --displayIndex: 6; }
+    .event[data-display-index="7"] { --displayIndex: 7; }
+    .event[data-display-index="8"] { --displayIndex: 8; }
+    .event[data-display-index="9"] { --displayIndex: 9; }
 
     cal-year {
         grid-template-columns: repeat(3, 1fr);

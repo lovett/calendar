@@ -484,10 +484,19 @@ class CalendarMonth extends CalendarView {
         }
 
         const d = new Date(firstDay);
+
         while (d <= lastDay) {
-            const eventSubset = [];
+            let eventSubset = [];
             for (const event of events) {
-                if (event.occursOn(d)) eventSubset.push(event);
+                if (!event.occursOn(d)) continue;
+                eventSubset.push(event);
+                if (eventSubset.length === 1) continue;
+                event.displayIndex = eventSubset[eventSubset.length - 2].displayIndex + 1;
+                if (eventSubset[0].displayIndex > 0 && event.displayIndex > 0) {
+                    event.displayIndex = 0;
+                    eventSubset.pop();
+                    eventSubset.unshift(event);
+                }
             }
 
             const day = fragment.appendChild(document.createElement('div'));
@@ -533,10 +542,12 @@ class CalendarMonth extends CalendarView {
             }
 
             div.classList.add('event', ...event.classes(d));
+            div.dataset.displayIndex = event.displayIndex;
 
             this.renderIcon(div, event.icon(d));
             if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML += event.shortLine(this.locale);
 
+            div.innerHTML += `(${event.displayIndex})`;
             parent.appendChild(div);
         }
     }
@@ -662,6 +673,7 @@ class CalendarEvent extends CalendarBase {
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
         this.parsedDate = false;
         this.parsedTime = false;
+        this.displayIndex = 0;
     }
 
     connectedCallback() {
