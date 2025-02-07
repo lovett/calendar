@@ -150,6 +150,8 @@ describe('CalendarEvent', function() {
                 ["8:30 AM", [8, 30]],
                 ["1:03", [1, 3]],
                 ["13:03", [13, 3]],
+                ["12:30 PM", [12, 30]],
+                ["1:37 pm", [13, 37]],
             ];
 
             for (const [value, [hours, minutes]] of scenarios) {

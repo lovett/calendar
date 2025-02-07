@@ -605,18 +605,23 @@ class CalendarDay extends CalendarView {
             }
 
             const time = container.appendChild(document.createElement('time'));
-            if (event.hasStartTime()) {
+            if (event.canShowStartTime(this.date)) {
                 const div = time.appendChild(document.createElement('div'));
                 div.innerText = event.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+                this.renderIcon(time, 'arrow-down');
             }
 
-            if (event.hasEndTime()) {
-                this.renderIcon(time, 'arrow-down');
+            if (event.canShowEndTime(this.date)) {
+                if (!event.canShowStartTime(this.date)) {
+                    this.renderIcon(time, 'arrow-down');
+                }
                 const div = time.appendChild(document.createElement('div'));
                 div.innerText = event.end.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
             }
 
-            this.renderIcon(time, event.icon(this.date));
+            if (!event.canShowStartTime(this.date) && !event.canShowEndTime(this.date)) {
+                this.renderIcon(time, event.icon(this.date));
+            }
 
             const h2 = container.appendChild(document.createElement('h2'));
             h2.innerHTML = event.description;
@@ -693,7 +698,7 @@ class CalendarEvent extends CalendarBase {
         const classes = [];
         const candidates = [
             'all-day', this.isAllDay(),
-            'at-time', this.hasStartTime(),
+            'at-time', this.canShowStartTime(d) || this.canShowEndTime(d),
             'multi-day', this.isMultiDay(),
             'multi-day-start', this.isMultiDayStart(d),
             'multi-day-continuation', this.isMultiDayContinuation(d),
@@ -733,6 +738,18 @@ class CalendarEvent extends CalendarBase {
         return h > 0 || m > 0;
     }
 
+    canShowStartTime(d) {
+        if (!this.hasStartTime()) return false;
+        if (this.isMultiDay() && !this.isMultiDayStart(d)) return false;
+        return true;
+    }
+
+    canShowEndTime(d) {
+        if (!this.hasEndTime()) return false;
+        if (this.isMultiDay() && !this.isMultiDayEnd(d)) return false;
+        return true;
+    }
+
     hasEndTime() {
         if (this.startTime[0] !== this.endTime[0]) return true;
         if (this.startTime[1] !== this.endTime[1]) return true;
@@ -768,12 +785,18 @@ class CalendarEvent extends CalendarBase {
         return d > this.start;
     }
 
-    dayCount(d) {
+    dayCount(asOf) {
         if (!this.isMultiDay()) return [1, 1];
-        const oneDayMs = 1000 * 60 * 60 * 24;
-        const elapsedDays = Math.ceil((d.getTime() - this.start.getTime()) / oneDayMs);
-        const totalDays = Math.ceil((this.end.getTime() - this.start.getTime()) / oneDayMs);
-        return [elapsedDays + 1, totalDays];
+
+        const d = new Date(this.startOfDayMs(this.start));
+        let totalDays = 0;
+        let elapsedDays = 0;
+        while (d < this.end) {
+            if (d <= asOf) elapsedDays++;
+            totalDays++;
+            d.setDate(d.getDate() + 1);
+        }
+        return [elapsedDays, totalDays];
     }
 
     * match(pattern, limit) {
@@ -802,7 +825,7 @@ class CalendarEvent extends CalendarBase {
         if (this.parsedTime) return;
         if (!this.start) return;
 
-        for (const [i, match] of this.match(/(\d{1,2}):(\d{1,2})\s*([AP]M)?\s*/g, 2)) {
+        for (const [i, match] of this.match(/(\d{1,2}):(\d{1,2})\s*([AP]M)?\s*/gi, 2)) {
             if (i > 0) {
                 const wordsSinceLastMatch = this.innerHTML.slice(this.parsingIndex, match.index)
                     .trim()
@@ -812,7 +835,7 @@ class CalendarEvent extends CalendarBase {
             this.captureParsingIndex(match);
 
             let [hour, minute] = match.slice(1, 3).map(x => Number.parseInt(x, 10));
-            hour += (match[3] && match[3].toLowerCase() === 'pm') ? 12 : 0;
+            hour += (hour < 12 && match[3] && match[3].toLowerCase() === 'pm') ? 12 : 0;
 
             if (this.start && i === 0) {
                 this.start.setHours(hour);
