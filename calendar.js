@@ -621,6 +621,13 @@ class CalendarDay extends CalendarView {
             const h2 = container.appendChild(document.createElement('h2'));
             h2.innerHTML = event.description;
 
+            if (event.isMultiDay()) {
+                const [elapsedDays, totalDays] = event.dayCount(this.date);
+                const span = h2.appendChild(document.createElement('span'));
+                span.classList.add('day-count');
+                span.innerText = ` — Day ${elapsedDays} of ${totalDays}`;
+            }
+
             const details = container.appendChild(document.createElement('div'));
             details.classList.add('details');
             details.innerHTML = event.details;
@@ -759,6 +766,14 @@ class CalendarEvent extends CalendarBase {
         if (!this.isMultiDay()) return false;
         if (this.isMultiDayEnd(d)) return false;
         return d > this.start;
+    }
+
+    dayCount(d) {
+        if (!this.isMultiDay()) return [1, 1];
+        const oneDayMs = 1000 * 60 * 60 * 24;
+        const elapsedDays = Math.ceil((d.getTime() - this.start.getTime()) / oneDayMs);
+        const totalDays = Math.ceil((this.end.getTime() - this.start.getTime()) / oneDayMs);
+        return [elapsedDays + 1, totalDays];
     }
 
     * match(pattern, limit) {
