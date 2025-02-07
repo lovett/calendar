@@ -268,7 +268,10 @@ class CalendarView extends CalendarBase {
         if (!formatter) return '';
         const ms = d.getTime() - this.now.getTime();
         const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
-        if (Math.abs(days) > 365) return '';
+        const months = Math.ceil(days / 30);
+        const years = Math.ceil(days / 365);
+        if (Math.abs(years) > 1) return formatter.format(years, 'year');
+        if (Math.abs(months) > 3) return formatter.format(months, 'month');
         return formatter.format(days, 'day');
     }
 
