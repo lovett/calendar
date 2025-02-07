@@ -738,7 +738,7 @@ class CalendarEvent extends CalendarBase {
     isMultiDay() {
         if (!this.start) return false;
         if (this.start.getMonth() !== this.end.getMonth()) return true;
-        if (this.start.getDay() !== this.end.getDay()) return true;
+        if (this.start.getDate() !== this.end.getDate()) return true;
         return false;
     }
 

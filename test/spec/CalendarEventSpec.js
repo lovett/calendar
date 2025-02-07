@@ -48,12 +48,69 @@ describe('CalendarEvent', function() {
         it("recognizes end date", function() {
             const event = new CalendarEvent();
             event.textContent = '2025-01-02 to 2025-02-07 test';
-            event.parseDate()
+            event.parseDate();
             expect(event.start.getMonth()).toBe(0);
             expect(event.start.getDate()).toBe(2);
             expect(event.end.getMonth()).toBe(1);
             expect(event.end.getDate()).toBe(7);
         });
+    });
+
+    describe("Event classification", function() {
+        it("identifies multi-day events within a single month", function () {
+            const event = new CalendarEvent();
+            event.textContent = '2025-01-02 to 2025-01-09 test';
+            event.parseDate();
+            expect(event.isMultiDay()).toBe(true);
+            expect(event.isAllDay()).toBe(false);
+        });
+
+        it("identifies multi-day events that span multiple months", function () {
+            const event = new CalendarEvent();
+            event.textContent = '2025-01-02 to 2025-02-09 test';
+            event.parseDate();
+            expect(event.isMultiDay()).toBe(true);
+            expect(event.isAllDay()).toBe(false);
+        });
+
+        it("identifies all-day events", function() {
+            const event = new CalendarEvent();
+            event.textContent = '2025-01-02 test';
+            event.parseDate();
+            expect(event.isMultiDay()).toBe(false);
+            expect(event.isAllDay()).toBe(true);
+        });
+
+        it("identifies multi-day start", function() {
+            const d = new Date(2025, 0, 2);
+            const event = new CalendarEvent();
+            event.textContent = '2025-01-02 to 2025-01-09 test';
+            event.parseDate();
+            expect(event.isMultiDayStart(d)).toBe(true);
+            expect(event.isMultiDayEnd(d)).toBe(false);
+            expect(event.isMultiDayContinuation(d)).toBe(false);
+        });
+
+        it("identifies multi-day end", function() {
+            const d = new Date(2025, 0, 9)
+            const event = new CalendarEvent();
+            event.textContent = '2025-01-02 to 2025-01-09 test';
+            event.parseDate();
+            expect(event.isMultiDayStart(d)).toBe(false);
+            expect(event.isMultiDayEnd(d)).toBe(true);
+            expect(event.isMultiDayContinuation(d)).toBe(false);
+        });
+
+        it("identifies multi-day continuation", function() {
+            const d = new Date(2025, 0, 4)
+            const event = new CalendarEvent();
+            event.textContent = '2025-01-02 to 2025-01-09 test';
+            event.parseDate();
+            expect(event.isMultiDayStart(d)).toBe(false);
+            expect(event.isMultiDayEnd(d)).toBe(false);
+            expect(event.isMultiDayContinuation(d)).toBe(true);
+        });
+
     });
 
     describe("Time parsing", function() {
