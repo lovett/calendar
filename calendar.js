@@ -547,7 +547,6 @@ class CalendarMonth extends CalendarView {
             this.renderIcon(div, event.icon(d));
             if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML += event.shortLine(this.locale);
 
-            div.innerHTML += `(${event.displayIndex})`;
             parent.appendChild(div);
         }
     }
