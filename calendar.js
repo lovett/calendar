@@ -486,7 +486,7 @@ class CalendarMonth extends CalendarView {
         const d = new Date(firstDay);
 
         while (d <= lastDay) {
-            let eventSubset = [];
+            const eventSubset = [];
             for (const event of events) {
                 if (!event.occursOn(d)) continue;
                 eventSubset.push(event);
@@ -1002,36 +1002,51 @@ window.addEventListener('hashchange', (e) => {
 });
 
 window.addEventListener('DOMContentLoaded', (e) => {
-    let defaultView = CalendarMonth;
+    const today = new Date();
+    today.setHours(0);
+    today.setMinutes(0);
+    today.setSeconds(0);
+    today.setMilliseconds(0);
 
-    const defaultDate = new Date();
-    defaultDate.setHours(0);
-    defaultDate.setMinutes(0);
-    defaultDate.setSeconds(0);
-    defaultDate.setMilliseconds(0);
+    const config = {
+        locale: Intl.DateTimeFormat().resolvedOptions().locale,
+        name: '',
+        version: '',
+        appVersion: '!dev!',
+        start: today,
+        defaultView: CalendarMonth,
+    };
 
-    let startDate = window.location.hash.replace('#', '');
-    if (!startDate) {
-        const meta = document.head.querySelector('META[name=startDate]');
-        if (meta) startDate = meta.content;
+    for (const meta of document.head.querySelectorAll('meta')) {
+        if (!meta.content) continue;
+        config[meta.name] = meta.content;
     }
 
-    const [y, m, d] = startDate.split('-').map(x => Number.parseInt(x, 10));
-    if (y) {
-        defaultDate.setFullYear(y);
-        defaultDate.setMonth(0);
-        defaultDate.setDate(1);
-        defaultView = CalendarYear;
-   }
-
-    if (y && m) {
-        defaultDate.setMonth(m - 1);
-        defaultView = CalendarMonth;
+    const hashDate = window.location.hash.replace('#', '');
+    if (hashDate) {
+        config.start = hashDate;
     }
 
-    if (y && m && d) {
-        defaultDate.setDate(d);
-        defaultView = CalendarDay;
+    if (typeof config.start === 'string') {
+        const start = new Date(today);
+        const [y, m, d] = config.start.split('-').map(x => Number.parseInt(x, 10));
+        if (y) {
+            start.setFullYear(y);
+            start.setMonth(0);
+            start.setDate(1);
+            config.defaultView = CalendarYear;
+        }
+
+        if (y && m) {
+            start.setMonth(m - 1);
+            config.defaultView = CalendarMonth;
+        }
+
+        if (y && m && d) {
+            start.setDate(d);
+            config.defaultView = CalendarDay;
+        }
+        config.start = start;
     }
 
     const svg = document.body.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
@@ -1046,18 +1061,6 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></symbol>
     </defs>`;
 
-    const config = {
-        locale: Intl.DateTimeFormat().resolvedOptions().locale,
-        name: '',
-        version: '',
-        appVersion: '!dev!',
-    };
-
-    for (const meta of document.head.querySelectorAll('meta')) {
-        if (!meta.content) continue;
-        config[meta.name] = meta.content;
-    }
-
     const appVersionMeta = document.head.appendChild(document.createElement('META'));
     appVersionMeta.name = 'app-version';
     appVersionMeta.content = config.appVersion;
@@ -1067,7 +1070,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     for (const viewClass of [CalendarMonth, CalendarYear, CalendarDay]) {
         for (const node of document.body.querySelectorAll(viewClass.tag)) node.remove();
         const view = document.body.appendChild(new viewClass(cache, config));
-        if (viewClass === defaultView) view.setAttribute('date', defaultDate);
+        if (viewClass === config.defaultView) view.setAttribute('date', config.start);
     }
 
     window.setInterval(() => {

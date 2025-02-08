@@ -65,11 +65,18 @@ A couple things can be customized by adding special meta tags to the HTML docume
 <meta name="locale" content="FR_fr" />
 ```
 
+*Start*: A date in `yyyy-mm-dd` format that should be shown by default instead of the current date:
+
+```
+<meta name="date" content="1999-12-31" />
+```
+
 *Version*: when set, turns on caching for a slight speedup. The cache only lasts while the browser window is open. Ideally, the version is changed whenever events are added or changed.
 
 ```
 <meta name="version" content="anything" />
 ```
+
 
 
 ## Acknowledgements
