@@ -37,7 +37,7 @@ cal-day .day-of-week {
 
 cal-day .event {
     display: grid;
-    grid-template-columns: 6em 1fr;
+    grid-template-columns: 2em 1fr;
     grid-template-rows: auto 1fr;
     gap: 0 1em;
     margin-bottom: 1em;
@@ -45,6 +45,15 @@ cal-day .event {
     align-items: center;
     padding: var(--padding);
     box-sizing: border-box;
+}
+
+cal-day .event.at-time {
+    grid-template-columns: 6em 1fr;
+}
+
+cal-day time .icon {
+    width: 1.5em;
+    height: 1.5em;
 }
 
 cal-day .event:last-of-type {
