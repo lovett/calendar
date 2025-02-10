@@ -1051,22 +1051,60 @@ window.addEventListener('DOMContentLoaded', (e) => {
         if (!start && window.Intl.RelativeTimeFormat) {
             start = new Date(today);
             const rtf = new window.Intl.RelativeTimeFormat(config.locale, { numeric: "auto" });
-            const lastWord = (parts) => parts.pop().value;
-            const todayKeyword = lastWord(rtf.formatToParts(0, 'day'));
-            const yesterdayKeyword = lastWord(rtf.formatToParts(-1, 'day'));
+            const format = (quantity, unit) => rtf.format(quantity, unit).replace(' ', '-');
 
-            if (config.start === todayKeyword) {
+            if (config.start === format(0, 'day')) {
                 config.defaultView = CalendarDay;
             }
 
-            if (config.start === yesterdayKeyword) {
+            if (config.start === format(-1, 'day')) {
                 start.setDate(start.getDate() - 1);
                 config.defaultView = CalendarDay;
             }
 
+            if (config.start === format(1, 'day')) {
+                start.setDate(start.getDate() + 1);
+                config.defaultView = CalendarDay;
+            }
+
+            if (config.start === format(0, 'month')) {
+                start.setDate(1);
+                config.defaultView = CalendarMonth;
+            }
+
+            if (config.start === format(-1, 'month')) {
+                start.setMonth(start.getMonth() - 1);
+                start.setDate(1);
+                config.defaultView = CalendarMonth;
+            }
+
+            if (config.start === format(1, 'month')) {
+                start.setMonth(start.getMonth() + 1);
+                start.setDate(1);
+                config.defaultView = CalendarMonth;
+            }
+
+            if (config.start === format(0, 'year')) {
+                start.setMonth(1);
+                start.setDate(1);
+                config.defaultView = CalendarYear;
+            }
+
+            if (config.start === format(-1, 'year')) {
+                start.setFullYear(start.getFullYear() - 1);
+                start.setMonth(1);
+                start.setDate(1);
+                config.defaultView = CalendarYear;
+            }
+
+            if (config.start === format(1, 'year')) {
+                start.setFullYear(start.getFullYear() + 1);
+                start.setMonth(1);
+                start.setDate(1);
+                config.defaultView = CalendarYear;
+            }
         }
         config.start = start;
-
     }
 
     const svg = document.body.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));

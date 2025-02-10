@@ -6,49 +6,46 @@ describe('Location.hash', function() {
     });
 
     describe("Default date", function() {
-        it("can be in yyyy-mm-dd format", function () {
-            const [y, m, d] = [1999, 1, 1];
-            const dt = new Date(y, m - 1, d, 0, 0, 0, 0);
-            window.location.hash = `${y}-${m}-${d}`;
-            window.dispatchEvent(new Event("DOMContentLoaded"));
-            expect(CalendarDay).toHaveDefaultDate(dt);
-            expect(CalendarDay).toBeTheActiveView();
+        it("can be a date", function() {
+            const scenarios = [
+                ["1999-01-01", CalendarDay],
+                ["1998-02", CalendarMonth],
+                ["1997", CalendarYear],
+            ];
+
+            for (const [scenario, view] of scenarios) {
+                let dt;
+                const parts = scenario.split('-').map(x => Number.parseInt(x, 10));
+                if (parts.length === 1) dt = new Date(parts[0], 0, 1, 0, 0, 0, 0);
+                if (parts.length === 2) dt = new Date(parts[0], parts[1] - 1, 1, 0, 0, 0, 0);
+                if (parts.length === 3) dt = new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0);
+
+                window.location.hash = scenario;
+                window.dispatchEvent(new Event("DOMContentLoaded"));
+                expect(view).toHaveDefaultDate(dt);
+                expect(view).toBeTheActiveView();
+            }
         });
 
-        it("can be in yyyy-mm format", function () {
-            const [y, m] = [1998, 2];
-            const dt = new Date(y, m - 1, 1, 0, 0, 0, 0);
-            window.location.hash = `${y}-${m}`;
-            window.dispatchEvent(new Event("DOMContentLoaded"));
-            expect(CalendarMonth).toHaveDefaultDate(dt);
-            expect(CalendarMonth).toBeTheActiveView();
-        });
+        it("can be a keyword", function () {
+            const scenarios = [
+                ['today', new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0), CalendarDay],
+                ['yesterday', new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0), CalendarDay],
+                ['tomorrow', new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0), CalendarDay],
+                ['this-month', new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0), CalendarMonth],
+                ['last-month', new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0), CalendarMonth],
+                ['next-month', new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0), CalendarMonth],
+                ['this-year', new Date(now.getFullYear(), 1, 1, 0, 0, 0, 0), CalendarYear],
+                ['last-year', new Date(now.getFullYear() - 1, 1, 1, 0, 0, 0, 0), CalendarYear],
+                ['next-year', new Date(now.getFullYear() + 1, 1, 1, 0, 0, 0, 0), CalendarYear],
+            ];
 
-        it("can be in yyyy format", function () {
-            const y = 1997;
-            const dt = new Date(y, 0, 1, 0, 0, 0, 0);
-            window.location.hash = `${y}`;
-            window.dispatchEvent(new Event("DOMContentLoaded"));
-            expect(CalendarYear).toHaveDefaultDate(dt);
-            expect(CalendarYear).toBeTheActiveView();
-        });
-
-        it("can be the keyword 'today'", function () {
-            const keyword = rtf.format(0, 'day');
-            const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-            window.location.hash = keyword;
-            window.dispatchEvent(new Event("DOMContentLoaded"));
-            expect(CalendarDay).toHaveDefaultDate(dt);
-            expect(CalendarDay).toBeTheActiveView();
-        });
-
-        it("can be the keyword 'yesterday'", function () {
-            const keyword = rtf.format(-1, 'day');
-            const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
-            window.location.hash = keyword;
-            window.dispatchEvent(new Event("DOMContentLoaded"));
-            expect(CalendarDay).toHaveDefaultDate(dt);
-            expect(CalendarDay).toBeTheActiveView();
+            for (const [keyword, dt, view] of scenarios) {
+                window.location.hash = keyword;
+                window.dispatchEvent(new Event("DOMContentLoaded"));
+                expect(view).toHaveDefaultDate(dt);
+                expect(view).toBeTheActiveView();
+            }
         });
     });
 });
