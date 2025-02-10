@@ -77,6 +77,22 @@ A couple things can be customized by adding special meta tags to the HTML docume
 <meta name="version" content="anything" />
 ```
 
+## Linking
+A calendar's default date can be set from the URL hash. If present, it takes precedence over the date meta tag.
+
+The URL hash can be a date or a localized keyword phrase:
+  - yyyy-mm-dd
+  - yyyy-mm
+  - yyyy
+  - today
+  - yesterday
+  - tomorrow
+  - this-month
+  - last-month
+  - next-month
+  - this-year
+  - last-year
+  - next-year
 
 
 ## Acknowledgements
