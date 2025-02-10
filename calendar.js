@@ -1028,25 +1028,45 @@ window.addEventListener('DOMContentLoaded', (e) => {
     }
 
     if (typeof config.start === 'string') {
-        const start = new Date(today);
+        let start;
         const [y, m, d] = config.start.split('-').map(x => Number.parseInt(x, 10));
-        if (y) {
+        if (Number.isInteger(y)) {
+            start = new Date(today);
             start.setFullYear(y);
             start.setMonth(0);
             start.setDate(1);
             config.defaultView = CalendarYear;
         }
 
-        if (y && m) {
+        if (Number.isInteger(m)) {
             start.setMonth(m - 1);
             config.defaultView = CalendarMonth;
         }
 
-        if (y && m && d) {
+        if (Number.isInteger(d)) {
             start.setDate(d);
             config.defaultView = CalendarDay;
         }
+
+        if (!start && window.Intl.RelativeTimeFormat) {
+            start = new Date(today);
+            const rtf = new window.Intl.RelativeTimeFormat(config.locale, { numeric: "auto" });
+            const lastWord = (parts) => parts.pop().value;
+            const todayKeyword = lastWord(rtf.formatToParts(0, 'day'));
+            const yesterdayKeyword = lastWord(rtf.formatToParts(-1, 'day'));
+
+            if (config.start === todayKeyword) {
+                config.defaultView = CalendarDay;
+            }
+
+            if (config.start === yesterdayKeyword) {
+                start.setDate(start.getDate() - 1);
+                config.defaultView = CalendarDay;
+            }
+
+        }
         config.start = start;
+
     }
 
     const svg = document.body.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
