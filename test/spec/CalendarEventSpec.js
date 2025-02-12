@@ -54,6 +54,22 @@ describe('CalendarEvent', function() {
             expect(event.end.getMonth()).toBe(1);
             expect(event.end.getDate()).toBe(7);
         });
+
+        it("does not look too far for end date", function() {
+            const scenarios = [
+                '2025-01-02 word word 2025-01-03 word',
+                '2025-01-02 word <details>2025-01-03 word</details>',
+                '2025-01-02 9:00 word <details>2025-01-03 word</details>',
+                '2025-01-02 word <details>2025-01-03</details>',
+            ];
+
+            for (const scenario of scenarios) {
+                const event = new CalendarEvent();
+                event.textContent = scenario;
+                event.parseDate();
+                expect(event.end.getDate()).toBe(event.start.getDate(), scenario);
+            }
+        });
     });
 
     describe("Event classification", function() {

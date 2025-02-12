@@ -811,7 +811,10 @@ class CalendarEvent extends CalendarBase {
     }
 
     * match(pattern, limit) {
-        const iterator = this.innerHTML.matchAll(pattern);
+        let haystack = this.innerHTML;
+        const markupStart = haystack.indexOf('<');
+        if (markupStart > -1) haystack = haystack.slice(0, markupStart);
+        const iterator = haystack.matchAll(pattern);
         for (let i=0; i < limit; i++) {
             const result = iterator.next();
             if (result.done) return;
@@ -822,12 +825,21 @@ class CalendarEvent extends CalendarBase {
     parseDate() {
         if (this.parsedDate) return;
         for (const [i, match] of this.match(/(\d{4})-(\d{2})-(\d{2})\s*/g, 2)) {
+            if (i > 0) {
+                console.log(match.index);
+                const wordsSinceLastMatch = this.innerHTML.slice(this.parsingIndex, match.index)
+                    .trim()
+                    .split(/\s+/);
+                if (wordsSinceLastMatch.length > 1) continue;
+            }
             this.captureParsingIndex(match);
             const [_, year, month, day] = match.map(x => Number.parseInt(x, 10));
             if (i === 0) {
                 this.start = new Date(year, month - 1, day, 0, 0, 0, 0);
             }
+
             this.end = new Date(year, month - 1, day, 23, 59, 59, 999);
+
         }
         this.parsedDate = true;
     }
