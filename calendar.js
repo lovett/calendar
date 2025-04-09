@@ -634,7 +634,10 @@ class CalendarDay extends CalendarView {
             }
 
             const h2 = container.appendChild(document.createElement('h2'));
-            h2.innerHTML = event.description;
+            if (event.canShowStartTime(this.date) || event.canShowEndTime(this.date)) {
+                this.renderIcon(h2, event.icon(this.date));
+            }
+            h2.innerHTML += event.description;
 
             if (event.isMultiDay()) {
                 const [elapsedDays, totalDays] = event.dayCount(this.date);
@@ -700,8 +703,8 @@ class CalendarEvent extends CalendarBase {
     icon(d) {
         if (this.isMultiDayEnd(d)) return 'arrow-down';
         if (this.isMultiDayContinuation(d)) return 'arrow-right';
-        if (this.hasStartTime()) return null;
         if (this.dataset.icon) return this.dataset.icon;
+        if (this.hasStartTime()) return null;
         return 'calendar';
     }
 
