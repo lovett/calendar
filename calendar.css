@@ -442,10 +442,6 @@ body > svg  {
         padding: 1em;
     }
 
-    cal-day .event.at-time time {
-        margin-top: .5em;
-    }
-
     cal-month .lining {
         height: auto;
     }
