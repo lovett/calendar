@@ -618,13 +618,10 @@ class CalendarDay extends CalendarView {
             if (event.canShowStartTime(this.date)) {
                 const div = time.appendChild(document.createElement('div'));
                 div.innerText = event.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
-                this.renderIcon(time, 'arrow-down');
             }
 
             if (event.canShowEndTime(this.date)) {
-                if (!event.canShowStartTime(this.date)) {
-                    this.renderIcon(time, 'arrow-down');
-                }
+                this.renderIcon(time, 'arrow-down');
                 const div = time.appendChild(document.createElement('div'));
                 div.innerText = event.end.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
             }
