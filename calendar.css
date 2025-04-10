@@ -449,19 +449,27 @@ body > svg  {
     cal-month .event {
         display: block;
         padding: 0 .25em;
-        line-height: 1.75em;
-        height: 2em;
         box-sizing: border-box;
         border-width: 0 0 .25em 0;
         border-color: rgba(0, 0, 0,0);
         border-style: solid;
         background-clip: padding-box;
+        min-height: 2em;
+    }
 
+    cal-month .event:not(.multi-day) {
+        text-indent: -1.25em;
+        margin-left: 1.25em;
+        line-height: 1;
     }
 
     cal-month .event .icon {
         margin-bottom: -2px;
         margin-right: 0.25em;
+    }
+
+    cal-month .multi-day {
+        line-height: 1.75em;
     }
 
     cal-month .multi-day-start .icon, cal-month .all-day .icon {
