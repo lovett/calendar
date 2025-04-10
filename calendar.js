@@ -492,11 +492,6 @@ class CalendarMonth extends CalendarView {
                 eventSubset.push(event);
                 if (eventSubset.length === 1) continue;
                 event.displayIndex = eventSubset[eventSubset.length - 2].displayIndex + 1;
-                if (eventSubset[0].displayIndex > 0 && event.displayIndex > 0) {
-                    event.displayIndex = 0;
-                    eventSubset.pop();
-                    eventSubset.unshift(event);
-                }
             }
 
             const day = fragment.appendChild(document.createElement('div'));
