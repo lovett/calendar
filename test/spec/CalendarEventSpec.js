@@ -55,12 +55,22 @@ describe('CalendarEvent', function() {
             expect(event.end.getDate()).toBe(7);
         });
 
+        it("recognizes start date and time, end date only", function() {
+            const event = new CalendarEvent();
+            event.textContent = '2025-01-03 1:01 to 2025-01-06 test';
+            event.parseDate();
+            event.parseTime();
+            expect(event.start.getMonth()).toBe(0);
+            expect(event.start.getDate()).toBe(3);
+            expect(event.end.getMonth()).toBe(0);
+            expect(event.end.getDate()).toBe(6);
+        });
+
         it("does not look too far for end date", function() {
             const scenarios = [
-                '2025-01-02 word word 2025-01-03 word',
-                '2025-01-02 word <details>2025-01-03 word</details>',
-                '2025-01-02 9:00 word <details>2025-01-03 word</details>',
-                '2025-01-02 word <details>2025-01-03</details>',
+                '2025-01-05 word <details>2025-01-06 word</details>',
+                '2025-01-07 9:00 word <details>2025-01-08 word</details>',
+                '2025-01-09 word <details>2025-01-10</details>',
             ];
 
             for (const scenario of scenarios) {

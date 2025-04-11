@@ -821,10 +821,8 @@ class CalendarEvent extends CalendarBase {
         if (this.parsedDate) return;
         for (const [i, match] of this.match(/(\d{4})-(\d{2})-(\d{2})\s*/g, 2)) {
             if (i > 0) {
-                const wordsSinceLastMatch = this.innerHTML.slice(this.parsingIndex, match.index)
-                    .trim()
-                    .split(/\s+/);
-                if (wordsSinceLastMatch.length > 1) continue;
+                const wordsSinceLastMatch = this.innerHTML.slice(this.parsingIndex, match.index);
+                if (wordsSinceLastMatch.indexOf('&lt;') > -1) continue;
             }
             this.captureParsingIndex(match);
             const [_, year, month, day] = match.map(x => Number.parseInt(x, 10));
