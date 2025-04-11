@@ -627,7 +627,7 @@ class CalendarDay extends CalendarView {
 
             const h2 = container.appendChild(document.createElement('h2'));
             if (event.canShowStartTime(this.date) || event.canShowEndTime(this.date)) {
-                this.renderIcon(h2, event.icon(this.date));
+                if (!event.isMultiDay()) this.renderIcon(h2, event.icon(this.date));
             }
             h2.innerHTML += event.description;
 
