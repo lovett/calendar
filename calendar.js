@@ -531,6 +531,8 @@ class CalendarMonth extends CalendarView {
             event.parseTime();
 
             const div = document.createElement('div');
+            const sleeve = document.createElement('div');
+            sleeve.classList.add('sleeve');
 
             if (event.hasAttribute('style')) {
                 div.setAttribute('style', event.getAttribute('style'));
@@ -539,9 +541,10 @@ class CalendarMonth extends CalendarView {
             div.classList.add('event', ...event.classes(d));
             div.dataset.displayIndex = event.displayIndex;
 
-            this.renderIcon(div, event.icon(d));
-            if (!event.isMultiDay() || event.isMultiDayStart(d)) div.innerHTML += event.shortLine(this.locale);
+            this.renderIcon(sleeve, event.icon(d));
+            if (!event.isMultiDay() || event.isMultiDayStart(d)) sleeve.innerHTML += event.shortLine(this.locale);
 
+            div.appendChild(sleeve);
             parent.appendChild(div);
         }
     }

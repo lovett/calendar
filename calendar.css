@@ -457,15 +457,15 @@ body > svg  {
         min-height: 2em;
     }
 
-    cal-month .event:not(.multi-day) {
+    cal-month .event:not(.multi-day) .sleeve {
         text-indent: -1.25em;
         margin-left: 1.25em;
         line-height: 1;
+        padding: .25em;
     }
 
     cal-month .event .icon {
-        margin-bottom: -2px;
-        margin-right: 0.25em;
+        margin-bottom: -.25em;
     }
 
     cal-month .multi-day {
