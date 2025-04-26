@@ -231,6 +231,8 @@ class CalendarView extends CalendarBase {
                 b.parseTime();
                 if (a.start < b.start) return -1;
                 if (a.start > b.start) return 1;
+                if (a.isMultiDay() && !b.isMultiDay()) return -1;
+                if (!a.isMultiDay() && b.isMultiDay()) return 1;
                 return 0;
             }), null];
         })
