@@ -887,8 +887,9 @@ class CalendarEvent extends CalendarBase {
         let result = '';
 
         if (this.hasStartTime()) {
-            result = this.start.toLocaleString(locale, {hour: 'numeric', minute: 'numeric'});
-            result += ' ';
+            const t = document.createElement('time');
+            t.innerHTML = this.start.toLocaleString(locale, {hour: 'numeric', minute: 'numeric'});
+            result += t.outerHTML + ' ';
         }
 
         return result + this.description;
