@@ -461,7 +461,7 @@ body > svg  {
         text-indent: -1.25em;
         margin-left: 1.25em;
         line-height: 1;
-        padding: .25em;
+        padding: .25em .25em .25em 0;
     }
 
     cal-month .event .icon {
