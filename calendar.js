@@ -221,17 +221,15 @@ class CalendarView extends CalendarBase {
         }
         query = query.slice(0, -1);
 
-        return this.cache.get(query, () => {
-            return Array.from(document.querySelectorAll(query)).sort((a, b) => {
-                a.parseTime();
-                b.parseTime();
-                if (a.start < b.start) return -1;
-                if (a.start > b.start) return 1;
-                if (a.isMultiDay() && !b.isMultiDay()) return -1;
-                if (!a.isMultiDay() && b.isMultiDay()) return 1;
-                return 0;
-            });
-        })
+        return Array.from(document.querySelectorAll(query)).sort((a, b) => {
+            a.parseTime();
+            b.parseTime();
+            if (a.start < b.start) return -1;
+            if (a.start > b.start) return 1;
+            if (a.isMultiDay() && !b.isMultiDay()) return -1;
+            if (!a.isMultiDay() && b.isMultiDay()) return 1;
+            return 0;
+        });
     }
 
     populateTitle() {
