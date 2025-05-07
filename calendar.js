@@ -138,6 +138,7 @@ class CalendarView extends CalendarBase {
         if (e.type === 'clock') {
             const now = new Date();
             if (now.getDate() !== this.now.getDate()) {
+                this.cache.set('now', now);
                 this.markToday();
             }
         }
@@ -1141,10 +1142,14 @@ window.addEventListener('DOMContentLoaded', (e) => {
         if (viewClass === config.defaultView) view.setAttribute('date', config.start);
     }
 
-    window.setInterval(() => {
+
+    const clockCallback = () => {
         document.body.querySelector('.view[date]')
             .dispatchEvent(new CustomEvent('clock'));
-    }, 5 * 60 * 1000);
+    }
+
+    clockCallback();
+    window.setInterval(clockCallback, 5000);
 });
 
 if (!window.customElements || !window.customElements.define) {
