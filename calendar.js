@@ -15,13 +15,9 @@ class CalendarCache {
         this.cache.set(key, value);
     }
 
-    get(key, missingCallback) {
-        if (missingCallback && !this.cache.has(key)) {
-            const [result, expiration] = missingCallback();
-            this.cache.set(key, result);
-            if (expiration) {
-                setTimeout(() => this.cache.delete(key), expiration);
-            }
+    get(key, notFoundCallback) {
+        if (notFoundCallback && !this.cache.has(key)) {
+            this.set(key, notFoundCallback());
         }
         return this.cache.get(key);
     }
@@ -30,10 +26,10 @@ class CalendarCache {
         this.storage.setItem(key, value);
     }
 
-    storageGet(key, foundCallback, missingCallback) {
+    storageGet(key, foundCallback, notFoundCallback) {
         const value = this.storage.getItem(key);
         if (value) return foundCallback(value);
-        return missingCallback();
+        return notFoundCallback();
     }
 }
 
@@ -201,14 +197,13 @@ class CalendarView extends CalendarBase {
                 d.setDate(d.getDate() + 1);
                 names[i] = d.toLocaleString(this.locale, {weekday: 'short'});
             }
-            return [names, null];
+            return names;
         });
     }
 
     get now() {
         return this.cache.get('now', () => {
-            const d = new Date();
-            return [d, this.endOfDayMs(d) - d.getTime()];
+            return new Date();
         });
     }
 
@@ -227,7 +222,7 @@ class CalendarView extends CalendarBase {
         query = query.slice(0, -1);
 
         return this.cache.get(query, () => {
-            return [Array.from(document.querySelectorAll(query)).sort((a, b) => {
+            return Array.from(document.querySelectorAll(query)).sort((a, b) => {
                 a.parseTime();
                 b.parseTime();
                 if (a.start < b.start) return -1;
@@ -235,7 +230,7 @@ class CalendarView extends CalendarBase {
                 if (a.isMultiDay() && !b.isMultiDay()) return -1;
                 if (!a.isMultiDay() && b.isMultiDay()) return 1;
                 return 0;
-            }), null];
+            });
         })
     }
 
@@ -264,8 +259,8 @@ class CalendarView extends CalendarBase {
 
     relativeAge(d) {
         const formatter = this.cache.get('relativeTimeFormatter', () => {
-            if (!window.Intl.RelativeTimeFormat) return [null, null];
-            return [new Intl.RelativeTimeFormat(this.locale, { numeric: "auto" }), null];
+            if (!window.Intl.RelativeTimeFormat) return null;
+            return new Intl.RelativeTimeFormat(this.locale, { numeric: "auto" });
         });
 
         if (!formatter) return '';
