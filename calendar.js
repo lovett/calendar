@@ -74,7 +74,7 @@ class CalendarView extends CalendarBase {
 
     constructor() {
         super();
-        this.cache = null;
+        this.viewCache = null;
         this.name = '';
         this.linkedTitleParts = [];
         this.emojiPattern = /\p{Emoji}/u;
@@ -106,9 +106,9 @@ class CalendarView extends CalendarBase {
 
     cachePage() {
         const hash = this.hasher(this.date);
-        const key = this.cache.versionedKey(hash);
+        const key = this.viewCache.versionedKey(hash);
         if (!key) return;
-        this.cache.storageSet(key, this.innerHTML);
+        this.viewCache.storageSet(key, this.innerHTML);
     }
 
     markToday() {
@@ -122,8 +122,8 @@ class CalendarView extends CalendarBase {
 
     renderFromCache() {
         const hash = this.hasher(this.date);
-        const key = this.cache.versionedKey(hash);
-        return this.cache.storageGet(
+        const key = this.viewCache.versionedKey(hash);
+        return this.viewCache.storageGet(
             key,
             (value) => { this.innerHTML = value; return true },
             () => false
@@ -134,7 +134,7 @@ class CalendarView extends CalendarBase {
         if (e.type === 'clock') {
             const now = new Date();
             if (now.getDate() !== this.now.getDate()) {
-                this.cache.set('now', now);
+                this.viewCache.set('now', now);
                 this.markToday();
             }
         }
@@ -188,7 +188,7 @@ class CalendarView extends CalendarBase {
     }
 
     get dayNames() {
-        return this.cache.get('day-names', () => {
+        return this.viewCache.get('day-names', () => {
             const d = new Date(this.now.getTime());
             d.setDate(d.getDate() - d.getDay() - 1);
 
@@ -202,7 +202,7 @@ class CalendarView extends CalendarBase {
     }
 
     get now() {
-        return this.cache.get('now', () => {
+        return this.viewCache.get('now', () => {
             return new Date();
         });
     }
@@ -256,7 +256,7 @@ class CalendarView extends CalendarBase {
     }
 
     relativeAge(d) {
-        const formatter = this.cache.get('relativeTimeFormatter', () => {
+        const formatter = this.viewCache.get('relativeTimeFormatter', () => {
             if (!window.Intl.RelativeTimeFormat) return null;
             return new Intl.RelativeTimeFormat(this.locale, { numeric: "auto" });
         });
@@ -321,7 +321,7 @@ class CalendarYear extends CalendarView {
 
     constructor(cache, config) {
         super();
-        this.cache = cache;
+        this.viewCache = cache;
         this.name = config.name;
         this.locale = config.locale;
         this.titleFormat = {year: 'numeric'}
@@ -434,7 +434,7 @@ class CalendarMonth extends CalendarView {
 
     constructor(cache, config) {
         super();
-        this.cache = cache;
+        this.viewCache = cache;
         this.name = config.name;
         this.locale = config.locale;
         this.linkedTitleParts = ['year'];
@@ -571,7 +571,7 @@ class CalendarDay extends CalendarView {
 
     constructor(cache, config) {
         super();
-        this.cache = cache;
+        this.viewCache = cache;
         this.name = config.name;
         this.locale = config.locale;
         this.linkedTitleParts = ['year', 'month'];
