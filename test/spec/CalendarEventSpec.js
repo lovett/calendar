@@ -234,7 +234,7 @@ describe('CalendarEvent', function() {
             event.textContent = '2025-01-01 8:30 AM rest of text';
             event.parseDate();
             event.parseTime();
-            expect(event.shortLine('en-US')).toBe('8:30 AM rest of text');
+            expect(event.shortLine('en-US')).toBe('<time>8:30 AM</time> rest of text');
         });
 
         it("omits start time for all-day and multi-day events", function() {
@@ -259,7 +259,7 @@ describe('CalendarEvent', function() {
                 [`${date} ${link}`, link],
                 [`${date} test ${link}`, `test ${link}`],
                 [`${date} test ${link} test`, `test ${link} test`],
-                [`${date} 8:30PM ${link}`, `8:30 PM ${link}`],
+                [`${date} 8:30PM ${link}`, `<time>8:30 PM</time> ${link}`],
 
             ];
 
