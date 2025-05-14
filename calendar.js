@@ -425,12 +425,9 @@ class CalendarYear extends CalendarView {
         const lining = container.appendChild(document.createElement('div'))
         lining.classList.add('lining');
 
-        const tag = (hasEvents)? 'a' : 'div';
-        const dayNumber = lining.appendChild(document.createElement(tag));
-        if (tag === 'a') {
-            dayNumber.href = '#';
-            dayNumber.hash = this.ymd(d);
-        }
+        const dayNumber = lining.appendChild(document.createElement('a'));
+        dayNumber.href = '#';
+        dayNumber.hash = this.ymd(d);
         dayNumber.innerText = d.getDate();
         dayNumber.classList.add('day-number');
         if (hasEvents) dayNumber.classList.add('has-events');
@@ -562,13 +559,10 @@ class CalendarMonth extends CalendarView {
         }
     }
 
-    renderDayNumber(parent, d, hasEvents = false) {
-        const tag = (hasEvents)? 'a' : 'div';
-        const dayNumber = parent.appendChild(document.createElement(tag));
-        if (tag === 'a') {
-            dayNumber.href = '#';
-            dayNumber.hash = this.ymd(d);
-        }
+    renderDayNumber(parent, d) {
+        const dayNumber = parent.appendChild(document.createElement('a'));
+        dayNumber.href = '#';
+        dayNumber.hash = this.ymd(d);
 
         dayNumber.classList.add('day-number');
         dayNumber.setAttribute('title', this.relativeAge(d));
