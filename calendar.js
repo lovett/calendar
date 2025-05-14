@@ -67,6 +67,23 @@ class CalendarBase extends HTMLElement {
         d.setDate(d.getDate() - count);
         return d;
     }
+
+    * runExtras(date, config) {
+        const extras = this.viewCache.get('extras', () => {
+            const extras = [];
+            for (const script of document.querySelectorAll('script')) {
+                if (script.src.indexOf('extras/') === -1) continue;
+                const name = script.src.split('/').pop();
+                const func = name.split('.', 1).shift();
+                extras.push(`run${func.charAt(0).toUpperCase()}${func.slice(1)}`);
+            }
+            return extras;
+        });
+
+        for (const extra of extras) {
+            yield window[extra](date, config);
+        }
+    }
 }
 
 class CalendarView extends CalendarBase {
@@ -592,11 +609,21 @@ class CalendarDay extends CalendarView {
 
     renderView() {
         let counter = 0;
-        this.removeAll('.event, .day-of-week');
+        this.removeAll('.event, .day-of-week, .extras');
 
         const div = this.appendChild(document.createElement('div'));
         div.classList.add('day-of-week');
         div.innerText = `${this.date.toLocaleString(this.locale, {weekday: 'long'})}, ${this.relativeAge(this.date)}`;
+
+        const extras = this.appendChild(document.createElement('ul'));
+        extras.classList.add('extras');
+
+        for (const values of this.runExtras(this.date)) {
+            for (const value of values) {
+                const li = extras.appendChild(document.createElement('li'));
+                li.innerText = value;
+            }
+        }
 
         for (const event of this.eventFinder(this.date)) {
             if (!event.occursOn(this.date)) continue;
