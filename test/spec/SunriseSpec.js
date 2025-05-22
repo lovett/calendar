@@ -90,7 +90,7 @@ describe('Sunrise', function() {
      * To match the spreadsheet, the "Time (hrs past local midnight)" column
      * was set to "0:00".
      */
-    describe("Calculation", function() {
+    describe("Sunrise Calculation", function() {
         beforeEach(function() {
             this.result = calculateSunrise(this.date, 40.7128, -74.006);
         });
@@ -187,6 +187,120 @@ describe('Sunrise', function() {
         it("Sunset Date", function() {
             result = this.result.sunsetDate.toLocaleString(this.locale);
             expect(result).toBe('5/1/2025, 7:51:41 PM');
+        });
+    });
+
+    describe("Daylight Calculation", function() {
+        it("skipped for past and future dates", function() {
+            const now = new Date();
+
+            const scenarios = [
+                new Date(now.getFullYear(), now.getMonth(), now.getDay() - 1),
+                new Date(now.getFullYear(), now.getMonth(), now.getDay() + 1),
+            ];
+
+            for (const scenario of scenarios) {
+                const sunriseResult = {date: scenario};
+                const daylightResult = calculateDaylight(sunriseResult);
+                expect(daylightResult).toBeNull();
+            }
+        });
+
+        it("pre-sunrise values", function() {
+            const now = new Date();
+            const fakeSunrise = new Date();
+            fakeSunrise.setHours(now.getHours() + 1);
+            fakeSunrise.setMinutes(now.getMinutes() + 1);
+
+            const fakeSunset = new Date();
+
+            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
+            const daylightResult = calculateDaylight(sunriseResult);
+            expect(daylightResult.hoursUntilSunrise).toEqual(1);
+            expect(daylightResult.minutesUntilSunrise).toEqual(1);
+            expect(daylightResult.hoursSinceSunrise).toEqual(0);
+            expect(daylightResult.minutesSinceSunrise).toEqual(0);
+            expect(daylightResult.isBeforeSunrise).toBe(true);
+        });
+
+        it("post-sunrise values", function() {
+            const now = new Date();
+            const fakeSunrise = new Date();
+            fakeSunrise.setHours(now.getHours() - 1);
+            fakeSunrise.setMinutes(now.getMinutes() - 1);
+
+            const fakeSunset = new Date();
+
+            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
+            const daylightResult = calculateDaylight(sunriseResult);
+            expect(daylightResult.hoursUntilSunrise).toEqual(0);
+            expect(daylightResult.minutesUntilSunrise).toEqual(0);
+            expect(daylightResult.hoursSinceSunrise).toEqual(1);
+            expect(daylightResult.minutesSinceSunrise).toEqual(1);
+            expect(daylightResult.isBeforeSunrise).toBe(false);
+        });
+
+        it("at-sunrise values", function() {
+            const now = new Date();
+            const fakeSunrise = new Date();
+            const fakeSunset = new Date();
+
+            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
+            const daylightResult = calculateDaylight(sunriseResult);
+            expect(daylightResult.hoursUntilSunrise).toEqual(0);
+            expect(daylightResult.minutesUntilSunrise).toEqual(0);
+            expect(daylightResult.hoursSinceSunrise).toEqual(0);
+            expect(daylightResult.minutesSinceSunrise).toEqual(0);
+            expect(daylightResult.isBeforeSunrise).toBe(false);
+        });
+
+        it("pre-sunset values", function() {
+            const now = new Date();
+            const fakeSunrise = new Date();
+
+            const fakeSunset = new Date();
+            fakeSunset.setHours(now.getHours() + 2);
+            fakeSunset.setMinutes(now.getMinutes() + 2);
+
+            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
+            const daylightResult = calculateDaylight(sunriseResult);
+            expect(daylightResult.hoursUntilSunset).toEqual(2);
+            expect(daylightResult.minutesUntilSunset).toEqual(2);
+            expect(daylightResult.hoursSinceSunset).toEqual(0);
+            expect(daylightResult.minutesSinceSunset).toEqual(0);
+            expect(daylightResult.isAfterSunset).toBe(false);
+        });
+
+        it("post-sunset values", function() {
+            const now = new Date();
+            const fakeSunrise = new Date();
+
+            const fakeSunset = new Date();
+            fakeSunset.setHours(now.getHours() - 3);
+            fakeSunset.setMinutes(now.getMinutes() - 3);
+
+            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
+            const daylightResult = calculateDaylight(sunriseResult);
+            expect(daylightResult.hoursUntilSunset).toEqual(0);
+            expect(daylightResult.minutesUntilSunset).toEqual(0);
+            expect(daylightResult.hoursSinceSunset).toEqual(3);
+            expect(daylightResult.minutesSinceSunset).toEqual(3);
+            expect(daylightResult.isAfterSunset).toBe(true);
+        });
+
+        it("at-sunset values", function() {
+            const now = new Date();
+            const fakeSunrise = new Date();
+
+            const fakeSunset = new Date();
+
+            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
+            const daylightResult = calculateDaylight(sunriseResult);
+            expect(daylightResult.hoursUntilSunset).toEqual(0);
+            expect(daylightResult.minutesUntilSunset).toEqual(0);
+            expect(daylightResult.hoursSinceSunset).toEqual(0);
+            expect(daylightResult.minutesSinceSunset).toEqual(0);
+            expect(daylightResult.isAfterSunset).toBe(false);
         });
     });
 });
