@@ -315,6 +315,8 @@ describe('Sunrise', function() {
             const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset, sunlightDurationMinutes: 120};
             const daylightResult = calculateDaylight(sunriseResult);
 
+            expect(daylightResult.spentPercent).toBeGreaterThan(0);
+            expect(daylightResult.remainingPercent).toBeLessThan(100);
             expect(daylightResult.spentPercent + daylightResult.remainingPercent).toEqual(100);
         });
 

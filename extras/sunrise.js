@@ -41,8 +41,8 @@ function runSunrise(date) {
     }
 
     if (daylight && !daylight.isBeforeSunrise && !daylight.isAfterSunset) {
-        results.push(`${daylight.hoursSinceSunrise}h ${daylight.minutesSinceSunrise}m daylight spent (${daylight.spentPercent}%) `);
-        results.push(`${daylight.hoursUntilSunset}h ${daylight.hoursUntilSunset}m daylight remaining (${daylight.remainingPercent}%) `);
+        results.push(`${daylight.hoursSinceSunrise}h ${daylight.minutesSinceSunrise}m daylight spent (${daylight.spentPercent}%)`);
+        results.push(`${daylight.hoursUntilSunset}h ${daylight.hoursUntilSunset}m daylight remaining (${daylight.remainingPercent}%)`);
     }
     return results;
 }
@@ -151,7 +151,7 @@ function calculateDaylight(sunriseResult) {
     } else {
         hoursSinceSunrise = Math.trunc(sunriseDelta / 60);
         minutesSinceSunrise = Math.floor(sunriseDelta % 60);
-        spentPercent = Math.floor(sunriseDelta / sunriseResult.sunlightDurationMinutes) * 100;
+        spentPercent = Math.floor(sunriseDelta / sunriseResult.sunlightDurationMinutes * 100);
     }
 
     let hoursSinceSunset = 0;
@@ -167,7 +167,7 @@ function calculateDaylight(sunriseResult) {
     } else {
         hoursUntilSunset = Math.trunc(sunsetDelta / 60);
         minutesUntilSunset = Math.ceil(sunsetDelta % 60);
-        remainingPercent = Math.ceil(sunsetDelta / sunriseResult.sunlightDurationMinutes) * 100;
+        remainingPercent = Math.ceil(sunsetDelta / sunriseResult.sunlightDurationMinutes * 100);
     }
 
     return {
