@@ -138,43 +138,41 @@ function calculateDaylight(sunriseResult) {
 
     if (!dateIsToday) return null;
 
-    const sunriseDeltaMinutes = now.getHours() * 60 + now.getMinutes() -
-        sunriseResult.sunriseDate.getHours() * 60 - sunriseResult.sunriseDate.getMinutes();
-
-    const sunsetDeltaMinutes = sunriseResult.sunsetDate.getHours() * 60 + sunriseResult.sunsetDate.getMinutes() -
-        now.getHours() * 60 - now.getMinutes();
-
-    let hoursSinceSunrise = Math.trunc(sunriseDeltaMinutes / 60);
-    let minutesSinceSunrise = Math.ceil(sunriseDeltaMinutes % 60);
+    let hoursSinceSunrise = 0;
+    let minutesSinceSunrise = 0;
     let hoursUntilSunrise = 0;
     let minutesUntilSunrise = 0;
-    let spentPercent = Math.ceil((sunriseDeltaMinutes / sunriseResult.sunlightDurationMinutes) * 100);
-
-    if (sunriseDeltaMinutes < 0) {
-        hoursSinceSunrise = 0;
-        minutesSinceSunrise = 0;
-        hoursUntilSunrise = Math.trunc(Math.abs(sunriseDeltaMinutes) / 60);
-        minutesUntilSunrise = Math.trunc(Math.abs(sunriseDeltaMinutes) % 60);
-        spentPercent = 0;
+    let spentPercent = 0;
+    let isBeforeSunrise = now.getTime() < sunriseResult.sunriseDate.getTime();
+    const sunriseDelta = Math.abs((sunriseResult.sunriseDate.getTime() - now.getTime()) / 60_000);
+    if (isBeforeSunrise) {
+        hoursUntilSunrise = Math.trunc(sunriseDelta / 60);
+        minutesUntilSunrise = Math.floor(sunriseDelta % 60);
+    } else {
+        hoursSinceSunrise = Math.trunc(sunriseDelta / 60);
+        minutesSinceSunrise = Math.floor(sunriseDelta % 60);
+        spentPercent = Math.floor(sunriseDelta / sunriseResult.sunlightDurationMinutes) * 100;
     }
 
     let hoursSinceSunset = 0;
     let minutesSinceSunset = 0;
-    let hoursUntilSunset = Math.trunc(sunsetDeltaMinutes / 60);
-    let minutesUntilSunset = Math.trunc(sunsetDeltaMinutes % 60);
-    let remainingPercent = Math.ceil((sunsetDeltaMinutes / sunriseResult.sunlightDurationMinutes) * 100);
-
-    if (sunsetDeltaMinutes < 0) {
-        hoursSinceSunset = Math.trunc(Math.abs(sunsetDeltaMinutes) / 60);
-        minutesSinceSunset = Math.trunc(Math.abs(sunsetDeltaMinutes) % 60);
-        hoursUntilSunset = 0;
-        minutesUntilSunset = 0;
-        remainingPercent = 0;
+    let hoursUntilSunset = 0;
+    let minutesUntilSunset = 0;
+    let remainingPercent = 0;
+    let isAfterSunset = now.getTime() > sunriseResult.sunsetDate.getTime();
+    const sunsetDelta = Math.abs((now.getTime() - sunriseResult.sunsetDate.getTime()) / 60_000)
+    if (isAfterSunset) {
+        hoursSinceSunset = Math.trunc(sunsetDelta / 60);
+        minutesSinceSunset = Math.ceil(sunsetDelta % 60);
+    } else {
+        hoursUntilSunset = Math.trunc(sunsetDelta / 60);
+        minutesUntilSunset = Math.ceil(sunsetDelta % 60);
+        remainingPercent = Math.ceil(sunsetDelta / sunriseResult.sunlightDurationMinutes) * 100;
     }
 
     return {
-        isBeforeSunrise: sunriseDeltaMinutes < 0,
-        isAfterSunset: sunsetDeltaMinutes < 0,
+        isBeforeSunrise,
+        isAfterSunset,
         hoursUntilSunrise,
         minutesUntilSunrise,
         hoursSinceSunrise,

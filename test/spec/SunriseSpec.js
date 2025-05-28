@@ -227,7 +227,7 @@ describe('Sunrise', function() {
             const now = new Date();
             const fakeSunrise = new Date();
             fakeSunrise.setHours(now.getHours() - 1);
-            fakeSunrise.setMinutes(now.getMinutes() - 1);
+            fakeSunrise.setMinutes(now.getMinutes() - 2);
 
             const fakeSunset = new Date();
 
@@ -236,7 +236,7 @@ describe('Sunrise', function() {
             expect(daylightResult.hoursUntilSunrise).toEqual(0);
             expect(daylightResult.minutesUntilSunrise).toEqual(0);
             expect(daylightResult.hoursSinceSunrise).toEqual(1);
-            expect(daylightResult.minutesSinceSunrise).toEqual(1);
+            expect(daylightResult.minutesSinceSunrise).toEqual(2);
             expect(daylightResult.isBeforeSunrise).toBe(false);
         });
 
@@ -301,6 +301,48 @@ describe('Sunrise', function() {
             expect(daylightResult.hoursSinceSunset).toEqual(0);
             expect(daylightResult.minutesSinceSunset).toEqual(0);
             expect(daylightResult.isAfterSunset).toBe(false);
+        });
+
+        it("daylight spent plus remaining percent adds to 100", function() {
+            const now = new Date();
+
+            const fakeSunrise = new Date();
+            fakeSunrise.setHours(now.getHours() - 1);
+
+            const fakeSunset = new Date();
+            fakeSunset.setHours(now.getHours() + 1);
+
+            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset, sunlightDurationMinutes: 120};
+            const daylightResult = calculateDaylight(sunriseResult);
+
+            expect(daylightResult.spentPercent + daylightResult.remainingPercent).toEqual(100);
+        });
+
+
+        it("daylight spent plus remaining time matches total", function() {
+            const now = new Date();
+            const fakeSunrise = new Date();
+            fakeSunrise.setHours(now.getHours() - 1);
+
+            const fakeSunset = new Date();
+            fakeSunset.setHours(now.getHours() + 1);
+
+            for (let i = 0; i < 59; i++) {
+                now.setMinutes(i);
+                fakeSunrise.setMinutes(i);
+                fakeSunset.setMinutes(i);
+
+                const fakeSunlightDurationMinutes = (fakeSunset.getTime() - fakeSunrise.getTime()) / 60_000;
+                const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset, sunlightDurationMinutes: fakeSunlightDurationMinutes };
+                const daylightResult = calculateDaylight(sunriseResult);
+
+                let spentPlusRemainingMinutes = (daylightResult.hoursSinceSunrise * 60) + daylightResult.minutesSinceSunrise +
+                    (daylightResult.hoursUntilSunset * 60) + daylightResult.minutesUntilSunset;
+                console.log(i, fakeSunlightDurationMinutes, spentPlusRemainingMinutes, fakeSunlightDurationMinutes - spentPlusRemainingMinutes);
+
+                expect(spentPlusRemainingMinutes).toEqual(fakeSunlightDurationMinutes);
+            }
+
         });
     });
 });
