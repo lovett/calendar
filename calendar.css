@@ -30,18 +30,17 @@ a {
 }
 
 cal-day .day-of-week {
-    font-size: 1em;
-    font-style: italic;
-    padding: 1em 0.5em;
+    font-size: 1.25em;
+    padding: 1em 0 1em 0.25em ;
 }
 
 cal-day .extras {
     font-size: 1em;
-    padding: 0 0.5em 1em 0.5em;
+    padding: 0 0 1em 0.5em;
     list-style-type: none;
     display: flex;
     flex-flow: column nowrap;
-    gap: 0.5em;
+    gap: 0.75em;
 }
 
 cal-day .event {
@@ -448,13 +447,13 @@ body > svg  {
     }
 
     cal-day .day-of-week {
-        font-size: 1.25em;
-        padding: 1em;
+        font-size: 1.5em;
+        padding-left: 0.75em;
     }
 
     cal-day .extras {
         font-size: 1.25em;
-        padding: 0 1em 1em 1em;
+        padding: 0 0 1em 1em;
     }
 
 
