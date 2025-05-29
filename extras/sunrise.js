@@ -28,7 +28,7 @@ function runSunrise(date) {
     const results = [
         `Sunrise at ${result.sunriseDate.toLocaleString(locale, timeFormat)}`,
         `Sunset at ${result.sunsetDate.toLocaleString(locale, timeFormat)}`,
-        `Daylight ${durationHours}h ${durationMinutes}m`,
+        `${durationHours}h ${durationMinutes}m daylight`,
     ];
 
     const daylight = calculateDaylight(result);
