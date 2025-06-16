@@ -340,7 +340,6 @@ describe('Sunrise', function() {
 
                 let spentPlusRemainingMinutes = (daylightResult.hoursSinceSunrise * 60) + daylightResult.minutesSinceSunrise +
                     (daylightResult.hoursUntilSunset * 60) + daylightResult.minutesUntilSunset;
-                console.log(i, fakeSunlightDurationMinutes, spentPlusRemainingMinutes, fakeSunlightDurationMinutes - spentPlusRemainingMinutes);
 
                 expect(spentPlusRemainingMinutes).toEqual(fakeSunlightDurationMinutes);
             }
