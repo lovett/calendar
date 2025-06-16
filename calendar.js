@@ -34,6 +34,28 @@ class CalendarCache {
 }
 
 class CalendarBase extends HTMLElement {
+    daysOfWeek(format) {
+        const d = new Date();
+        d.setDate(d.getDate() - d.getDay() - 1);
+
+        const names = new Array(7);
+        for (let i = 0; i < names.length; i++) {
+            d.setDate(d.getDate() + 1);
+            names[i] = d.toLocaleString(this.locale, {weekday: format});
+        }
+        return names;
+    }
+
+    monthsOfYear(format) {
+        const d = new Date();
+        const names = new Array(12);
+        for (let i = 0; i < names.length; i++) {
+            d.setMonth(i);
+            names[i] = d.toLocaleString(this.locale, {month: format});
+        }
+        return names;
+    }
+
     isLastDayOfMonth(date) {
         return this.nextDay(date).getMonth() !== date.getMonth();
     }
@@ -206,15 +228,7 @@ class CalendarView extends CalendarBase {
 
     get dayNames() {
         return this.viewCache.get('day-names', () => {
-            const d = new Date(this.now.getTime());
-            d.setDate(d.getDate() - d.getDay() - 1);
-
-            const names = new Array(7);
-            for (let i = 0; i < names.length; i++) {
-                d.setDate(d.getDate() + 1);
-                names[i] = d.toLocaleString(this.locale, {weekday: 'short'});
-            }
-            return names;
+            return this.daysOfWeek('short');
         });
     }
 
@@ -226,6 +240,7 @@ class CalendarView extends CalendarBase {
 
     eventFinder(start, end) {
         const selectors = new Set();
+        selectors.add(`${CalendarEvent.tag}[repeat]`)
         const d = new Date(start);
         while (d <= (end || start)) {
             selectors.add(`${CalendarEvent.tag}[data-ym*="${this.ym(d)}"]`);
@@ -498,7 +513,7 @@ class CalendarMonth extends CalendarView {
         while (d <= lastDay) {
             const eventSubset = [];
             for (const event of events) {
-                if (!event.occursOn(d)) continue;
+                if (!event.occursOn(d) && !event.repeatsOn(d)) continue;
                 eventSubset.push(event);
                 if (eventSubset.length === 1) continue;
                 event.displayIndex = eventSubset[eventSubset.length - 2].displayIndex + 1;
@@ -620,7 +635,7 @@ class CalendarDay extends CalendarView {
         }
 
         for (const event of this.eventFinder(this.date)) {
-            if (!event.occursOn(this.date)) continue;
+            if (!event.occursOn(this.date) && !event.repeatsOn(this.date)) continue;
             counter++;
             const container = this.appendChild(document.createElement('div'));
             container.classList.add('event', ...event.classes(this.date));
@@ -688,10 +703,12 @@ class CalendarEvent extends CalendarBase {
         this.parsedDate = false;
         this.parsedTime = false;
         this.displayIndex = 0;
+        this.repetition = {};
     }
 
     connectedCallback() {
         this.parseDate();
+        this.parseRepetition();
         const start = this.ym(this.start);
         const end = this.ym(this.end);
         this.dataset.ym = (start === end) ? start : `${start} ${end}`;
@@ -717,6 +734,7 @@ class CalendarEvent extends CalendarBase {
         if (this.isMultiDayContinuation(d)) return 'arrow-right';
         if (this.dataset.icon) return this.dataset.icon;
         if (this.hasStartTime()) return null;
+        if (this.repeatsOn(d)) return 'repeat';
         return 'calendar';
     }
 
@@ -887,6 +905,82 @@ class CalendarEvent extends CalendarBase {
         this.parsedTime = true;
     }
 
+    parseRepetition() {
+        if (!this.start) return;
+
+        const interval = this.getAttribute("repeat");
+        if (!interval) return;
+
+        const words = interval.toLowerCase().trim().replace(/[^\w- ]/g, ' ').split(/\s+/);
+
+        const wordAfter = (word) => words.at(words.indexOf(word) + 1);
+
+        const hasWord = (word) => words.indexOf(word.toLowerCase()) > -1;
+
+        const includeDay = (index) => {
+            if (!this.repetition.days) this.repetition.days = new Set();
+            this.repetition.days.add(index);
+        };
+
+        const includeMonth = (index) => {
+            if (!this.repetition.months) this.repetition.months = new Set();
+            this.repetition.months.add(index);
+        }
+
+        for (const [index, dayOfWeek] of this.daysOfWeek('long').entries()) {
+            if (hasWord(dayOfWeek)) includeDay(index);
+        }
+
+        for (const [index, dayOfWeek] of this.daysOfWeek('short').entries()) {
+            if (hasWord(dayOfWeek)) includeDay(index);
+        }
+
+        if (hasWord('daily') && !this.repetition.days) {
+            for (let i = 0; i < 7; i++) includeDay(i);
+        }
+
+        if (hasWord('weekly') && !this.repetition.days) {
+            includeDay(this.start.getDay());
+        }
+
+        if (hasWord('weekdays') && !this.repetition.days) {
+            for (let i = 1; i < 6; i++) includeDay(i);
+        }
+
+        for (const [index, monthOfYear] of this.monthsOfYear('long').entries()) {
+            if (hasWord(monthOfYear)) includeMonth(index);
+        }
+
+        for (const [index, monthOfYear] of this.monthsOfYear('short').entries()) {
+            if (hasWord(monthOfYear)) includeMonth(index);
+        }
+
+        if (hasWord('monthly') && !this.repetition.months) {
+            this.repetition.date = this.start.getDate();
+            for (let i = 0; i < 12; i++) includeMonth(i);
+        }
+
+        if (interval === 'yearly' && !this.repetition.months) {
+            this.repetition.date = this.start.getDate();
+            includeMonth(this.start.getMonth());
+        }
+
+        if (hasWord('until')) {
+            const cutoff = wordAfter('until');
+            if (cutoff) {
+                this.repetition.until = new Date(`${cutoff}T00:00:00`);
+            }
+        }
+
+        if (hasWord('first')) this.repetition.ordinal = 1;
+        if (hasWord('second')) this.repetition.ordinal = 2;
+        if (hasWord('third')) this.repetition.ordinal = 3;
+        if (hasWord('fourth')) this.repetition.ordinal = 4;
+        if (hasWord('fifth')) this.repetition.ordinal = 5;
+        if (hasWord('sixth')) this.repetition.ordinal = 6;
+        if (hasWord('last')) this.repetition.ordinal = -1;
+    }
+
     captureParsingIndex(match) {
         this.parsingIndex = Math.max(this.parsingIndex, match.index + match[0].length);
     }
@@ -895,6 +989,30 @@ class CalendarEvent extends CalendarBase {
         if (!this.start) return false;
         if (d.getTime() < this.startOfDayMs(this.start)) return false;
         if (d.getTime() > this.endOfDayMs(this.end)) return false;
+        return true;
+    }
+
+    repeatsOn(d) {
+        if (!this.repetition) return false;
+        if (d < this.start) return false;
+        const date = this.repetition.date;
+        const days = this.repetition.days || null;
+        const months = this.repetition.months || null;
+        const ordinal = this.repetition.ordinal || null;
+        const until = this.repetition.until || null;
+        if (until && d > until) return false;
+        if (date && date !== d.getDate()) return false;
+        if (days && !days.has(d.getDay())) return false;
+        if (months && !months.has(d.getMonth())) return false;
+        if (ordinal && days) {
+            const between = (value, min, max) => value >= min && value <= max;
+            if (ordinal === 1 && !between(d.getDate(), 1, 7)) return false;
+            if (ordinal === 2 && !between(d.getDate(), 8, 14)) return false;
+            if (ordinal === 3 && !between(d.getDate(), 15, 21)) return false;
+            if (ordinal === 4 && !between(d.getDate(), 22, 28)) return false;
+            if (ordinal === 5 && !between(d.getDate(), 29, 31)) return false;
+            if (ordinal === -1 && !between(d.getDate(), 25, 31)) return false;
+        }
         return true;
     }
 
@@ -1142,6 +1260,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="slash" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></symbol>
     <symbol id="chevron-up" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></symbol>
     <symbol id="chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></symbol>
+    <symbol id="repeat" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></symbol>
     </defs>`;
 
     const appVersionMeta = document.head.appendChild(document.createElement('META'));

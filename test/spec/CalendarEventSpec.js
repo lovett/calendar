@@ -272,4 +272,304 @@ describe('CalendarEvent', function() {
             }
         });
     });
+
+    describe("Repetition parsing", function() {
+        function createEvent() {
+            const event = new CalendarEvent();
+            event.innerHTML = '2025-01-01 9:30 AM repetion parsing test';
+            event.parseDate();
+            return event;
+        }
+
+        it('daily', function() {
+            const event = createEvent();
+            event.setAttribute('repeat', 'daily');
+            event.parseRepetition();
+            expect(Array.from(event.repetition.days)).toEqual([0, 1, 2, 3, 4, 5, 6]);
+            expect(event.repetition.until).toBeUndefined();
+        });
+
+        it('weekly', function() {
+            const event = createEvent();
+            event.setAttribute('repeat', 'weekly');
+            event.parseRepetition();
+            expect(Array.from(event.repetition.days)).toEqual([3]);
+            expect(event.repetition.until).toBeUndefined();
+        });
+
+        it('monthly', function() {
+            const event = createEvent();
+            event.setAttribute('repeat', 'monthly');
+            event.parseRepetition();
+            expect(event.repetition.date).toEqual(1);
+            expect(Array.from(event.repetition.months)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+            expect(event.repetition.until).toBeUndefined();
+        });
+
+        it('yearly', function() {
+            const event = createEvent();
+            event.setAttribute('repeat', 'yearly');
+            event.parseRepetition();
+            expect(event.repetition.date).toEqual(1);
+            expect(Array.from(event.repetition.months)).toEqual([0]);
+            expect(event.repetition.until).toBeUndefined();
+        });
+
+        it('until', function() {
+            const event = createEvent();
+            event.setAttribute('repeat', 'daily until 2025-01-08');
+            event.parseRepetition();
+            expect(event.repetition.until.getDate()).toBe(8);
+        });
+
+        it('ordinals', function() {
+            const scenarios = [
+                ['first', 1],
+                ['second', 2],
+                ['third', 3],
+                ['fourth', 4],
+                ['fifth', 5],
+                ['sixth', 6]
+            ];
+            for (const [word, number] of scenarios) {
+                const event = createEvent();
+                event.setAttribute('repeat', `${word} Monday`);
+                event.parseRepetition();
+                expect(event.repetition.ordinal).toEqual(number);
+            }
+        });
+
+        it('weekdays', function() {
+            const event = createEvent();
+            event.setAttribute('repeat', 'weekdays');
+            event.parseRepetition();
+            expect(Array.from(event.repetition.days)).toEqual([1, 2, 3, 4, 5]);
+        });
+
+        it('single day', function() {
+            const scenarios = [
+                ['Sunday', 0],
+                ['Monday', 1],
+                ['Tuesday', 2],
+                ['Wednesday', 3],
+                ['Thursday', 4],
+                ['Friday', 5],
+                ['Saturday', 6],
+                ['Sun', 0],
+                ['Mon', 1],
+                ['Tue', 2],
+                ['Wed', 3],
+                ['Thu', 4],
+                ['Fri', 5],
+                ['Sat', 6]
+            ];
+            for (const [day, number] of scenarios) {
+                const event = createEvent();
+                event.setAttribute('repeat', `every ${day}`);
+                event.parseRepetition();
+                expect(Array.from(event.repetition.days)).toEqual([number]);
+            }
+        });
+
+        it('multiple days', function() {
+            const scenarios = [
+                ['weekly on Sunday and Thursday', [0, 4]],
+                ['Mon and Wed weekly', [1, 3]]
+            ];
+            for (const [phrase, days] of scenarios) {
+                const event = createEvent();
+                event.setAttribute('repeat', `every ${phrase}`);
+                event.parseRepetition();
+                expect(Array.from(event.repetition.days)).toEqual(days);
+            }
+        });
+
+        it('single month', function() {
+            const scenarios = [
+                ['January', 0],
+                ['February', 1],
+                ['March', 2],
+                ['April', 3],
+                ['May', 4],
+                ['June', 5],
+                ['July', 6],
+                ['August', 7],
+                ['September', 8],
+                ['October', 9],
+                ['November', 10],
+                ['December', 11],
+                ['Jan', 0],
+                ['Feb', 1],
+                ['Mar', 2],
+                ['Apr', 3],
+                ['May', 4],
+                ['Jun', 5],
+                ['Jul', 6],
+                ['Aug', 7],
+                ['Sep', 8],
+                ['Oct', 9],
+                ['Nov', 10],
+                ['Dec', 11],
+            ];
+
+            for (const [month, number] of scenarios) {
+                const event = createEvent();
+                event.setAttribute('repeat', `every ${month}`);
+                event.parseRepetition();
+                expect(Array.from(event.repetition.months)).toEqual([number]);
+            }
+
+        });
+
+        it('multiple months', function() {
+            const scenarios = [
+                ['monthly from January to February', [0, 1]],
+                ['January, February, March', [0, 1, 2]]
+            ];
+            for (const [phrase, months] of scenarios) {
+                const event = createEvent();
+                event.setAttribute('repeat', phrase);
+                event.parseRepetition();
+                expect(Array.from(event.repetition.months)).toEqual(months);
+            }
+        });
+
+    });
+
+    describe("Repetition calculation", function() {
+        it("daily", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "daily");
+            event.parseDate();
+            event.parseRepetition();
+
+            const d = new Date('2025-02-01T00:00:00');
+            for (let i = 0; i < 30; i++) {
+                d.setDate(d.getDate() + 1);
+                expect(event.repeatsOn(d)).toBe(true);
+            }
+        });
+
+        it("weekly", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "weekly");
+            event.parseDate();
+            event.parseRepetition();
+
+            const d = new Date('2025-01-08T00:00:00');
+            for (let i = 0; i < 30; i++) {
+                d.setDate(d.getDate() + 1);
+
+                const expectation = d.getDay() === event.start.getDay();
+                expect(event.repeatsOn(d)).toBe(expectation, d);
+            }
+        });
+
+        it("monthly", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "monthly");
+            event.parseDate();
+            event.parseRepetition();
+
+            const d = new Date('2025-01-08T00:00:00');
+            for (let i = 0; i < 365; i++) {
+                d.setDate(d.getDate() + 1);
+
+                const expectation = d.getDate() === 1;
+                expect(event.repeatsOn(d)).toBe(expectation, d);
+            }
+        });
+
+        it("yearly", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "yearly");
+            event.parseDate();
+            event.parseRepetition();
+
+            const d = new Date('2025-01-08T00:00:00');
+            for (let i = 0; i < 366; i++) {
+                d.setDate(d.getDate() + 1);
+                const expectation = d.getDate() === 1 && d.getMonth() === 0;
+                expect(event.repeatsOn(d)).toBe(expectation, d);
+            }
+        });
+
+        it("ordinal - first", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "first wednesday");
+            event.parseDate();
+            event.parseRepetition();
+
+            const d = new Date('2025-01-02T00:00:00');
+            for (let i = 0; i < 366; i++){
+                d.setDate(d.getDate() + 1);
+                const expectation = d.getDay() === 3 && d.getDate() <= 7;
+                expect(event.repeatsOn(d)).toBe(expectation, d);
+            }
+        });
+
+        it("ordinal - second", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-09 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "second thursday");
+            event.parseDate();
+            event.parseRepetition();
+
+            const d = new Date('2025-01-10T00:00:00');
+            for (let i = 0; i < 366; i++){
+                d.setDate(d.getDate() + 1);
+                const expectation = d.getDay() === 4 && Math.ceil(d.getDate()/7) == 2;
+                expect(event.repeatsOn(d)).toBe(expectation, d);
+            }
+        });
+
+        it("ordinal - third", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-17 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "third friday");
+            event.parseDate();
+            event.parseRepetition();
+
+            const d = new Date('2025-01-18T00:00:00');
+            for (let i = 0; i < 366; i++){
+                d.setDate(d.getDate() + 1);
+                const expectation = d.getDay() === 5 && Math.ceil(d.getDate()/7) == 3;
+                expect(event.repeatsOn(d)).toBe(expectation, d);
+            }
+        });
+        it("ordinal - fourth", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-25 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "fourth saturday");
+            event.parseDate();
+            event.parseRepetition();
+
+            const d = new Date('2025-01-18T00:00:00');
+            for (let i = 0; i < 366; i++){
+                d.setDate(d.getDate() + 1);
+                const expectation = d.getDay() === 6 && Math.ceil(d.getDate()/7) == 4;
+                expect(event.repeatsOn(d)).toBe(expectation, d);
+            }
+        });
+
+        it("ordinal - last", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-26 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "last sunday");
+            event.parseDate();
+            event.parseRepetition();
+
+            const d = new Date('2025-01-27T00:00:00');
+            for (let i = 0; i < 366; i++){
+                d.setDate(d.getDate() + 1);
+                const expectation = d.getDay() === 0 && d.getDate() >= 25;
+                expect(event.repeatsOn(d)).toBe(expectation, d);
+            }
+        });
+    });
 });
