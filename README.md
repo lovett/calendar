@@ -20,7 +20,7 @@ Viewing the HTML file locally should work fine. Or host them as static files. It
 
 ## Events
 
-A custom HTML tag `<cal-event>` is used to define the events that are shown on the calendar. Dates, times, and descriptions go into the text of the tag and the application figures out the rest. For example:
+A custom HTML tag `<cal-event>` defines the events that are shown on the calendar. Dates, times, and descriptions go into the text of the tag and the application figures out the rest. For example:
 
 ```
 <cal-event>1999-12-31 Prepare for Y2K</cal-event>
@@ -50,7 +50,26 @@ The rest of the tag content is treated as the event title and description. Its s
 </cal-event>
 ```
 
-Although `cal-event` is a custom tag, it inherits behavior from standard HTML tags. You can define CSS classes or inline styles in your HTML file to jazz up an event's presentation. There's also a special `data-icon` attribute that can be used to set a custom Emoji as the icon for an event. You can also reference SVG symbols if you've added an SVG `<defs>` tag to the page.
+Although `cal-event` is a custom tag, it works like a standard HTML tag. You can give it CSS classes or inline styles to jazz up the presentation. There's also a special `data-icon` attribute that can be used to set a custom Emoji or SVG symbol id as the icon for an event. If using SVG symbols, they add them to the page in a `<defs>` tag as per usual.
+
+## Repetition
+When a `cal-event` tag has a `repeat` attribute, it will show up multiple times according to whatever cadence you set.
+
+The following words and phrases are recognized:
+
+  - one or more days of the week, either "long" or "short" (3-letter abbreviation)
+  - one or more months of the year, also long or short
+  - daily
+  - weekly
+  - weekdays
+  - monthly
+  - yearly
+  - until _stop date_, where the stop date is in yyyy-mm-dd format
+  - first, second, third, fourth, fifth, sixth, last
+
+Repetition starts from the date of the initial event and goes forward. For repetition that covers past and future, set the event date's year to something like "0000".
+
+For more complex repetition patterns, multiple single-occurrence events are a better choice.
 
 ## Customization
 A couple things can be customized by adding special meta tags to the HTML document:
