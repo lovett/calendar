@@ -56,6 +56,16 @@ class CalendarBase extends HTMLElement {
         return names;
     }
 
+    dayOfYear(date) {
+        const start = Date.UTC(date.getFullYear(), 0, 0);
+        const stop = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+        return Math.floor((stop - start) / 86_400_000);
+    }
+
+    weekOfYear(date) {
+        return Math.floor(this.dayOfYear(date) / 7);
+    }
+
     isLastDayOfMonth(date) {
         return this.nextDay(date).getMonth() !== date.getMonth();
     }
@@ -908,10 +918,17 @@ class CalendarEvent extends CalendarBase {
     parseRepetition() {
         if (!this.start) return;
 
-        const interval = this.getAttribute("repeat");
+        let interval = this.getAttribute("repeat");
         if (!interval) return;
 
-        const words = interval.toLowerCase().trim().replace(/[^\w- ]/g, ' ').split(/\s+/);
+        this.repetition.since = this.start;
+
+        interval = interval.toLowerCase().trim();
+        interval = interval.replaceAll('every other week', 'biweekly');
+        interval = interval.replaceAll('every other month', 'bimonthly');
+        interval = interval.replaceAll('fortnightly', 'biweekly');
+
+        const words = interval.replace(/[^\w- ]/g, ' ').split(/\s+/);
 
         const wordAfter = (word) => words.at(words.indexOf(word) + 1);
 
@@ -943,6 +960,11 @@ class CalendarEvent extends CalendarBase {
             includeDay(this.start.getDay());
         }
 
+        if (hasWord('biweekly') && !this.repetition.days) {
+            includeDay(this.start.getDay());
+            this.repetition.dayStep = 14;
+        }
+
         if (hasWord('weekdays') && !this.repetition.days) {
             for (let i = 1; i < 6; i++) includeDay(i);
         }
@@ -958,6 +980,12 @@ class CalendarEvent extends CalendarBase {
         if (hasWord('monthly') && !this.repetition.months) {
             this.repetition.date = this.start.getDate();
             for (let i = 0; i < 12; i++) includeMonth(i);
+        }
+
+        if (hasWord('bimonthly') && !this.repetition.months) {
+            this.repetition.date = this.start.getDate();
+            const start = (this.start.getMonth() + 1) % 2 == 0 ? 1: 0;
+            for (let i = start; i < 12; i += 2) includeMonth(i);
         }
 
         if (interval === 'yearly' && !this.repetition.months) {
@@ -994,12 +1022,16 @@ class CalendarEvent extends CalendarBase {
 
     repeatsOn(d) {
         if (!this.repetition) return false;
+        if (!this.repetition.since) return false;
         if (d < this.start) return false;
         const date = this.repetition.date;
         const days = this.repetition.days || null;
         const months = this.repetition.months || null;
         const ordinal = this.repetition.ordinal || null;
         const until = this.repetition.until || null;
+        const dayStep = this.repetition.dayStep || 0;
+        //const monthRestriction = this.repetition.monthRestriction || ((x) => true);
+
         if (until && d > until) return false;
         if (date && date !== d.getDate()) return false;
         if (days && !days.has(d.getDay())) return false;
@@ -1013,6 +1045,16 @@ class CalendarEvent extends CalendarBase {
             if (ordinal === 5 && !between(d.getDate(), 29, 31)) return false;
             if (ordinal === -1 && !between(d.getDate(), 25, 31)) return false;
         }
+
+        if (dayStep > 0) {
+            const matchDate = new Date(d);
+            while (true) {
+                if (matchDate < this.repetition.since) return false;
+                if (matchDate.getTime() === this.repetition.since.getTime()) break;
+                matchDate.setDate(matchDate.getDate() - dayStep);
+            }
+        }
+
         return true;
     }
 

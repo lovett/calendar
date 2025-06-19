@@ -297,6 +297,34 @@ describe('CalendarEvent', function() {
             expect(event.repetition.until).toBeUndefined();
         });
 
+        it('biweekly', function() {
+            const scenarios = ['biweekly', 'every other week', 'fortnightly'];
+            for (const scenario of scenarios) {
+                const event = createEvent();
+                event.setAttribute('repeat', scenario);
+                event.parseRepetition();
+                expect(event.repetition.dayStep).toBe(14);
+            }
+        });
+
+        it('bimonthly', function() {
+            const scenarios = ['bimonthly', 'every other month'];
+            for (const scenario of scenarios) {
+                const event1 = createEvent();
+                event1.setAttribute('repeat', scenario);
+                event1.parseRepetition();
+                expect(event1.repetition.date).toEqual(event1.start.getDate());
+                expect(Array.from(event1.repetition.months)).toEqual([0, 2, 4, 6, 8, 10]);
+
+                const event2 = createEvent();
+                event2.start.setMonth(event2.start.getMonth() + 1);
+                event2.setAttribute('repeat', scenario);
+                event2.parseRepetition();
+                expect(event2.repetition.date).toEqual(event2.start.getDate());
+                expect(Array.from(event2.repetition.months)).toEqual([1, 3, 5, 7, 9, 11]);
+            }
+        });
+
         it('monthly', function() {
             const event = createEvent();
             event.setAttribute('repeat', 'monthly');
@@ -433,7 +461,6 @@ describe('CalendarEvent', function() {
                 expect(Array.from(event.repetition.months)).toEqual(months);
             }
         });
-
     });
 
     describe("Repetition calculation", function() {
@@ -569,6 +596,30 @@ describe('CalendarEvent', function() {
                 d.setDate(d.getDate() + 1);
                 const expectation = d.getDay() === 0 && d.getDate() >= 25;
                 expect(event.repeatsOn(d)).toBe(expectation, d);
+            }
+        });
+
+        it("biweekly", function() {
+            const event = new CalendarEvent();
+            event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
+            event.setAttribute("repeat", "biweekly");
+            event.parseDate();
+            event.parseRepetition();
+
+            const scenarios = [];
+            const initial = new Date(2025, 0, 15, 0, 0, 0);
+            for (let i = 0; i < 365 * 2; i += 14) {
+                const d = new Date(initial);
+                d.setDate(initial.getDate() + i);
+                scenarios.push(d);
+            }
+
+            for (const scenario of scenarios) {
+                expect(event.repeatsOn(scenario)).toBe(true, scenario);
+                const previousWeek = new Date(scenario.getFullYear(), scenario.getMonth(), scenario.getDate() - 7);
+                const nextWeek = new Date(scenario.getFullYear(), scenario.getMonth(), scenario.getDate() + 7);
+                expect(event.repeatsOn(previousWeek)).toBe(false, scenario);
+                expect(event.repeatsOn(nextWeek)).toBe(false, scenario);
             }
         });
     });

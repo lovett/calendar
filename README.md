@@ -61,8 +61,10 @@ The following words and phrases are recognized:
   - one or more months of the year, also long or short
   - daily
   - weekly
+  - biweekly (also "every other week" or "fortnightly")
   - weekdays
   - monthly
+  - bimonthly (also "every other month")
   - yearly
   - until _stop date_, where the stop date is in yyyy-mm-dd format
   - first, second, third, fourth, fifth, sixth, last
