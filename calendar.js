@@ -460,6 +460,7 @@ class CalendarYear extends CalendarView {
 
     hasEvents(d) {
         for (const event of this.eventFinder(d)) {
+            if (event.repeatsOn(d)) return true;
             if (d.getTime() < this.startOfDayMs(event.start)) continue;
             if (d.getTime() > this.endOfDayMs(event.end)) continue;
             return true;
