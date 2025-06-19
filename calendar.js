@@ -1111,7 +1111,7 @@ window.addEventListener('keypress', (e) => {
     if (e.key === 'd') to = 'day';
     if (e.key === 'm') to = 'month';
     if (e.key === 'y') to = 'year';
-    if (e.key === 'j') event = new CustomEvent('jump');
+    if (e.key === 'g') event = new CustomEvent('jump');
     if (to) event = new CustomEvent('step', {detail: {to: to}});
     if (event) document.body.querySelector('.view[date]').dispatchEvent(event);
 });
