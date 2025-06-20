@@ -525,6 +525,16 @@ class CalendarMonth extends CalendarView {
             const eventSubset = [];
             for (const event of events) {
                 if (!event.occursOn(d) && !event.repeatsOn(d)) continue;
+                if (!event.isMultiDay()) continue;
+                eventSubset.push(event);
+
+                if (eventSubset.length === 1) continue;
+                event.displayIndex = eventSubset[eventSubset.length - 2].displayIndex + 1;
+            }
+
+            for (const event of events) {
+                if (!event.occursOn(d) && !event.repeatsOn(d)) continue;
+                if (event.isMultiDay()) continue;
                 eventSubset.push(event);
                 if (eventSubset.length === 1) continue;
                 event.displayIndex = eventSubset[eventSubset.length - 2].displayIndex + 1;
