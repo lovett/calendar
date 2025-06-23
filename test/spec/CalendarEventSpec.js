@@ -283,7 +283,7 @@ describe('CalendarEvent', function() {
 
         it('daily', function() {
             const event = createEvent();
-            event.setAttribute('repeat', 'daily');
+            event.dataset.repeat = 'daily';
             event.parseRepetition();
             expect(Array.from(event.repetition.days)).toEqual([0, 1, 2, 3, 4, 5, 6]);
             expect(event.repetition.until).toBeUndefined();
@@ -291,7 +291,7 @@ describe('CalendarEvent', function() {
 
         it('weekly', function() {
             const event = createEvent();
-            event.setAttribute('repeat', 'weekly');
+            event.dataset.repeat = 'weekly';
             event.parseRepetition();
             expect(Array.from(event.repetition.days)).toEqual([3]);
             expect(event.repetition.until).toBeUndefined();
@@ -301,7 +301,7 @@ describe('CalendarEvent', function() {
             const scenarios = ['biweekly', 'every other week', 'fortnightly'];
             for (const scenario of scenarios) {
                 const event = createEvent();
-                event.setAttribute('repeat', scenario);
+                event.dataset.repeat = scenario;
                 event.parseRepetition();
                 expect(event.repetition.dayStep).toBe(14);
             }
@@ -311,14 +311,14 @@ describe('CalendarEvent', function() {
             const scenarios = ['bimonthly', 'every other month'];
             for (const scenario of scenarios) {
                 const event1 = createEvent();
-                event1.setAttribute('repeat', scenario);
+                event1.dataset.repeat = scenario;
                 event1.parseRepetition();
                 expect(event1.repetition.date).toEqual(event1.start.getDate());
                 expect(Array.from(event1.repetition.months)).toEqual([0, 2, 4, 6, 8, 10]);
 
                 const event2 = createEvent();
                 event2.start.setMonth(event2.start.getMonth() + 1);
-                event2.setAttribute('repeat', scenario);
+                event2.dataset.repeat = scenario;
                 event2.parseRepetition();
                 expect(event2.repetition.date).toEqual(event2.start.getDate());
                 expect(Array.from(event2.repetition.months)).toEqual([1, 3, 5, 7, 9, 11]);
@@ -327,7 +327,7 @@ describe('CalendarEvent', function() {
 
         it('monthly', function() {
             const event = createEvent();
-            event.setAttribute('repeat', 'monthly');
+            event.dataset.repeat = 'monthly';
             event.parseRepetition();
             expect(event.repetition.date).toEqual(1);
             expect(Array.from(event.repetition.months)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
@@ -336,7 +336,7 @@ describe('CalendarEvent', function() {
 
         it('yearly', function() {
             const event = createEvent();
-            event.setAttribute('repeat', 'yearly');
+            event.dataset.repeat = 'yearly';
             event.parseRepetition();
             expect(event.repetition.date).toEqual(1);
             expect(Array.from(event.repetition.months)).toEqual([0]);
@@ -345,7 +345,7 @@ describe('CalendarEvent', function() {
 
         it('until', function() {
             const event = createEvent();
-            event.setAttribute('repeat', 'daily until 2025-01-08');
+            event.dataset.repeat = 'daily until 2025-01-08';
             event.parseRepetition();
             expect(event.repetition.until.getDate()).toBe(8);
         });
@@ -361,7 +361,7 @@ describe('CalendarEvent', function() {
             ];
             for (const [word, number] of scenarios) {
                 const event = createEvent();
-                event.setAttribute('repeat', `${word} Monday`);
+                event.dataset.repeat = `${word} Monday`;
                 event.parseRepetition();
                 expect(event.repetition.ordinal).toEqual(number);
             }
@@ -369,7 +369,7 @@ describe('CalendarEvent', function() {
 
         it('weekdays', function() {
             const event = createEvent();
-            event.setAttribute('repeat', 'weekdays');
+            event.dataset.repeat = 'weekdays';
             event.parseRepetition();
             expect(Array.from(event.repetition.days)).toEqual([1, 2, 3, 4, 5]);
         });
@@ -393,7 +393,7 @@ describe('CalendarEvent', function() {
             ];
             for (const [day, number] of scenarios) {
                 const event = createEvent();
-                event.setAttribute('repeat', `every ${day}`);
+                event.dataset.repeat = `every ${day}`;
                 event.parseRepetition();
                 expect(Array.from(event.repetition.days)).toEqual([number]);
             }
@@ -406,7 +406,7 @@ describe('CalendarEvent', function() {
             ];
             for (const [phrase, days] of scenarios) {
                 const event = createEvent();
-                event.setAttribute('repeat', `every ${phrase}`);
+                event.dataset.repeat = `every ${phrase}`;
                 event.parseRepetition();
                 expect(Array.from(event.repetition.days)).toEqual(days);
             }
@@ -442,7 +442,7 @@ describe('CalendarEvent', function() {
 
             for (const [month, number] of scenarios) {
                 const event = createEvent();
-                event.setAttribute('repeat', `every ${month}`);
+                event.dataset.repeat = `every ${month}`;
                 event.parseRepetition();
                 expect(Array.from(event.repetition.months)).toEqual([number]);
             }
@@ -456,7 +456,7 @@ describe('CalendarEvent', function() {
             ];
             for (const [phrase, months] of scenarios) {
                 const event = createEvent();
-                event.setAttribute('repeat', phrase);
+                event.dataset.repeat = phrase;
                 event.parseRepetition();
                 expect(Array.from(event.repetition.months)).toEqual(months);
             }
@@ -467,7 +467,7 @@ describe('CalendarEvent', function() {
         it("daily", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "daily");
+            event.dataset.repeat = 'daily';
             event.parseDate();
             event.parseRepetition();
 
@@ -481,7 +481,7 @@ describe('CalendarEvent', function() {
         it("weekly", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "weekly");
+            event.dataset.repeat = 'weekly';
             event.parseDate();
             event.parseRepetition();
 
@@ -497,7 +497,7 @@ describe('CalendarEvent', function() {
         it("monthly", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "monthly");
+            event.dataset.repeat = "monthly";
             event.parseDate();
             event.parseRepetition();
 
@@ -513,7 +513,7 @@ describe('CalendarEvent', function() {
         it("yearly", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "yearly");
+            event.dataset.repeat = "yearly";
             event.parseDate();
             event.parseRepetition();
 
@@ -528,7 +528,7 @@ describe('CalendarEvent', function() {
         it("ordinal - first", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "first wednesday");
+            event.dataset.repeat = "first wednesday";
             event.parseDate();
             event.parseRepetition();
 
@@ -543,7 +543,7 @@ describe('CalendarEvent', function() {
         it("ordinal - second", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-09 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "second thursday");
+            event.dataset.repeat = "second thursday";
             event.parseDate();
             event.parseRepetition();
 
@@ -558,7 +558,7 @@ describe('CalendarEvent', function() {
         it("ordinal - third", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-17 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "third friday");
+            event.dataset.repeat = "third friday";
             event.parseDate();
             event.parseRepetition();
 
@@ -572,7 +572,7 @@ describe('CalendarEvent', function() {
         it("ordinal - fourth", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-25 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "fourth saturday");
+            event.dataset.repeat = "fourth saturday";
             event.parseDate();
             event.parseRepetition();
 
@@ -587,7 +587,7 @@ describe('CalendarEvent', function() {
         it("ordinal - last", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-26 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "last sunday");
+            event.dataset.repeat = "last sunday";
             event.parseDate();
             event.parseRepetition();
 
@@ -602,7 +602,7 @@ describe('CalendarEvent', function() {
         it("biweekly", function() {
             const event = new CalendarEvent();
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
-            event.setAttribute("repeat", "biweekly");
+            event.dataset.repeat = "biweekly";
             event.parseDate();
             event.parseRepetition();
 

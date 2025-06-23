@@ -53,7 +53,7 @@ The rest of the tag content is treated as the event title and description. Its s
 Although `cal-event` is a custom tag, it works like a standard HTML tag. You can give it CSS classes or inline styles to jazz up the presentation. There's also a special `data-icon` attribute that can be used to set a custom Emoji or SVG symbol id as the icon for an event. If using SVG symbols, they add them to the page in a `<defs>` tag as per usual.
 
 ## Repetition
-When a `cal-event` tag has a `repeat` attribute, it will show up multiple times according to whatever cadence you set.
+When a `cal-event` tag has a `data-repeat` attribute, it will show up multiple times according to whatever cadence you set.
 
 The following words and phrases are recognized:
 

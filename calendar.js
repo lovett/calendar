@@ -929,7 +929,7 @@ class CalendarEvent extends CalendarBase {
     parseRepetition() {
         if (!this.start) return;
 
-        let interval = this.getAttribute("repeat");
+        let interval = this.dataset.repeat;
         if (!interval) return;
 
         this.repetition.since = this.start;
