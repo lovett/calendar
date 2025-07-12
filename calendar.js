@@ -22,6 +22,10 @@ class CalendarCache {
         return this.cache.get(key);
     }
 
+    clear(key) {
+        this.cache.delete(key);
+    }
+
     storageSet(key, value) {
         this.storage.setItem(key, value);
     }
@@ -169,6 +173,14 @@ class CalendarView extends CalendarBase {
         if (tag) tag.classList.add('today');
     }
 
+    highlight(el) {
+        if (!el) return;
+        el.classList.add('highlighted');
+        setTimeout(() => {
+            el.classList.remove('highlighted');
+        }, 1000);
+    }
+
     renderFromCache() {
         const hash = this.hasher(this.date);
         const key = this.viewCache.versionedKey(hash);
@@ -223,10 +235,17 @@ class CalendarView extends CalendarBase {
         }
 
         if (e.type === 'step' && e.detail.to === 'month') {
-            window.location.hash = this.ym(this.date);
+            const capturedDate = this.viewCache.get('capturedDate');
+            if (capturedDate) {
+                window.location.hash = this.ym(capturedDate);
+                this.viewCache.clear('capturedDate');
+            } else {
+                window.location.hash = this.ym(this.date);
+            }
         }
 
         if (e.type === 'step' && e.detail.to === 'year') {
+            this.viewCache.set('capturedDate', this.date);
             window.location.hash = this.date.getFullYear();
         }
 
@@ -433,9 +452,18 @@ class CalendarYear extends CalendarView {
 
         this.append(fragment);
 
-        const currentMonth = document.getElementById(this.ym(this.now));
-        if (currentMonth && window.scrollY === 0) {
-            currentMonth.scrollIntoView({behavior: 'smooth', block: 'start'});
+        let ym = this.ym(this.now);
+        const capturedDate = this.viewCache.get('capturedDate');
+        if (capturedDate) {
+            ym = this.ym(capturedDate);
+        }
+
+        const el = document.getElementById(ym);
+        if (el && window.scrollY === 0) {
+            document.addEventListener('scrollend', (e) => {
+                this.highlight(el);
+            }, {'once': true});
+            el.scrollIntoView({behavior: 'smooth', block: 'start'});
         }
     }
 

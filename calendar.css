@@ -7,6 +7,7 @@
     --has-events: #A1B5D8;
     --default: #333;
     --default-inverse: #fff;
+    --highlighted: #AED6BE;
 }
 
 * {
@@ -226,14 +227,20 @@ cal-year .has-events {
 }
 
 cal-year .month {
-    padding: 0 var(--padding);
+    padding: var(--padding);
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     align-items: center;
     justify-content: center;
-    margin: 1em 0;
+    margin: 0.5em 0;
     scroll-margin: 100px;
+    transition: background-color 0.5s ease-in;
 }
+
+cal-year .month.highlighted {
+    background-color: var(--highlighted);
+}
+
 
 cal-year .month:last-of-type {
     margin-bottom: 0;
