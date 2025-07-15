@@ -725,6 +725,20 @@ class CalendarDay extends CalendarView {
             const details = container.appendChild(document.createElement('div'));
             details.classList.add('details');
             details.innerHTML = event.details;
+
+            const recurrence = (label, d) => {
+                if (!d) return;
+                const p = details.appendChild(document.createElement('p'));
+                p.classList.add('recurrence');
+                p.innerText = `${label}: `;
+
+                const link = p.appendChild(document.createElement('a'));
+                link.href = `#${this.ymd(d)}`;
+                link.innerText = d.toLocaleString(this.locale, {month: 'long', day: 'numeric', year: 'numeric'});
+            }
+
+            recurrence('Previously', event.previousOccurrence(this.date));
+            recurrence('Next', event.nextOccurrence(this.date));
         }
 
         if (counter === 0) {
@@ -997,6 +1011,7 @@ class CalendarEvent extends CalendarBase {
 
         if (hasWord('weekly') && !this.repetition.days) {
             includeDay(this.start.getDay());
+            this.repetition.dayStep = 7;
         }
 
         if (hasWord('biweekly') && !this.repetition.days) {
@@ -1059,6 +1074,38 @@ class CalendarEvent extends CalendarBase {
         return true;
     }
 
+    previousOccurrence(asOfDate) {
+        return this.occurrenceSequence(asOfDate, -1);
+    }
+
+    nextOccurrence(asOfDate) {
+        return this.occurrenceSequence(asOfDate, 1);
+    }
+
+    occurrenceSequence(asOfDate, step) {
+        if (!this.repetition) return null;
+        if (!this.repetition.since) return null;
+
+        const d = new Date(asOfDate ? asOfDate : this.start);
+        d.setHours(0);
+        d.setMinutes(0);
+        d.setSeconds(0);
+        d.setMilliseconds(0);
+
+        if (this.repetition.dayStep) {
+            d.setDate(d.getDate() + this.repetition.dayStep * step);
+            if (this.repeatsOn(d)) return d;
+            return null;
+        }
+
+        for (let i = 0; i <= 365; i++) {
+            d.setDate(d.getDate() + 1 * step);
+            if (this.repeatsOn(d)) return d;
+        }
+
+        return null;
+    }
+
     repeatsOn(d) {
         if (!this.repetition) return false;
         if (!this.repetition.since) return false;
@@ -1091,6 +1138,9 @@ class CalendarEvent extends CalendarBase {
                 if (matchDate < this.repetition.since) return false;
                 if (matchDate.getTime() === this.repetition.since.getTime()) break;
                 matchDate.setDate(matchDate.getDate() - dayStep);
+                if (dayStep == 365) {
+                    console.log('matchDate is now', matchDate);
+                }
             }
         }
 

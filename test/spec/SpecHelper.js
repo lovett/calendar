@@ -39,8 +39,26 @@ beforeEach(function () {
                     }
                 }
             }
+        },
+
+        toCalendarEqual: function (matchersUtil) {
+            return {
+                compare: function(d1, d2) {
+                    if (d1 === null) {
+                        return {
+                            pass: false,
+                            message: 'Got null rather than a date'
+                        }
+                    }
+
+                    return {
+                        pass: d1.getDate() == d2.getDate(),
+                        message: `Expected ${d2.getDate()}, got ${d1.getDate()}`
+                    }
+                }
+            }
         }
-  });
+    });
 });
 
 afterAll(function () {
