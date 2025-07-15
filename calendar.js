@@ -269,7 +269,7 @@ class CalendarView extends CalendarBase {
 
     eventFinder(start, end) {
         const selectors = new Set();
-        selectors.add(`${CalendarEvent.tag}[repeat]`)
+        selectors.add(`${CalendarEvent.tag}[data-repeat]`)
         const d = new Date(start);
         while (d <= (end || start)) {
             selectors.add(`${CalendarEvent.tag}[data-ym*="${this.ym(d)}"]`);
