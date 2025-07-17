@@ -26,8 +26,8 @@ function runSunrise(date) {
     const locale = Intl.DateTimeFormat().resolvedOptions().locale;
 
     const results = [
-        `Sunrise at ${result.sunriseDate.toLocaleString(locale, timeFormat)}`,
-        `Sunset at ${result.sunsetDate.toLocaleString(locale, timeFormat)}`,
+        `${result.sunriseDate.toLocaleString(locale, timeFormat)} sunrise`,
+        `${result.sunsetDate.toLocaleString(locale, timeFormat)} sunset`,
         `${durationHours}h ${durationMinutes}m daylight`,
     ];
 
