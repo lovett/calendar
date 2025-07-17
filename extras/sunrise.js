@@ -185,3 +185,9 @@ function calculateDaylight(sunriseResult) {
         remainingPercent,
     }
 }
+
+window.runSunrise = runSunrise;
+window.calculateDaylight = calculateDaylight;
+window.calculateSunrise = calculateSunrise;
+window.decimalDaysToHMS = decimalDaysToHMS;
+window.sunriseCache = sunriseCache;

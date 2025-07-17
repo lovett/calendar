@@ -481,7 +481,7 @@ class CalendarYear extends CalendarView {
         const dayNumber = lining.appendChild(document.createElement('a'));
         dayNumber.href = '#';
         dayNumber.hash = this.ymd(d);
-        dayNumber.innerText = d.getDate();
+        dayNumber.textContent = d.getDate();
         dayNumber.classList.add('day-number');
         if (hasEvents) dayNumber.classList.add('has-events');
     }
@@ -542,7 +542,7 @@ class CalendarMonth extends CalendarView {
             for (const day of this.dayNames) {
                 const div = document.createElement('div');
                 div.classList.add('day-of-week');
-                div.innerText = day;
+                div.textContent = day;
                 fragment.append(div);
             }
         }
@@ -596,7 +596,7 @@ class CalendarMonth extends CalendarView {
         if (events.length === 0) return;
         const div = parent.appendChild(document.createElement('div'));
         div.classList.add('event-count');
-        div.innerText = events.length;
+        div.textContent = events.length;
         this.renderIcon(div, 'calendar');
     }
 
@@ -637,7 +637,7 @@ class CalendarMonth extends CalendarView {
             label += ' ';
         }
 
-        dayNumber.innerText = label + d.getDate();
+        dayNumber.textContent = label + d.getDate();
     }
 }
 
@@ -671,7 +671,7 @@ class CalendarDay extends CalendarView {
 
         const div = this.appendChild(document.createElement('div'));
         div.classList.add('day-of-week');
-        div.innerText = `${this.date.toLocaleString(this.locale, {weekday: 'long'})}, ${this.relativeAge(this.date)}`;
+        div.textContent = `${this.date.toLocaleString(this.locale, {weekday: 'long'})}, ${this.relativeAge(this.date)}`;
 
         const extras = this.appendChild(document.createElement('ul'));
         extras.classList.add('extras');
@@ -679,7 +679,7 @@ class CalendarDay extends CalendarView {
         for (const values of this.runExtras(this.date)) {
             for (const value of values) {
                 const li = extras.appendChild(document.createElement('li'));
-                li.innerText = value;
+                li.textContent = value;
             }
         }
 
@@ -696,13 +696,13 @@ class CalendarDay extends CalendarView {
             const time = container.appendChild(document.createElement('time'));
             if (event.canShowStartTime(this.date)) {
                 const div = time.appendChild(document.createElement('div'));
-                div.innerText = event.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+                div.textContent = event.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
             }
 
             if (event.canShowEndTime(this.date)) {
                 this.renderIcon(time, 'arrow-down');
                 const div = time.appendChild(document.createElement('div'));
-                div.innerText = event.end.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+                div.textContent = event.end.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
             }
 
             if (!event.canShowStartTime(this.date) && !event.canShowEndTime(this.date)) {
@@ -719,22 +719,22 @@ class CalendarDay extends CalendarView {
                 const [elapsedDays, totalDays] = event.dayCount(this.date);
                 const span = h2.appendChild(document.createElement('span'));
                 span.classList.add('day-count');
-                span.innerText = ` — Day ${elapsedDays} of ${totalDays}`;
+                span.textContent = ` — Day ${elapsedDays} of ${totalDays}`;
             }
 
             const details = container.appendChild(document.createElement('div'));
             details.classList.add('details');
-            details.innerHTML = event.details;
+            details.textContent = event.details;
 
             const recurrence = (label, d) => {
                 if (!d) return;
                 const p = details.appendChild(document.createElement('p'));
                 p.classList.add('recurrence');
-                p.innerText = `${label}: `;
+                p.textContent = `${label}: `;
 
                 const link = p.appendChild(document.createElement('a'));
                 link.href = `#${this.ymd(d)}`;
-                link.innerText = d.toLocaleString(this.locale, {month: 'long', day: 'numeric', year: 'numeric'});
+                link.textContent = d.toLocaleString(this.locale, {month: 'long', day: 'numeric', year: 'numeric'});
             }
 
             recurrence('Previously', event.previousOccurrence(this.date));
@@ -747,7 +747,7 @@ class CalendarDay extends CalendarView {
             const time = container.appendChild(document.createElement('time'));
             this.renderIcon(time, 'slash');
             const h2 = container.appendChild(document.createElement('h2'));
-            h2.innerHTML = 'No events';
+            h2.textContent = 'No events';
         }
     }
 }
@@ -1359,25 +1359,26 @@ window.addEventListener('DOMContentLoaded', (e) => {
             }
 
             if (config.start === format(0, 'year')) {
-                start.setMonth(1);
+                start.setMonth(0);
                 start.setDate(1);
                 config.defaultView = CalendarYear;
             }
 
             if (config.start === format(-1, 'year')) {
                 start.setFullYear(start.getFullYear() - 1);
-                start.setMonth(1);
+                start.setMonth(0);
                 start.setDate(1);
                 config.defaultView = CalendarYear;
             }
 
             if (config.start === format(1, 'year')) {
                 start.setFullYear(start.getFullYear() + 1);
-                start.setMonth(1);
+                start.setMonth(0);
                 start.setDate(1);
                 config.defaultView = CalendarYear;
             }
         }
+
         config.start = start;
     }
 

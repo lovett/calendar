@@ -1,31 +1,33 @@
+import {test, expect, describe, beforeEach} from "bun:test";
+
 describe('CalendarEvent', function() {
-    afterEach(function() {
-        document.body.querySelectorAll(CalendarEvent.tag).forEach(node => node.remove());
+    beforeEach(function() {
+        document.body.querySelectorAll('cal-event').forEach(node => node.remove());
     });
 
     describe("data-ym attribute", function() {
-        it("is populated with a single value", function() {
+        test("is populated with a single value", function() {
             const event = document.createElement('cal-event');
             event.textContent = '2025-01-01 test';
             document.body.appendChild(event);
             expect(event.dataset.ym).toBe('2025-01');
         });
 
-        it("is populated with multiple values", function() {
+        test("is populated with multiple values", function() {
             const event = document.createElement('cal-event');
             event.textContent = '2025-01-01 to 2025-02-01 test';
             document.body.appendChild(event);
             expect(event.dataset.ym).toBe('2025-01 2025-02');
         });
 
-        it("does not duplicate values", function() {
+        test("does not duplicate values", function() {
             const event = document.createElement('cal-event');
             event.textContent = '2025-01-01 to 2025-01-02 test';
             document.body.appendChild(event);
             expect(event.dataset.ym).toBe('2025-01');
         });
 
-        it("can be empty", function() {
+        test("can be empty", function() {
             const event = document.createElement('cal-event');
             document.body.appendChild(event);
             expect(event.dataset.ym).toBe('');
@@ -33,8 +35,8 @@ describe('CalendarEvent', function() {
     });
 
     describe("Date parsing", function() {
-        it("defaults end date to start date", function() {
-            const event = new CalendarEvent();
+        test("defaults end date to start date", function() {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-02 test';
             event.parseDate()
             expect(event.start.getFullYear()).toBe(2025);
@@ -45,8 +47,8 @@ describe('CalendarEvent', function() {
             expect(event.end.getDate(), event.start.getDate());
         });
 
-        it("recognizes end date", function() {
-            const event = new CalendarEvent();
+        test("recognizes end date", function() {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-02 to 2025-02-07 test';
             event.parseDate();
             expect(event.start.getMonth()).toBe(0);
@@ -55,8 +57,8 @@ describe('CalendarEvent', function() {
             expect(event.end.getDate()).toBe(7);
         });
 
-        it("recognizes start date and time, end date only", function() {
-            const event = new CalendarEvent();
+        test("recognizes start date and time, end date only", function() {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-03 1:01 to 2025-01-06 test';
             event.parseDate();
             event.parseTime();
@@ -66,7 +68,7 @@ describe('CalendarEvent', function() {
             expect(event.end.getDate()).toBe(6);
         });
 
-        it("does not look too far for end date", function() {
+        test("does not look too far for end date", function() {
             const scenarios = [
                 '2025-01-05 word <details>2025-01-06 word</details>',
                 '2025-01-07 9:00 word <details>2025-01-08 word</details>',
@@ -74,7 +76,7 @@ describe('CalendarEvent', function() {
             ];
 
             for (const scenario of scenarios) {
-                const event = new CalendarEvent();
+                const event = document.createElement('cal-event');
                 event.textContent = scenario;
                 event.parseDate();
                 expect(event.end.getDate()).toBe(event.start.getDate(), scenario);
@@ -83,33 +85,33 @@ describe('CalendarEvent', function() {
     });
 
     describe("Event classification", function() {
-        it("identifies multi-day events within a single month", function () {
-            const event = new CalendarEvent();
+        test("identifies multi-day events within a single month", function () {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-02 to 2025-01-09 test';
             event.parseDate();
             expect(event.isMultiDay()).toBe(true);
             expect(event.isAllDay()).toBe(false);
         });
 
-        it("identifies multi-day events that span multiple months", function () {
-            const event = new CalendarEvent();
+        test("identifies multi-day events that span multiple months", function () {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-02 to 2025-02-09 test';
             event.parseDate();
             expect(event.isMultiDay()).toBe(true);
             expect(event.isAllDay()).toBe(false);
         });
 
-        it("identifies all-day events", function() {
-            const event = new CalendarEvent();
+        test("identifies all-day events", function() {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-02 test';
             event.parseDate();
             expect(event.isMultiDay()).toBe(false);
             expect(event.isAllDay()).toBe(true);
         });
 
-        it("identifies multi-day start", function() {
+        test("identifies multi-day start", function() {
             const d = new Date(2025, 0, 2);
-            const event = new CalendarEvent();
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-02 to 2025-01-09 test';
             event.parseDate();
             expect(event.isMultiDayStart(d)).toBe(true);
@@ -117,9 +119,9 @@ describe('CalendarEvent', function() {
             expect(event.isMultiDayContinuation(d)).toBe(false);
         });
 
-        it("identifies multi-day end", function() {
+        test("identifies multi-day end", function() {
             const d = new Date(2025, 0, 9)
-            const event = new CalendarEvent();
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-02 to 2025-01-09 test';
             event.parseDate();
             expect(event.isMultiDayStart(d)).toBe(false);
@@ -127,9 +129,9 @@ describe('CalendarEvent', function() {
             expect(event.isMultiDayContinuation(d)).toBe(false);
         });
 
-        it("identifies multi-day continuation", function() {
+        test("identifies multi-day continuation", function() {
             const d = new Date(2025, 0, 4)
-            const event = new CalendarEvent();
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-02 to 2025-01-09 test';
             event.parseDate();
             expect(event.isMultiDayStart(d)).toBe(false);
@@ -140,8 +142,8 @@ describe('CalendarEvent', function() {
     });
 
     describe("Time parsing", function() {
-        it("parses date and time discretely", function() {
-            const event = new CalendarEvent();
+        test("parses date and time discretely", function() {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-02 8:30 AM';
             event.parseDate()
             expect(event.parsedTime).toBe(false);
@@ -151,8 +153,8 @@ describe('CalendarEvent', function() {
             expect(event.start.getHours()).toBe(8);
         });
 
-        it("defaults start time to beginning of day", function() {
-            const event = new CalendarEvent();
+        test("defaults start time to beginning of day", function() {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-01';
             event.parseDate()
             expect(event.start.getHours()).toBe(0);
@@ -161,8 +163,8 @@ describe('CalendarEvent', function() {
             expect(event.start.getMilliseconds()).toBe(0);
         });
 
-        it("defaults end time to end of day", function() {
-            const event = new CalendarEvent();
+        test("defaults end time to end of day", function() {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-01';
             event.parseDate()
             expect(event.end.getHours()).toBe(23);
@@ -171,7 +173,7 @@ describe('CalendarEvent', function() {
             expect(event.end.getMilliseconds()).toBe(999);
         });
 
-        it("recognizes start time", function() {
+        test("recognizes start time", function() {
             const scenarios = [
                 ["8:30 AM", [8, 30]],
                 ["1:03", [1, 3]],
@@ -181,7 +183,7 @@ describe('CalendarEvent', function() {
             ];
 
             for (const [value, [hours, minutes]] of scenarios) {
-                const event = new CalendarEvent();
+                const event = document.createElement('cal-event');
                 event.textContent = `2025-01-02 ${value}`;
                 event.parseDate()
                 event.parseTime()
@@ -192,11 +194,11 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("defaults end time to start time", function() {
+        test("defaults end time to start time", function() {
             const scenarios = ["8:30 AM but", "13:03"];
 
             for (const value of scenarios) {
-                const event = new CalendarEvent();
+                const event = document.createElement('cal-event');
                 event.textContent = `2025-01-02 ${value}`;
                 event.parseDate()
                 event.parseTime()
@@ -207,7 +209,7 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("recognizes end time", function() {
+        test("recognizes end time", function() {
             const scenarios = [
                 ["8:30 AM to 9:30 AM", [9, 30]],
                 ["8:30 AM to 9:30 AM or maybe 11:00 AM", [9, 30]],
@@ -216,7 +218,7 @@ describe('CalendarEvent', function() {
             ];
 
             for (const [value, [hours, minutes]] of scenarios) {
-                const event = new CalendarEvent();
+                const event = document.createElement('cal-event');
                 event.textContent = `2025-01-02 ${value}`;
                 event.parseDate()
                 event.parseTime()
@@ -229,22 +231,22 @@ describe('CalendarEvent', function() {
     });
 
     describe("Short line", function() {
-        it("includes start time when specified", function() {
-            const event = new CalendarEvent();
+        test("includes start time when specified", function() {
+            const event = document.createElement('cal-event');
             event.textContent = '2025-01-01 8:30 AM rest of text';
             event.parseDate();
             event.parseTime();
             expect(event.shortLine('en-US')).toBe('<time>8:30 AM</time> rest of text');
         });
 
-        it("omits start time for all-day and multi-day events", function() {
+        test("omits start time for all-day and multi-day events", function() {
             const scenarios = [
                 '2025-01-01 rest of text',
                 '2025-01-01 to 2025-01-04 rest of text',
             ];
 
             for (const value of scenarios) {
-                const event = new CalendarEvent();
+                const event = document.createElement('cal-event');
                 event.textContent = value;
                 event.parseDate();
                 event.parseTime();
@@ -252,7 +254,7 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("preserves markup", function() {
+        test("preserves markup", function() {
             const date = '2025-01-01';
             const link = '<a href="http://example.com">link</a>';
             const scenarios = [
@@ -264,7 +266,7 @@ describe('CalendarEvent', function() {
             ];
 
             for (const [text, description] of scenarios) {
-                const event = new CalendarEvent();
+                const event = document.createElement('cal-event');
                 event.innerHTML = text;
                 event.parseDate();
                 event.parseTime();
@@ -275,13 +277,13 @@ describe('CalendarEvent', function() {
 
     describe("Repetition parsing", function() {
         function createEvent() {
-            const event = new CalendarEvent();
+            const event = document.createElement('cal-event');
             event.innerHTML = '2025-01-01 9:30 AM repetion parsing test';
             event.parseDate();
             return event;
         }
 
-        it('daily', function() {
+        test('daily', function() {
             const event = createEvent();
             event.dataset.repeat = 'daily';
             event.parseRepetition();
@@ -289,7 +291,7 @@ describe('CalendarEvent', function() {
             expect(event.repetition.until).toBeUndefined();
         });
 
-        it('weekly', function() {
+        test('weekly', function() {
             const event = createEvent();
             event.dataset.repeat = 'weekly';
             event.parseRepetition();
@@ -297,7 +299,7 @@ describe('CalendarEvent', function() {
             expect(event.repetition.until).toBeUndefined();
         });
 
-        it('biweekly', function() {
+        test('biweekly', function() {
             const scenarios = ['biweekly', 'every other week', 'fortnightly'];
             for (const scenario of scenarios) {
                 const event = createEvent();
@@ -307,7 +309,7 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it('bimonthly', function() {
+        test('bimonthly', function() {
             const scenarios = ['bimonthly', 'every other month'];
             for (const scenario of scenarios) {
                 const event1 = createEvent();
@@ -325,7 +327,7 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it('monthly', function() {
+        test('monthly', function() {
             const event = createEvent();
             event.dataset.repeat = 'monthly';
             event.parseRepetition();
@@ -334,7 +336,7 @@ describe('CalendarEvent', function() {
             expect(event.repetition.until).toBeUndefined();
         });
 
-        it('yearly', function() {
+        test('yearly', function() {
             const event = createEvent();
             event.dataset.repeat = 'yearly';
             event.parseRepetition();
@@ -343,14 +345,14 @@ describe('CalendarEvent', function() {
             expect(event.repetition.until).toBeUndefined();
         });
 
-        it('until', function() {
+        test('until', function() {
             const event = createEvent();
             event.dataset.repeat = 'daily until 2025-01-08';
             event.parseRepetition();
             expect(event.repetition.until.getDate()).toBe(8);
         });
 
-        it('ordinals', function() {
+        test('ordinals', function() {
             const scenarios = [
                 ['first', 1],
                 ['second', 2],
@@ -367,14 +369,14 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it('weekdays', function() {
+        test('weekdays', function() {
             const event = createEvent();
             event.dataset.repeat = 'weekdays';
             event.parseRepetition();
             expect(Array.from(event.repetition.days)).toEqual([1, 2, 3, 4, 5]);
         });
 
-        it('single day', function() {
+        test('single day', function() {
             const scenarios = [
                 ['Sunday', 0],
                 ['Monday', 1],
@@ -399,7 +401,7 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it('multiple days', function() {
+        test('multiple days', function() {
             const scenarios = [
                 ['weekly on Sunday and Thursday', [0, 4]],
                 ['Mon and Wed weekly', [1, 3]]
@@ -412,7 +414,7 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it('single month', function() {
+        test('single month', function() {
             const scenarios = [
                 ['January', 0],
                 ['February', 1],
@@ -449,7 +451,7 @@ describe('CalendarEvent', function() {
 
         });
 
-        it('multiple months', function() {
+        test('multiple months', function() {
             const scenarios = [
                 ['monthly from January to February', [0, 1]],
                 ['January, February, March', [0, 1, 2]]
@@ -464,8 +466,8 @@ describe('CalendarEvent', function() {
     });
 
     describe("Repetition calculation", function() {
-        it("daily", function() {
-            const event = new CalendarEvent();
+        test("daily", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = 'daily';
             event.parseDate();
@@ -478,8 +480,8 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("weekly", function() {
-            const event = new CalendarEvent();
+        test("weekly", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = 'weekly';
             event.parseDate();
@@ -494,8 +496,8 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("monthly", function() {
-            const event = new CalendarEvent();
+        test("monthly", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = "monthly";
             event.parseDate();
@@ -510,8 +512,8 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("yearly", function() {
-            const event = new CalendarEvent();
+        test("yearly", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = "yearly";
             event.parseDate();
@@ -525,8 +527,8 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("ordinal - first", function() {
-            const event = new CalendarEvent();
+        test("ordinal - first", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = "first wednesday";
             event.parseDate();
@@ -540,8 +542,8 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("ordinal - second", function() {
-            const event = new CalendarEvent();
+        test("ordinal - second", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-09 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = "second thursday";
             event.parseDate();
@@ -555,8 +557,8 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("ordinal - third", function() {
-            const event = new CalendarEvent();
+        test("ordinal - third", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-17 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = "third friday";
             event.parseDate();
@@ -569,8 +571,8 @@ describe('CalendarEvent', function() {
                 expect(event.repeatsOn(d)).toBe(expectation, d);
             }
         });
-        it("ordinal - fourth", function() {
-            const event = new CalendarEvent();
+        test("ordinal - fourth", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-25 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = "fourth saturday";
             event.parseDate();
@@ -584,8 +586,8 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("ordinal - last", function() {
-            const event = new CalendarEvent();
+        test("ordinal - last", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-26 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = "last sunday";
             event.parseDate();
@@ -599,8 +601,8 @@ describe('CalendarEvent', function() {
             }
         });
 
-        it("biweekly", function() {
-            const event = new CalendarEvent();
+        test("biweekly", function() {
+            const event = document.createElement('cal-event');
             event.innerHTML = "2025-01-01 9:30 AM day-of-week repetition test event";
             event.dataset.repeat = "biweekly";
             event.parseDate();
