@@ -104,6 +104,44 @@ class CalendarBase extends HTMLElement {
         return d;
     }
 
+    constrainNavigation(firstDate, lastDate, begin, end) {
+        if (begin && begin >= firstDate && begin <= lastDate) {
+            document.body.classList.add('cannot-step-backward');
+        } else {
+            document.body.classList.remove('cannot-step-backward');
+        }
+
+        if (end && end >= firstDate && end <= lastDate) {
+            document.body.classList.add('cannot-step-forward');
+        } else {
+            document.body.classList.remove('cannot-step-forward');
+        }
+    }
+
+    enableForwardNavigation() {
+        for (const el of document.querySelectorAll('.nav.next')) {
+            el.classList.remove('disabled');
+        }
+    }
+
+    disableForwardNavigation() {
+        for (const el of document.querySelectorAll('.nav.next')) {
+            el.classList.add('disabled');
+        }
+    }
+
+    enableBackwardNavigation() {
+        for (const el of document.querySelectorAll('.nav.previous')) {
+            el.classList.remove('disabled');
+        }
+    }
+
+    disableBackwardNavigation() {
+        for (const el of document.querySelectorAll('.nav.previous')) {
+            el.classList.add('disabled');
+        }
+    }
+
     * runExtras(date, config) {
         const extras = this.viewCache.get('extras', () => {
             const extras = [];
@@ -125,12 +163,14 @@ class CalendarBase extends HTMLElement {
 class CalendarView extends CalendarBase {
     static get observedAttributes() { return ['date']; }
 
-    constructor() {
+    constructor(cache, config) {
         super();
-        this.viewCache = null;
+        this.viewCache = cache;
         this.name = '';
         this.linkedTitleParts = [];
         this.emojiPattern = /\p{Emoji}/u;
+        this.begin = config.begin;
+        this.end = config.end;
     }
 
     connectedCallback() {
@@ -162,6 +202,18 @@ class CalendarView extends CalendarBase {
         const key = this.viewCache.versionedKey(hash);
         if (!key) return;
         this.viewCache.storageSet(key, this.innerHTML);
+    }
+
+    outOfBounds(d) {
+        if (d < this.begin) return true;
+        if (d > this.end) return true;
+        return false;
+    }
+
+    dateWithinBoundary(d) {
+        if (d < this.begin) return this.begin;
+        if (d > this.end) return this.end;
+        return d;
     }
 
     markToday() {
@@ -223,15 +275,17 @@ class CalendarView extends CalendarBase {
         }
 
         if (e.type === 'step' && e.detail.to === 'next') {
+            if (document.body.classList.contains('cannot-step-forward')) return;
             window.location.hash = this.hasher(this.next);
         }
 
         if (e.type === 'step' && e.detail.to === 'previous') {
+            if (document.body.classList.contains('cannot-step-backward')) return;
             window.location.hash = this.hasher(this.previous);
         }
 
         if (e.type === 'step' && e.detail.to === 'day') {
-            window.location.hash = this.ymd(this.date);
+            window.location.hash = this.ymd(this.dateWithinBoundary(this.date));
         }
 
         if (e.type === 'step' && e.detail.to === 'month') {
@@ -240,7 +294,7 @@ class CalendarView extends CalendarBase {
                 window.location.hash = this.ym(capturedDate);
                 this.viewCache.clear('capturedDate');
             } else {
-                window.location.hash = this.ym(this.date);
+                window.location.hash = this.ym(this.dateWithinBoundary(this.date));
             }
         }
 
@@ -250,7 +304,8 @@ class CalendarView extends CalendarBase {
         }
 
         if (e.type === 'jump') {
-            const destination = prompt("Jump to:", this.hasher(this.date));
+            const promptDefault = this.dateWithinBoundary(this.date);
+            const destination = prompt("Jump to:", this.hasher(promptDefault));
             if (destination) window.location.hash = destination;
         }
     }
@@ -381,8 +436,7 @@ class CalendarYear extends CalendarView {
     static get tag() { return 'cal-year' }
 
     constructor(cache, config) {
-        super();
-        this.viewCache = cache;
+        super(cache, config);
         this.name = config.name;
         this.locale = config.locale;
         this.titleFormat = {year: 'numeric'}
@@ -409,8 +463,29 @@ class CalendarYear extends CalendarView {
 
         const fragment = document.createDocumentFragment();
         const d = this.previousDay(this.date);
+        const firstDate = new Date(d.getTime() + 86_400_000);
+        const lastDate = new Date(firstDate.getTime() + 86_400_000 * 364);
+        this.constrainNavigation(firstDate, lastDate, this.begin, this.end);
+
         for (let i = 0; i <= 365; i++) {
             d.setDate(d.getDate() + 1);
+
+            if (this.begin && d.getFullYear() < this.begin.getFullYear()) {
+                continue;
+            }
+
+            if (this.end && d.getFullYear() < this.begin.getFullYear()) {
+                continue;
+            }
+
+            if (this.begin && d.getMonth() < this.begin.getMonth()) {
+                continue;
+            }
+
+            if (this.end && d.getMonth() > this.end.getMonth()) {
+                break;
+            }
+
             if (d.getFullYear() > this.date.getFullYear()) break;
 
             if (d.getDate() === 1) {
@@ -471,6 +546,11 @@ class CalendarYear extends CalendarView {
         const hasEvents = this.hasEvents(d);
         const container = parent.appendChild(document.createElement('div'));
         container.classList.add(...['day'].concat(classes));
+
+        if (this.outOfBounds(d)) {
+            container.classList.add('out-of-bounds');
+        }
+
         container.setAttribute('title', this.relativeAge(d));
 
         container.dataset.ymd = this.ymd(d);
@@ -501,8 +581,7 @@ class CalendarMonth extends CalendarView {
     static get tag() { return 'cal-month' }
 
     constructor(cache, config) {
-        super();
-        this.viewCache = cache;
+        super(cache, config);
         this.name = config.name;
         this.locale = config.locale;
         this.linkedTitleParts = ['year'];
@@ -533,6 +612,8 @@ class CalendarMonth extends CalendarView {
 
         const lastDay = new Date(this.date.getFullYear(), this.date.getMonth() + 1, 0, 0, 0, 0, 0);
         lastDay.setDate(lastDay.getDate() + (6 - lastDay.getDay()));
+
+        this.constrainNavigation(firstDay, lastDay, this.begin, this.end);
 
         const events = this.eventFinder(firstDay, lastDay);
 
@@ -570,7 +651,12 @@ class CalendarMonth extends CalendarView {
 
             const day = fragment.appendChild(document.createElement('div'));
             day.classList.add('day');
+
             day.dataset.ymd = this.ymd(d);
+
+            if (this.outOfBounds(d)) {
+                day.classList.add('out-of-bounds');
+            }
 
             if (eventSubset.length > 0) {
                 day.classList.add('has-events');
@@ -645,8 +731,7 @@ class CalendarDay extends CalendarView {
     static get tag() { return 'cal-day' }
 
     constructor(cache, config) {
-        super();
-        this.viewCache = cache;
+        super(cache, config);
         this.name = config.name;
         this.locale = config.locale;
         this.linkedTitleParts = ['year', 'month'];
@@ -668,6 +753,8 @@ class CalendarDay extends CalendarView {
     renderView() {
         let counter = 0;
         this.removeAll('.event, .day-of-week, .extras');
+
+        this.constrainNavigation(this.date, this.date, this.begin, this.end);
 
         const div = this.appendChild(document.createElement('div'));
         div.classList.add('day-of-week');
@@ -1138,9 +1225,6 @@ class CalendarEvent extends CalendarBase {
                 if (matchDate < this.repetition.since) return false;
                 if (matchDate.getTime() === this.repetition.since.getTime()) break;
                 matchDate.setDate(matchDate.getDate() - dayStep);
-                if (dayStep == 365) {
-                    console.log('matchDate is now', matchDate);
-                }
             }
         }
 
@@ -1293,7 +1377,17 @@ window.addEventListener('DOMContentLoaded', (e) => {
 
     for (const meta of document.head.querySelectorAll('meta')) {
         if (!meta.content) continue;
-        config[meta.name] = meta.content;
+
+        switch (meta.name) {
+        case 'begin':
+            config[meta.name] = new Date(`${meta.content}T00:00:00`);
+            break;
+        case 'end':
+            config[meta.name] = new Date(`${meta.content}T00:00:00`);
+            break;
+        default:
+            config[meta.name] = meta.content;
+        }
     }
 
     const hashDate = window.location.hash.replace('#', '');
@@ -1381,6 +1475,9 @@ window.addEventListener('DOMContentLoaded', (e) => {
 
         config.start = start;
     }
+
+    if (config.start < config.begin) config.start = config.begin;
+    if (config.start > config.end) config.start = config.end;
 
     const svg = document.body.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
     svg.innerHTML = `<defs>

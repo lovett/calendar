@@ -76,10 +76,17 @@ For more complex repetition patterns, multiple single-occurrence events are a be
 ## Customization
 A couple things can be customized by adding special meta tags to the HTML document:
 
-*Name*: displayed in the header:
+*Name*: a title displayed in the header:
 ```
 <meta name="name" content="Name of My Calendar" />
 ```
+
+*Begin* and *End*: the earliest and latest dates that can be shown. Must be in `yyyy-mm-dd` format:
+```
+<meta name="begin" content="2025-01-01" />
+<meta name="end" content="2025-01-31" />
+```
+
 
 *Locale*: normally determined by the browser, but able to be overridden:
 ```

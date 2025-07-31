@@ -177,6 +177,11 @@ cal-month .lining {
     align-items: start;
 }
 
+cal-month .out-of-bounds {
+    background-color: #999;
+}
+
+
 cal-month .event {
     display: none;
 }
@@ -246,7 +251,6 @@ cal-year .month {
 cal-year .month.highlighted {
     background-color: var(--highlighted);
 }
-
 
 cal-year .month:last-of-type {
     margin-bottom: 0;
@@ -330,6 +334,13 @@ body > svg  {
     display: inline-flex;
 }
 
+.cannot-step-backward .nav.previous,
+.cannot-step-forward .nav.next {
+    pointer-events: none;
+    opacity: .25;
+}
+
+
 .navigator .icon {
     width: 1.75em;
     height: 1.75em;
@@ -395,6 +406,14 @@ body > svg  {
     font-style: italic;
     padding-top: .25em;
     grid-area: subtitle;
+}
+
+.out-of-bounds {
+    background-color: var(--bg);
+}
+
+.out-of-bounds * {
+    visibility: hidden;
 }
 
 .view {
