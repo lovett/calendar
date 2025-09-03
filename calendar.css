@@ -24,6 +24,13 @@ html {
     color: var(--default);
     font-size: 16px;
     background-color: var(--bg);
+    background: transparent url('calendar.svg') no-repeat center center;
+    background-size: 8em 8em;
+    min-height: 100%;
+}
+
+html.loaded {
+    background-image: none;
 }
 
 a {

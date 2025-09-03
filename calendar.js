@@ -1474,6 +1474,8 @@ window.addEventListener('DOMContentLoaded', (e) => {
         }
 
         config.start = start;
+
+        document.documentElement.classList.add('loaded');
     }
 
     if (config.start < config.begin) config.start = config.begin;
