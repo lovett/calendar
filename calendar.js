@@ -1125,7 +1125,7 @@ class CalendarEvent extends CalendarBase {
 
         if (hasWord('bimonthly') && !this.repetition.months) {
             this.repetition.date = this.start.getDate();
-            const start = (this.start.getMonth() + 1) % 2 == 0 ? 1: 0;
+            const start = (this.start.getMonth() + 1) % 2 === 0 ? 1: 0;
             for (let i = start; i < 12; i += 2) includeMonth(i);
         }
 
@@ -1237,7 +1237,7 @@ class CalendarEvent extends CalendarBase {
         if (this.hasStartTime()) {
             const t = document.createElement('time');
             t.innerHTML = this.start.toLocaleString(locale, {hour: 'numeric', minute: 'numeric'});
-            result += t.outerHTML + ' ';
+            result += `${t.outerHTML} `;
         }
 
         return result + this.description;
