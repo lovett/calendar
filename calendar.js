@@ -1475,7 +1475,6 @@ window.addEventListener('DOMContentLoaded', (e) => {
 
         config.start = start;
 
-        document.documentElement.classList.add('loaded');
     }
 
     if (config.start < config.begin) config.start = config.begin;
@@ -1514,6 +1513,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
 
     clockCallback();
     window.setInterval(clockCallback, 5000);
+    document.documentElement.classList.add('loaded');
 });
 
 if (!window.customElements || !window.customElements.define) {
