@@ -811,7 +811,7 @@ class CalendarDay extends CalendarView {
 
             const details = container.appendChild(document.createElement('div'));
             details.classList.add('details');
-            details.textContent = event.details;
+            details.innerHTML = event.details;
 
             const recurrence = (label, d) => {
                 if (!d) return;
