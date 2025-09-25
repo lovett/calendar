@@ -911,7 +911,7 @@ class CalendarEvent extends CalendarBase {
             'multi-day-start', this.isMultiDayStart(d),
             'multi-day-continuation', this.isMultiDayContinuation(d),
             'multi-day-skip', this.canSkipWeekend() && this.isWeekend(d),
-            'multi-day-pre-skip', this.isMultiDayPreSkip(d),
+            'multi-day-pre-skip', this.isMultiDayPreSkip(d) && this.isMultiDayStart(d),
             'multi-day-post-skip', this.isMultiDayPostSkip(d),
             'multi-day-end', this.isMultiDayEnd(d),
             this.className, this.hasAttribute('class'),
