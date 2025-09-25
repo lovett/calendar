@@ -40,7 +40,7 @@ An event with two dates is treated as a multi-day event. The separator (the word
 
 Events that occur at specific times can be expressed in 12- or 24-hour formats. If found, the first one is treated as the start and the second as the end.
 
-The rest of the tag content is treated as the event title and description. Its structure is open-ended. Do whatever.
+The rest of the tag content up to the first `<details>` tag is treated as the event title. Anything in the `<details>` tag is only shown on the day view as a supplemental description.
 
 ```
 <cal event>
@@ -50,7 +50,9 @@ The rest of the tag content is treated as the event title and description. Its s
 </cal-event>
 ```
 
-Although `cal-event` is a custom tag, it works like a standard HTML tag. You can give it CSS classes or inline styles to jazz up the presentation. There's also a special `data-icon` attribute that can be used to set a custom Emoji or SVG symbol id as the icon for an event. If using SVG symbols, they add them to the page in a `<defs>` tag as per usual.
+Although `cal-event` is a custom tag, it can take a class or style attribute like anything else. There's also a special `data-icon` attribute that can be used to set a custom Emoji or SVG symbol id (if available from a `defs` tag) as the icon for an event.
+
+For multi-day events that run through weekends, set `data-skip-weekend` to hide the weekend occurrences and resume the following Monday.
 
 ## Repetition
 When a `cal-event` tag has a `data-repeat` attribute, it will show up multiple times according to whatever cadence you set.

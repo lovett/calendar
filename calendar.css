@@ -206,8 +206,26 @@ cal-month .multi-day-continuation {
     text-align: center;
 }
 
+cal-month .multi-day-skip {
+    visibility: hidden;
+}
+
 cal-month .multi-day-end {
     text-align: right;
+}
+
+cal-month .multi-day-post-skip.multi-day-end {
+    text-align: left;
+}
+
+cal-month .multi-day-pre-skip .sleeve, cal-month .multi-day-post-skip .sleeve {
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    align-items: center;
+}
+
+cal-month .sleeve .icon:nth-child(2) {
+    justify-self: end;
 }
 
 cal-year {
@@ -537,7 +555,7 @@ body > svg  {
         line-height: 1.75em;
     }
 
-    cal-month .multi-day-start .icon, cal-month .all-day .icon {
+    cal-month .multi-day-start .icon, cal-month .multi-day-post-skip .icon, cal-month .all-day .icon {
         margin-right: .25em;
     }
 

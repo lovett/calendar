@@ -74,6 +74,10 @@ class CalendarBase extends HTMLElement {
         return this.nextDay(date).getMonth() !== date.getMonth();
     }
 
+    isWeekend(date) {
+        return date.getDay() === 0 || date.getDay() === 6;
+    }
+
     ym(d) {
         if (!d) return '';
         return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -702,7 +706,11 @@ class CalendarMonth extends CalendarView {
             div.dataset.displayIndex = event.displayIndex;
 
             this.renderIcon(sleeve, event.icon(d));
-            if (!event.isMultiDay() || event.isMultiDayStart(d)) sleeve.innerHTML += event.shortLine(this.locale);
+            if (!event.isMultiDay() || event.isMultiDayStart(d) || event.isMultiDayPostSkip(d)) {
+                sleeve.innerHTML += event.shortLine(this.locale);
+            }
+
+            this.renderIcon(sleeve, event.postTitleIcon(d));
 
             div.appendChild(sleeve);
             parent.appendChild(div);
@@ -880,12 +888,18 @@ class CalendarEvent extends CalendarBase {
     }
 
     icon(d) {
-        if (this.isMultiDayEnd(d)) return 'arrow-down';
+        if (this.isMultiDayEnd(d) && !this.isMultiDayPostSkip(d)) return 'arrow-down';
         if (this.isMultiDayContinuation(d)) return 'arrow-right';
         if (this.dataset.icon) return this.dataset.icon;
         if (this.hasStartTime()) return null;
         if (this.repeatsOn(d)) return 'repeat';
         return 'calendar';
+    }
+
+    postTitleIcon(d) {
+        if (this.isMultiDayEnd(d) && this.isMultiDayPostSkip(d)) return 'arrow-down';
+        if (this.isMultiDayStart(d) && this.isMultiDayPreSkip(d)) return 'arrow-right';
+        return null;
     }
 
     classes(d) {
@@ -896,6 +910,9 @@ class CalendarEvent extends CalendarBase {
             'multi-day', this.isMultiDay(),
             'multi-day-start', this.isMultiDayStart(d),
             'multi-day-continuation', this.isMultiDayContinuation(d),
+            'multi-day-skip', this.canSkipWeekend() && this.isWeekend(d),
+            'multi-day-pre-skip', this.isMultiDayPreSkip(d),
+            'multi-day-post-skip', this.isMultiDayPostSkip(d),
             'multi-day-end', this.isMultiDayEnd(d),
             this.className, this.hasAttribute('class'),
         ];
@@ -956,6 +973,10 @@ class CalendarEvent extends CalendarBase {
         return true;
     }
 
+    canSkipWeekend() {
+        return this.dataset.skipWeekend !== undefined;
+    }
+
     isMultiDay() {
         if (!this.start) return false;
         if (this.start.getMonth() !== this.end.getMonth()) return true;
@@ -976,7 +997,16 @@ class CalendarEvent extends CalendarBase {
     isMultiDayContinuation(d) {
         if (!this.isMultiDay()) return false;
         if (this.isMultiDayEnd(d)) return false;
+        if (this.isMultiDayPostSkip(d)) return false;
         return d > this.start;
+    }
+
+    isMultiDayPostSkip(d) {
+        return this.canSkipWeekend() && d.getDay() === 1;
+    }
+
+    isMultiDayPreSkip(d) {
+        return this.canSkipWeekend() && d.getDay() === 5;
     }
 
     dayCount(asOf) {
