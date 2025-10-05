@@ -37,18 +37,32 @@ a {
     color: currentColor;
 }
 
-cal-day .day-of-week {
-    font-size: 1em;
-    padding: 0.5em 0 0.5em 0.25em;
+cal-day .extras {
+    font-size: 1.25em;
+    padding: 1em 0.5em;
+    list-style-type: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10em, 1fr));
+    gap: 1em;
 }
 
-cal-day .extras {
-    font-size: 1em;
-    padding: 0 0 1em 0.5em;
-    list-style-type: none;
+cal-day .extras li {
     display: flex;
-    flex-flow: row nowrap;
-    gap: 2em;
+    gap: 0.5em;
+    align-items: center;
+}
+cal-day .extras .icon {
+    width: 1.5em;
+    height: 1.5em;
+    display: block;
+}
+
+cal-day .extras .day-of-week {
+    font-size: 1em;
+    font-style: italic;
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
 }
 
 cal-day .event {
@@ -505,17 +519,6 @@ body > svg  {
         font-size: 18px;
     }
 
-    cal-day .day-of-week {
-        font-size: 1.25em;
-        padding-left: 0.5em;
-    }
-
-    cal-day .extras {
-        font-size: 1.25em;
-        padding: 0 0 1em 0.5em;
-    }
-
-
     cal-month .lining {
         height: auto;
     }
@@ -604,7 +607,10 @@ body > svg  {
 
 @media only screen and (min-width: 1400px) {
     .navigator {
-        gap: 0 1.5em;
+        padding: 1em;
+    }
+
+    cal-day .extras {
         padding: 1em;
     }
 

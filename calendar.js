@@ -764,17 +764,20 @@ class CalendarDay extends CalendarView {
 
         this.constrainNavigation(this.date, this.date, this.begin, this.end);
 
-        const div = this.appendChild(document.createElement('div'));
-        div.classList.add('day-of-week');
-        div.textContent = `${this.date.toLocaleString(this.locale, {weekday: 'long'})}, ${this.relativeAge(this.date)}`;
 
         const extras = this.appendChild(document.createElement('ul'));
         extras.classList.add('extras');
 
+        const li = extras.appendChild(document.createElement('li'));
+        li.classList.add('day-of-week');
+        li.innerHTML = `<span>${this.date.toLocaleString(this.locale, {weekday: 'long'})}</span><span>${this.relativeAge(this.date)}</span>`;
+
         for (const values of this.runExtras(this.date)) {
-            for (const value of values) {
+            for (const [value, icon] of values) {
                 const li = extras.appendChild(document.createElement('li'));
-                li.textContent = value;
+                this.renderIcon(li, icon);
+                const span = li.appendChild(document.createElement('span'));
+                span.textContent = value;
             }
         }
 
@@ -840,7 +843,7 @@ class CalendarDay extends CalendarView {
             const container = this.appendChild(document.createElement('div'));
             container.classList.add('event', 'empty');
             const time = container.appendChild(document.createElement('time'));
-            this.renderIcon(time, 'slash');
+            this.renderIcon(time, 'minus');
             const h2 = container.appendChild(document.createElement('h2'));
             h2.textContent = 'No events';
         }
@@ -1517,10 +1520,13 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="arrow-down" class="default-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></symbol>
     <symbol id="calendar" class="default-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></symbol>
     <symbol id="compass" class="default-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></symbol>
-    <symbol id="slash" class="default-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></symbol>
+    <symbol id="minus" data-original-id="ph--minus-circle-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M180 128a12 12 0 0 1-12 12H88a12 12 0 0 1 0-24h80a12 12 0 0 1 12 12m56 0A108 108 0 1 1 128 20a108.12 108.12 0 0 1 108 108m-24 0a84 84 0 1 0-84 84a84.09 84.09 0 0 0 84-84"/></symbol>
     <symbol id="chevron-up" class="default-icon" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"></polyline></symbol>
     <symbol id="chevron-down" class="default-icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></symbol>
     <symbol id="repeat" class="default-icon" viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></symbol>
+    <symbol id="icon-sunrise" data-original-id="ph--sun-horizon-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M240 148h-36.11c.07-1.33.11-2.66.11-4a76 76 0 0 0-152 0c0 1.34 0 2.67.11 4H16a12 12 0 0 0 0 24h224a12 12 0 0 0 0-24m-164-4a52 52 0 0 1 104 0c0 1.34-.07 2.67-.17 4H76.17c-.1-1.33-.17-2.66-.17-4m144 56a12 12 0 0 1-12 12H48a12 12 0 0 1 0-24h160a12 12 0 0 1 12 12M12.62 92.21a12 12 0 0 1 15.17-7.59l12 4a12 12 0 1 1-7.58 22.77l-12-4a12 12 0 0 1-7.59-15.18m56-48.41a12 12 0 1 1 22.76-7.59l4 12a12 12 0 1 1-22.76 7.59Zm140 60a12 12 0 0 1 7.59-15.18l12-4a12 12 0 0 1 7.58 22.77l-12 4a12 12 0 0 1-15.17-7.59m-48-55.59l4-12a12 12 0 1 1 22.76 7.59l-4 12a12 12 0 1 1-22.76-7.59"/></symbol>
+    <symbol id="icon-sunset" data-original-id="ph--sun-horizon-fill" viewBox="0 0 256 256"><path fill="currentColor" d="M248 160a8 8 0 0 1-8 8H16a8 8 0 0 1 0-16h40.45a74 74 0 0 1-.45-8a72 72 0 0 1 144 0a74 74 0 0 1-.45 8H240a8 8 0 0 1 8 8m-40 32H48a8 8 0 0 0 0 16h160a8 8 0 0 0 0-16M80.84 59.58a8 8 0 0 0 14.32-7.16l-8-16a8 8 0 0 0-14.32 7.16Zm-60.42 43.58l16 8a8 8 0 1 0 7.16-14.31l-16-8a8 8 0 1 0-7.16 14.31M216 112a8 8 0 0 0 3.57-.84l16-8a8 8 0 1 0-7.16-14.31l-16 8A8 8 0 0 0 216 112m-51.58-48.84a8 8 0 0 0 10.74-3.58l8-16a8 8 0 0 0-14.32-7.16l-8 16a8 8 0 0 0 3.58 10.74"/></symbol>
+    <symbol id="icon-sun" data-original-id="ph--sun-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M116 36V20a12 12 0 0 1 24 0v16a12 12 0 0 1-24 0m80 92a68 68 0 1 1-68-68a68.07 68.07 0 0 1 68 68m-24 0a44 44 0 1 0-44 44a44.05 44.05 0 0 0 44-44M51.51 68.49a12 12 0 1 0 17-17l-12-12a12 12 0 0 0-17 17Zm0 119l-12 12a12 12 0 0 0 17 17l12-12a12 12 0 1 0-17-17M196 72a12 12 0 0 0 8.49-3.51l12-12a12 12 0 0 0-17-17l-12 12A12 12 0 0 0 196 72m8.49 115.51a12 12 0 0 0-17 17l12 12a12 12 0 0 0 17-17ZM48 128a12 12 0 0 0-12-12H20a12 12 0 0 0 0 24h16a12 12 0 0 0 12-12m80 80a12 12 0 0 0-12 12v16a12 12 0 0 0 24 0v-16a12 12 0 0 0-12-12m108-92h-16a12 12 0 0 0 0 24h16a12 12 0 0 0 0-24"/></symbol>
     </defs>`;
 
     const appVersionMeta = document.head.appendChild(document.createElement('META'));

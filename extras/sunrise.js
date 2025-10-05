@@ -26,24 +26,27 @@ function runSunrise(date) {
     const locale = Intl.DateTimeFormat().resolvedOptions().locale;
 
     const results = [
-        `${result.sunriseDate.toLocaleString(locale, timeFormat)} sunrise`,
-        `${result.sunsetDate.toLocaleString(locale, timeFormat)} sunset`,
-        `${durationHours}h ${durationMinutes}m daylight`,
+        [`${result.sunriseDate.toLocaleString(locale, timeFormat)} sunrise`, 'icon-sunrise'],
     ];
 
     const daylight = calculateDaylight(result);
     if (daylight && daylight.isBeforeSunrise) {
-        results.push(`${daylight.hoursUntilSunrise}h ${daylight.minutesUntilSunrise}m until sunrise`);
+        results.push([`${daylight.hoursUntilSunrise}h ${daylight.minutesUntilSunrise}m until sunrise`, 'icon-sunrise']);
     }
 
-    if (daylight && daylight.isAfterSunset) {
-        results.push(`${daylight.hoursSinceSunset}h ${daylight.minutesSinceSunset}m since sunset`);
-    }
+    results.push([`${durationHours}h ${durationMinutes}m daylight`, 'icon-sun']);
 
     if (daylight && !daylight.isBeforeSunrise && !daylight.isAfterSunset) {
-        results.push(`${daylight.hoursSinceSunrise}h ${daylight.minutesSinceSunrise}m daylight spent (${daylight.spentPercent}%)`);
-        results.push(`${daylight.hoursUntilSunset}h ${daylight.hoursUntilSunset}m daylight remaining (${daylight.remainingPercent}%)`);
+        results.push([`${daylight.hoursUntilSunset}h ${daylight.hoursUntilSunset}m daylight remaining (${daylight.remainingPercent}%)`, 'icon-sun']);
+        results.push([`${daylight.hoursSinceSunrise}h ${daylight.minutesSinceSunrise}m daylight spent (${daylight.spentPercent}%)`, 'icon-sun']);
     }
+
+    results.push([`${result.sunsetDate.toLocaleString(locale, timeFormat)} sunset`, 'icon-sunset']);
+
+    if (daylight && daylight.isAfterSunset) {
+        results.push([`${daylight.hoursSinceSunset}h ${daylight.minutesSinceSunset}m since sunset`, 'icon-sunset']);
+    }
+
     return results;
 }
 
