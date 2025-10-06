@@ -181,6 +181,7 @@ class CalendarView extends CalendarBase {
         this.classList.add('view');
         this.addEventListener('step', this);
         this.addEventListener('jump', this);
+        this.addEventListener('today', this);
         this.addEventListener('swipe', this);
         this.addEventListener('clock', this);
         this.swipe = [0, 0];
@@ -312,6 +313,11 @@ class CalendarView extends CalendarBase {
             const destination = prompt("Jump to:", this.hasher(promptDefault));
             if (destination) window.location.hash = destination;
         }
+
+        if (e.type === 'today') {
+            const today = this.ymd(new Date());
+            window.location.hash = today;
+        }
     }
 
     get dayNames() {
@@ -416,6 +422,7 @@ class CalendarView extends CalendarBase {
             <h1></h1>
             <a href="#previous" class="nav previous"><svg class="icon"><use xlink:href="#arrow-left" /></svg></a>
             <a href="#jump" class="nav jump"><svg class="icon"><use xlink:href="#compass" /></svg></a>
+            <a href="#today" class="nav today"><svg class="icon"><use xlink:href="#calendar-dot" /></svg></a>
             <a href="#next" class="nav next"><svg class="icon"><use xlink:href="#arrow-right" /></svg></a>
             <a href="#" class="nav toggle">
                 <svg class="icon"><use class="up" xlink:href="#chevron-up" />
@@ -424,6 +431,7 @@ class CalendarView extends CalendarBase {
             </a>
             <div class="panel" hidden>
                 <a href="#jump" class="nav jump"><svg class="icon"><use xlink:href="#compass" /></svg></a>
+                <a href="#today" class="nav today"><svg class="icon"><use xlink:href="#calendar-dot" /></svg></a>
             </div>
         </header>
         `;
@@ -1527,6 +1535,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol id="icon-sunrise" data-original-id="ph--sun-horizon-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M240 148h-36.11c.07-1.33.11-2.66.11-4a76 76 0 0 0-152 0c0 1.34 0 2.67.11 4H16a12 12 0 0 0 0 24h224a12 12 0 0 0 0-24m-164-4a52 52 0 0 1 104 0c0 1.34-.07 2.67-.17 4H76.17c-.1-1.33-.17-2.66-.17-4m144 56a12 12 0 0 1-12 12H48a12 12 0 0 1 0-24h160a12 12 0 0 1 12 12M12.62 92.21a12 12 0 0 1 15.17-7.59l12 4a12 12 0 1 1-7.58 22.77l-12-4a12 12 0 0 1-7.59-15.18m56-48.41a12 12 0 1 1 22.76-7.59l4 12a12 12 0 1 1-22.76 7.59Zm140 60a12 12 0 0 1 7.59-15.18l12-4a12 12 0 0 1 7.58 22.77l-12 4a12 12 0 0 1-15.17-7.59m-48-55.59l4-12a12 12 0 1 1 22.76 7.59l-4 12a12 12 0 1 1-22.76-7.59"/></symbol>
     <symbol id="icon-sunset" data-original-id="ph--sun-horizon-fill" viewBox="0 0 256 256"><path fill="currentColor" d="M248 160a8 8 0 0 1-8 8H16a8 8 0 0 1 0-16h40.45a74 74 0 0 1-.45-8a72 72 0 0 1 144 0a74 74 0 0 1-.45 8H240a8 8 0 0 1 8 8m-40 32H48a8 8 0 0 0 0 16h160a8 8 0 0 0 0-16M80.84 59.58a8 8 0 0 0 14.32-7.16l-8-16a8 8 0 0 0-14.32 7.16Zm-60.42 43.58l16 8a8 8 0 1 0 7.16-14.31l-16-8a8 8 0 1 0-7.16 14.31M216 112a8 8 0 0 0 3.57-.84l16-8a8 8 0 1 0-7.16-14.31l-16 8A8 8 0 0 0 216 112m-51.58-48.84a8 8 0 0 0 10.74-3.58l8-16a8 8 0 0 0-14.32-7.16l-8 16a8 8 0 0 0 3.58 10.74"/></symbol>
     <symbol id="icon-sun" data-original-id="ph--sun-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M116 36V20a12 12 0 0 1 24 0v16a12 12 0 0 1-24 0m80 92a68 68 0 1 1-68-68a68.07 68.07 0 0 1 68 68m-24 0a44 44 0 1 0-44 44a44.05 44.05 0 0 0 44-44M51.51 68.49a12 12 0 1 0 17-17l-12-12a12 12 0 0 0-17 17Zm0 119l-12 12a12 12 0 0 0 17 17l12-12a12 12 0 1 0-17-17M196 72a12 12 0 0 0 8.49-3.51l12-12a12 12 0 0 0-17-17l-12 12A12 12 0 0 0 196 72m8.49 115.51a12 12 0 0 0-17 17l12 12a12 12 0 0 0 17-17ZM48 128a12 12 0 0 0-12-12H20a12 12 0 0 0 0 24h16a12 12 0 0 0 12-12m80 80a12 12 0 0 0-12 12v16a12 12 0 0 0 24 0v-16a12 12 0 0 0-12-12m108-92h-16a12 12 0 0 0 0 24h16a12 12 0 0 0 0-24"/></symbol>
+    <symbol id="calendar-dot" data-original-id="ph--calendar-dot-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M148 152a20 20 0 1 1-20-20a20 20 0 0 1 20 20m80-104v160a20 20 0 0 1-20 20H48a20 20 0 0 1-20-20V48a20 20 0 0 1 20-20h20v-4a12 12 0 0 1 24 0v4h72v-4a12 12 0 0 1 24 0v4h20a20 20 0 0 1 20 20M52 52v24h152V52h-16a12 12 0 0 1-24 0H92a12 12 0 0 1-24 0Zm152 152V100H52v104Z"/></symbol>
     </defs>`;
 
     const appVersionMeta = document.head.appendChild(document.createElement('META'));

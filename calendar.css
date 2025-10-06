@@ -401,6 +401,11 @@ body > svg  {
     grid-area: jump;
 }
 
+.navigator .today {
+    display: none;
+    grid-area: today;
+}
+
 .navigator .panel {
     grid-area: panel;
     display: none;
@@ -436,8 +441,9 @@ body > svg  {
 }
 
 .navigator.open .panel {
-    display: block;
     padding: 1em 0;
+    display: flex;
+    gap: 1em;
 }
 
 .navigator .subtitle {
@@ -465,8 +471,8 @@ body > svg  {
 
 @media only screen and (min-width: 440px) {
     .navigator {
-        grid-template-columns: auto 1fr auto auto auto;
-        grid-template-areas: "title subtitle previous jump next";
+        grid-template-columns: auto 1fr auto auto auto auto;
+        grid-template-areas: "title subtitle previous jump today next";
         gap: 0 1.5em;
     }
 
@@ -496,6 +502,10 @@ body > svg  {
     }
 
     .navigator .jump {
+        display: block;
+    }
+
+    .navigator .today {
         display: block;
     }
 }
