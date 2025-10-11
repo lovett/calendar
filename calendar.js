@@ -108,6 +108,26 @@ class CalendarBase extends HTMLElement {
         return d;
     }
 
+    dayInterval(d1, d2) {
+        const first = new Date(d1);
+        const second = new Date(d2);
+        first.setHours(0);
+        first.setMinutes(0);
+        first.setSeconds(0);
+        first.setMilliseconds(0);
+        second.setHours(0);
+        second.setMinutes(0);
+        second.setSeconds(0);
+        second.setMilliseconds(0);
+        const delta = Math.abs(first - second) / (1000 * 60 * 60 * 24);
+
+        if (delta === 1 && second > first) return 'tomorrow';
+        if (delta === 1) return 'yesterday';
+        if (delta > 0 && second > first) return `in ${delta} days`;
+        if (delta > 0) return `${delta} days ago`;
+        return '';
+    }
+
     constrainNavigation(firstDate, lastDate, begin, end) {
         if (begin && begin >= firstDate && begin <= lastDate) {
             document.body.classList.add('cannot-step-backward');
@@ -832,19 +852,41 @@ class CalendarDay extends CalendarView {
             details.classList.add('details');
             details.innerHTML = event.details;
 
+            const tags = event.tags();
+            if (tags.length > 0) {
+                const ul = details.appendChild(document.createElement('ul'));
+                ul.classList.add('tags');
+                for (const tag of tags) {
+                    const li = ul.appendChild(document.createElement('li'));
+                    li.classList.add('tag');
+                    this.renderIcon(li, 'tag');
+                    li.appendChild(document.createTextNode(tag));
+                }
+            }
+
             const recurrence = (label, d) => {
                 if (!d) return;
                 const p = details.appendChild(document.createElement('p'));
                 p.classList.add('recurrence');
-                p.textContent = `${label}: `;
+                p.innerHTML = label;
 
                 const link = p.appendChild(document.createElement('a'));
                 link.href = `#${this.ymd(d)}`;
                 link.textContent = d.toLocaleString(this.locale, {month: 'long', day: 'numeric', year: 'numeric'});
+
+                const interval = this.dayInterval(event.start, d);
+                p.appendChild(document.createTextNode(` (${interval})`));
             }
 
-            recurrence('Previously', event.previousOccurrence(this.date));
-            recurrence('Next', event.nextOccurrence(this.date));
+            for (const occurrence of event.previousOccurrence(this.date)) {
+                if (occurrence.length === 1) recurrence('Previously occurred on ', occurrence[0]);
+                if (occurrence.length === 2) recurrence(`Previous <span class="tag"><svg class="icon"><use xlink:href="#tag"></use></svg>${occurrence[1]}</span> was `, occurrence[0]);
+            }
+
+            for (const occurrence of event.nextOccurrence(this.date)) {
+                if (occurrence.length === 1) recurrence('Next occurs on ', occurrence[0]);
+                if (occurrence.length === 2) recurrence(`Next <span class="tag"><svg class="icon"><use xlink:href="#tag"></use></svg>${occurrence[1]}</span> is `, occurrence[0]);
+            }
         }
 
         if (counter === 0) {
@@ -896,6 +938,19 @@ class CalendarEvent extends CalendarBase {
             yield parent;
             parent = parent.parentElement;
         }
+    }
+
+    tags() {
+        const splitter = (node) => {
+            return node.dataset.tags ? node.dataset.tags.split(',') : [];
+        }
+
+        const tags = splitter(this);
+        for (const parent of this.parents()) {
+            tags.push(...splitter(parent));
+        }
+
+        return tags;
     }
 
     icon(d) {
@@ -1203,16 +1258,31 @@ class CalendarEvent extends CalendarBase {
     }
 
     previousOccurrence(asOfDate) {
-        return this.occurrenceSequence(asOfDate, -1);
+        return this.occurrenceByTag(asOfDate, -1).concat(this.occurrenceBySequence(asOfDate, -1));
     }
 
     nextOccurrence(asOfDate) {
-        return this.occurrenceSequence(asOfDate, 1);
+        return this.occurrenceByTag(asOfDate, 1).concat(this.occurrenceBySequence(asOfDate, 1));
     }
 
-    occurrenceSequence(asOfDate, step) {
-        if (!this.repetition) return null;
-        if (!this.repetition.since) return null;
+    occurrenceByTag(asOfDate, step) {
+        let occurrences = [];
+        for (const tag of this.tags()) {
+            let match = this;
+            for (const node of document.querySelectorAll(`[data-tags *= ${tag}] cal-event, cal-event[data-tags *= ${tag}]`)) {
+                if (step === 1 && (node.start > match.start) || (node.start > this.start && node.start < match.start)) match = node;
+                if (step === -1 && (node.start < match.start) || (node.start < this.start && node.start > match.start)) match = node;
+            }
+
+            if (match !== this) occurrences.push([match.start, tag]);
+        }
+
+        return occurrences;
+    }
+
+    occurrenceBySequence(asOfDate, step) {
+        if (!this.repetition) return [];
+        if (!this.repetition.since) return [];
 
         const d = new Date(asOfDate ? asOfDate : this.start);
         d.setHours(0);
@@ -1222,16 +1292,16 @@ class CalendarEvent extends CalendarBase {
 
         if (this.repetition.dayStep) {
             d.setDate(d.getDate() + this.repetition.dayStep * step);
-            if (this.repeatsOn(d)) return d;
-            return null;
+            if (this.repeatsOn(d)) return [[d]];
+            return [];
         }
 
         for (let i = 0; i <= 365; i++) {
             d.setDate(d.getDate() + 1 * step);
-            if (this.repeatsOn(d)) return d;
+            if (this.repeatsOn(d)) return [[d]];
         }
 
-        return null;
+        return [];
     }
 
     repeatsOn(d) {
@@ -1526,7 +1596,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol class="default-icon" id="arrow-left" data-original-id="ph--arrow-left-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M228 128a12 12 0 0 1-12 12H69l51.52 51.51a12 12 0 0 1-17 17l-72-72a12 12 0 0 1 0-17l72-72a12 12 0 0 1 17 17L69 116h147a12 12 0 0 1 12 12"/></symbol>
     <symbol class="default-icon" id="arrow-right" data-original-id="ph--arrow-right-bold" viewBox="0 0 256 256"><path fill="currentColor" d="m224.49 136.49l-72 72a12 12 0 0 1-17-17L187 140H40a12 12 0 0 1 0-24h147l-51.49-51.52a12 12 0 0 1 17-17l72 72a12 12 0 0 1-.02 17.01"/></symbol>
     <symbol class="default-icon" id="arrow-down" data-original-id="ph--arrow-down-bold" viewBox="0 0 256 256"><path fill="currentColor" d="m208.49 152.49l-72 72a12 12 0 0 1-17 0l-72-72a12 12 0 0 1 17-17L116 187V40a12 12 0 0 1 24 0v147l51.51-51.52a12 12 0 0 1 17 17Z"/></symbol>
-    <symbol class="default-icon" id="calendar" data-original-id="ph--calendar-blank-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M208 28h-20v-4a12 12 0 0 0-24 0v4H92v-4a12 12 0 0 0-24 0v4H48a20 20 0 0 0-20 20v160a20 20 0 0 0 20 20h160a20 20 0 0 0 20-20V48a20 20 0 0 0-20-20M68 52a12 12 0 0 0 24 0h72a12 12 0 0 0 24 0h16v24H52V52ZM52 204V100h152v104Z"/></symbol>
+    <symbol class="default-icon" id="calendar" data-original-id="ph--calendar-dot-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M148 152a20 20 0 1 1-20-20a20 20 0 0 1 20 20m80-104v160a20 20 0 0 1-20 20H48a20 20 0 0 1-20-20V48a20 20 0 0 1 20-20h20v-4a12 12 0 0 1 24 0v4h72v-4a12 12 0 0 1 24 0v4h20a20 20 0 0 1 20 20M52 52v24h152V52h-16a12 12 0 0 1-24 0H92a12 12 0 0 1-24 0Zm152 152V100H52v104Z"/></symbol>
     <symbol class="default-icon" id="compass" data-original-id="ph--compass-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M128 20a108 108 0 1 0 108 108A108.12 108.12 0 0 0 128 20m0 192a84 84 0 1 1 84-84a84.09 84.09 0 0 1-84 84m35.27-135l-56 24a12 12 0 0 0-6.3 6.3l-24 56A12 12 0 0 0 92.73 179l56-24a12 12 0 0 0 6.3-6.3l24-56A12 12 0 0 0 163.27 77m-28.41 57.89l-24 10.29l10.29-24l24-10.29Z"/></symbol>
     <symbol class="default-icon" id="chevron-up" data-original-id="ph--caret-up-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M216.49 168.49a12 12 0 0 1-17 0L128 97l-71.51 71.49a12 12 0 0 1-17-17l80-80a12 12 0 0 1 17 0l80 80a12 12 0 0 1 0 17"/></symbol>
     <symbol class="default-icon" id="chevron-down" data-original-id="ph--caret-down-bold" viewBox="0 0 256 256"><path fill="currentColor" d="m216.49 104.49l-80 80a12 12 0 0 1-17 0l-80-80a12 12 0 0 1 17-17L128 159l71.51-71.52a12 12 0 0 1 17 17Z"/></symbol>
@@ -1536,6 +1606,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol class="default-icon" id="icon-sun" data-original-id="ph--sun-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M116 36V20a12 12 0 0 1 24 0v16a12 12 0 0 1-24 0m80 92a68 68 0 1 1-68-68a68.07 68.07 0 0 1 68 68m-24 0a44 44 0 1 0-44 44a44.05 44.05 0 0 0 44-44M51.51 68.49a12 12 0 1 0 17-17l-12-12a12 12 0 0 0-17 17Zm0 119l-12 12a12 12 0 0 0 17 17l12-12a12 12 0 1 0-17-17M196 72a12 12 0 0 0 8.49-3.51l12-12a12 12 0 0 0-17-17l-12 12A12 12 0 0 0 196 72m8.49 115.51a12 12 0 0 0-17 17l12 12a12 12 0 0 0 17-17ZM48 128a12 12 0 0 0-12-12H20a12 12 0 0 0 0 24h16a12 12 0 0 0 12-12m80 80a12 12 0 0 0-12 12v16a12 12 0 0 0 24 0v-16a12 12 0 0 0-12-12m108-92h-16a12 12 0 0 0 0 24h16a12 12 0 0 0 0-24"/></symbol>
     <symbol class="default-icon" id="calendar-dot" data-original-id="ph--calendar-dot-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M148 152a20 20 0 1 1-20-20a20 20 0 0 1 20 20m80-104v160a20 20 0 0 1-20 20H48a20 20 0 0 1-20-20V48a20 20 0 0 1 20-20h20v-4a12 12 0 0 1 24 0v4h72v-4a12 12 0 0 1 24 0v4h20a20 20 0 0 1 20 20M52 52v24h152V52h-16a12 12 0 0 1-24 0H92a12 12 0 0 1-24 0Zm152 152V100H52v104Z"/></symbol>
     <symbol class="default-icon" id="calendar-x" data-original-id="ph--calendar-x-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M160.49 136.49L145 152l15.52 15.51a12 12 0 0 1-17 17L128 169l-15.51 15.52a12 12 0 0 1-17-17L111 152l-15.49-15.51a12 12 0 1 1 17-17L128 135l15.51-15.52a12 12 0 1 1 17 17ZM228 48v160a20 20 0 0 1-20 20H48a20 20 0 0 1-20-20V48a20 20 0 0 1 20-20h20v-4a12 12 0 0 1 24 0v4h72v-4a12 12 0 0 1 24 0v4h20a20 20 0 0 1 20 20M52 52v24h152V52h-16a12 12 0 0 1-24 0H92a12 12 0 0 1-24 0Zm152 152V100H52v104Z"/></symbol>
+    <symbol class="default-icon" id="tag" data-original-id="ph--tag-simple-bold" viewBox="0 0 256 256"><path fill="currentColor" d="m250 121.34l-45.64-68.43A20 20 0 0 0 187.72 44H40a20 20 0 0 0-20 20v128a20 20 0 0 0 20 20h147.72a20 20 0 0 0 16.64-8.91L250 134.66a12 12 0 0 0 0-13.32M185.58 188H44V68h141.58l40 60Z"/></symbol>
     </defs>`;
 
     const appVersionMeta = document.head.appendChild(document.createElement('META'));

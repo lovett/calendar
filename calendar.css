@@ -72,7 +72,7 @@ cal-day .event {
     gap: 0 0.5em;
     margin-bottom: 1em;
     line-height: 1.5;
-    align-items: center;
+    align-items: start;
     padding: var(--padding);
     box-sizing: border-box;
     padding-left: 1em;
@@ -141,8 +141,15 @@ cal-day .event .details p {
 
 cal-day .event .details p.recurrence {
     margin-left: 0;
-    display: inline-block;
     margin-right: 1em;
+}
+
+cal-day .event .tags {
+    list-style-type: none;
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    padding: .5em 0;
 }
 
 cal-event {
@@ -461,6 +468,18 @@ body > svg  {
 .out-of-bounds * {
     visibility: hidden;
 }
+
+.tag {
+    text-transform: uppercase;
+    font-size: .85em;
+    font-family: sans-serif;
+}
+
+.tag .icon {
+    margin: -0.15em .25em 0 0;
+}
+
+
 
 .view {
     display: none;
