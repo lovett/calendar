@@ -135,7 +135,4 @@ The URL hash can be a date or a localized keyword phrase:
 
 ## Acknowledgements
 
-This project uses icons from:
-
-* [Feather icons](https://feathericons.com)
-* [Phosphor icons](https://github.com/phosphor-icons/core)
+This project uses icons from [Phosphor icons](https://github.com/phosphor-icons/core)

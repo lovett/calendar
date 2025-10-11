@@ -69,12 +69,13 @@ cal-day .event {
     display: grid;
     grid-template-columns: 2em 1fr;
     grid-template-rows: auto 1fr;
-    gap: 0 1em;
+    gap: 0 0.5em;
     margin-bottom: 1em;
     line-height: 1.5;
     align-items: center;
     padding: var(--padding);
     box-sizing: border-box;
+    padding-left: 1em;
 }
 
 cal-day .event.at-time {
