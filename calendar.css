@@ -144,6 +144,10 @@ cal-day .event .details p.recurrence {
     margin-right: 1em;
 }
 
+cal-day .event .details p.counts {
+    margin-left: 0;
+}
+
 cal-day .event .tags {
     list-style-type: none;
     display: flex;
@@ -473,6 +477,19 @@ body > svg  {
     text-transform: uppercase;
     font-size: .85em;
     font-family: sans-serif;
+}
+
+.tag .summary {
+    text-transform: none;
+}
+
+.tag .summary:before {
+    margin-left: 0.5em;
+    content: '(';
+}
+.tag .summary:after {
+    margin-right: 0.5em;
+    content: ')';
 }
 
 .tag .icon {

@@ -182,6 +182,49 @@ class CalendarBase extends HTMLElement {
             yield window[extra](date, config);
         }
     }
+
+    tagSelector(tag) {
+        return `[data-tags *= ${tag}] cal-event, cal-event[data-tags *= ${tag}]`;
+    }
+
+    tagSummary(tag) {
+        const counts = {};
+        const increment = (key, amount) => {
+            if (!Object.hasOwn(counts, key)) counts[key] = 0;
+            counts[key] += amount;
+        }
+
+        for (const event of document.querySelectorAll(this.tagSelector(tag))) {
+            const start = new Date(event.start);
+            const [elapsedDays, totalDays] = event.dayCount(this.date, this.date.getFullYear());
+            const [_, totalDaysLastYear] = event.dayCount(this.date, this.date.getFullYear() - 1);
+
+            if (event.start.getFullYear() === this.date.getFullYear() || event.end.getFullYear() === this.date.getFullYear()) {
+                increment('year', totalDays);
+                if (this.ymd(event.start) <= this.ymd(this.date)) increment('yearToDate', elapsedDays);
+            }
+
+            if (this.date.getFullYear() - event.start.getFullYear() === 1) {
+                increment('lastYear', totalDaysLastYear);
+            }
+        }
+
+        const statements = [];
+
+        if (counts.yearToDate) {
+            statements.push(`day ${counts.yearToDate} of ${counts.year} this year`);
+        }
+
+        if (counts.lastYear) {
+            statements.push(`${counts.lastYear} last year`);
+        }
+
+        const span = document.createElement('span')
+        span.classList.add('summary');
+        span.innerText = statements.join(', ');
+        return span;
+    }
+
 }
 
 class CalendarView extends CalendarBase {
@@ -853,7 +896,7 @@ class CalendarDay extends CalendarView {
             details.innerHTML = event.details;
 
             const tags = event.tags();
-            if (tags.length > 0) {
+            if (tags) {
                 const ul = details.appendChild(document.createElement('ul'));
                 ul.classList.add('tags');
                 for (const tag of tags) {
@@ -861,6 +904,7 @@ class CalendarDay extends CalendarView {
                     li.classList.add('tag');
                     this.renderIcon(li, 'tag');
                     li.appendChild(document.createTextNode(tag));
+                    li.appendChild(this.tagSummary(tag));
                 }
             }
 
@@ -1075,15 +1119,23 @@ class CalendarEvent extends CalendarBase {
         return this.canSkipWeekend() && d.getDay() === 5;
     }
 
-    dayCount(asOf) {
+    * days() {
+        let d = new Date(this.startOfDayMs(this.start));
+        while (d <= this.end) {
+            yield new Date(d);
+            d.setDate(d.getDate() + 1);
+        }
+    }
+
+    dayCount(asOf, year) {
         if (!this.isMultiDay()) return [1, 1];
 
         const d = new Date(this.startOfDayMs(this.start));
         let totalDays = 0;
         let elapsedDays = 0;
         while (d < this.end) {
-            if (d <= asOf) elapsedDays++;
-            totalDays++;
+            if (d <= asOf && (!year || d.getFullYear() === year)) elapsedDays++;
+            if (!year || d.getFullYear() === year) totalDays++;
             d.setDate(d.getDate() + 1);
         }
         return [elapsedDays, totalDays];
@@ -1266,18 +1318,23 @@ class CalendarEvent extends CalendarBase {
     }
 
     occurrenceByTag(asOfDate, step) {
-        let occurrences = [];
         for (const tag of this.tags()) {
-            let match = this;
-            for (const node of document.querySelectorAll(`[data-tags *= ${tag}] cal-event, cal-event[data-tags *= ${tag}]`)) {
-                if (step === 1 && (node.start > match.start) || (node.start > this.start && node.start < match.start)) match = node;
-                if (step === -1 && (node.start < match.start) || (node.start < this.start && node.start > match.start)) match = node;
+            let matches = [];
+            for (const node of document.querySelectorAll(this.tagSelector(tag))) {
+                for (const day of node.days()) {
+                    if (this.ymd(day) === this.ymd(asOfDate)) continue;
+                    if (step === 1 && day < asOfDate) continue;
+                    if (step === -1 && day > asOfDate) continue;
+                    matches.push(day);
+                }
             }
 
-            if (match !== this) occurrences.push([match.start, tag]);
+            matches.sort((a, b) => (step === 1) ? a - b : b - a);
+
+            return [[matches[0], tag]];
         }
 
-        return occurrences;
+        return [];
     }
 
     occurrenceBySequence(asOfDate, step) {
@@ -1606,7 +1663,7 @@ window.addEventListener('DOMContentLoaded', (e) => {
     <symbol class="default-icon" id="icon-sun" data-original-id="ph--sun-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M116 36V20a12 12 0 0 1 24 0v16a12 12 0 0 1-24 0m80 92a68 68 0 1 1-68-68a68.07 68.07 0 0 1 68 68m-24 0a44 44 0 1 0-44 44a44.05 44.05 0 0 0 44-44M51.51 68.49a12 12 0 1 0 17-17l-12-12a12 12 0 0 0-17 17Zm0 119l-12 12a12 12 0 0 0 17 17l12-12a12 12 0 1 0-17-17M196 72a12 12 0 0 0 8.49-3.51l12-12a12 12 0 0 0-17-17l-12 12A12 12 0 0 0 196 72m8.49 115.51a12 12 0 0 0-17 17l12 12a12 12 0 0 0 17-17ZM48 128a12 12 0 0 0-12-12H20a12 12 0 0 0 0 24h16a12 12 0 0 0 12-12m80 80a12 12 0 0 0-12 12v16a12 12 0 0 0 24 0v-16a12 12 0 0 0-12-12m108-92h-16a12 12 0 0 0 0 24h16a12 12 0 0 0 0-24"/></symbol>
     <symbol class="default-icon" id="calendar-dot" data-original-id="ph--calendar-dot-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M148 152a20 20 0 1 1-20-20a20 20 0 0 1 20 20m80-104v160a20 20 0 0 1-20 20H48a20 20 0 0 1-20-20V48a20 20 0 0 1 20-20h20v-4a12 12 0 0 1 24 0v4h72v-4a12 12 0 0 1 24 0v4h20a20 20 0 0 1 20 20M52 52v24h152V52h-16a12 12 0 0 1-24 0H92a12 12 0 0 1-24 0Zm152 152V100H52v104Z"/></symbol>
     <symbol class="default-icon" id="calendar-x" data-original-id="ph--calendar-x-bold" viewBox="0 0 256 256"><path fill="currentColor" d="M160.49 136.49L145 152l15.52 15.51a12 12 0 0 1-17 17L128 169l-15.51 15.52a12 12 0 0 1-17-17L111 152l-15.49-15.51a12 12 0 1 1 17-17L128 135l15.51-15.52a12 12 0 1 1 17 17ZM228 48v160a20 20 0 0 1-20 20H48a20 20 0 0 1-20-20V48a20 20 0 0 1 20-20h20v-4a12 12 0 0 1 24 0v4h72v-4a12 12 0 0 1 24 0v4h20a20 20 0 0 1 20 20M52 52v24h152V52h-16a12 12 0 0 1-24 0H92a12 12 0 0 1-24 0Zm152 152V100H52v104Z"/></symbol>
-    <symbol class="default-icon" id="tag" data-original-id="ph--tag-simple-bold" viewBox="0 0 256 256"><path fill="currentColor" d="m250 121.34l-45.64-68.43A20 20 0 0 0 187.72 44H40a20 20 0 0 0-20 20v128a20 20 0 0 0 20 20h147.72a20 20 0 0 0 16.64-8.91L250 134.66a12 12 0 0 0 0-13.32M185.58 188H44V68h141.58l40 60Z"/></symbol>
+    <symbol class="default-icon" id="tag" data-original-id="ph--tag-chevron-duotone" viewBox="0 0 256 256"><g fill="currentColor"><path d="m240 128l-45.62 68.44a8 8 0 0 1-6.66 3.56H32l48-72l-48-72h155.72a8 8 0 0 1 6.66 3.56Z" opacity="0.2"/><path d="M246.66 123.56L201 55.12A16 16 0 0 0 187.72 48H32a8 8 0 0 0-6.66 12.44L70.39 128l-45 67.56A8 8 0 0 0 32 208h155.72a16 16 0 0 0 13.28-7.12l45.63-68.44a8 8 0 0 0 .03-8.88M187.72 192H47l39.71-59.56a8 8 0 0 0 0-8.88L47 64h140.72l42.67 64Z"/></g></symbol>
     </defs>`;
 
     const appVersionMeta = document.head.appendChild(document.createElement('META'));
