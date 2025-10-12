@@ -108,24 +108,19 @@ class CalendarBase extends HTMLElement {
         return d;
     }
 
-    dayInterval(d1, d2) {
-        const first = new Date(d1);
-        const second = new Date(d2);
-        first.setHours(0);
-        first.setMinutes(0);
-        first.setSeconds(0);
-        first.setMilliseconds(0);
-        second.setHours(0);
-        second.setMinutes(0);
-        second.setSeconds(0);
-        second.setMilliseconds(0);
-        const delta = Math.abs(first - second) / (1000 * 60 * 60 * 24);
+    relativeDays(d1, d2) {
+        const delta = Math.abs(this.startOfDayMs(d1) - this.startOfDayMs(d2)) / (1000 * 60 * 60 * 24);
 
-        if (delta === 1 && second > first) return 'tomorrow';
-        if (delta === 1) return 'yesterday';
-        if (delta > 0 && second > first) return `in ${delta} days`;
-        if (delta > 0) return `${delta} days ago`;
-        return '';
+        if (d1 < d2) {
+            if (delta === 1) return 'tomorrow';
+            if (delta > 0) return `in ${delta} days`;
+        }
+
+        if (d1 > d2) {
+            if (delta === 1) return 'yesterday';
+            if (delta > 0) return `${delta} days ago`;
+        }
+        return 'today';
     }
 
     constrainNavigation(firstDate, lastDate, begin, end) {
@@ -919,8 +914,9 @@ class CalendarDay extends CalendarView {
                 link.href = `#${this.ymd(d)}`;
                 link.textContent = d.toLocaleString(this.locale, {month: 'long', day: 'numeric', year: 'numeric'});
 
-                const interval = this.dayInterval(event.start, d);
-                p.appendChild(document.createTextNode(` (${interval})`));
+                const interval = this.relativeDays(this.date, d);
+                const skip = event.canSkipWeekend() ? ', skipping weekend' : '';
+                p.appendChild(document.createTextNode(` (${interval}${skip})`));
             }
 
             for (const occurrence of event.previousOccurrence(this.date)) {
