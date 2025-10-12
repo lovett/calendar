@@ -854,6 +854,7 @@ class CalendarDay extends CalendarView {
 
         for (const event of this.eventFinder(this.date)) {
             if (!event.occursOn(this.date) && !event.repeatsOn(this.date)) continue;
+            if (event.canSkipWeekend() && this.isWeekend(this.date)) continue;
             counter++;
             const container = this.appendChild(document.createElement('div'));
             container.classList.add('event', ...event.classes(this.date));
@@ -1134,8 +1135,10 @@ class CalendarEvent extends CalendarBase {
         let totalDays = 0;
         let elapsedDays = 0;
         while (d < this.end) {
-            if (d <= asOf && (!year || d.getFullYear() === year)) elapsedDays++;
-            if (!year || d.getFullYear() === year) totalDays++;
+            if (!(this.canSkipWeekend() && this.isWeekend(d))) {
+                if (d <= asOf && (!year || d.getFullYear() === year)) elapsedDays++;
+                if (!year || d.getFullYear() === year) totalDays++;
+            }
             d.setDate(d.getDate() + 1);
         }
         return [elapsedDays, totalDays];
@@ -1322,6 +1325,7 @@ class CalendarEvent extends CalendarBase {
             let matches = [];
             for (const node of document.querySelectorAll(this.tagSelector(tag))) {
                 for (const day of node.days()) {
+                    if (this.canSkipWeekend && this.isWeekend(day)) continue;
                     if (this.ymd(day) === this.ymd(asOfDate)) continue;
                     if (step === 1 && day < asOfDate) continue;
                     if (step === -1 && day > asOfDate) continue;
