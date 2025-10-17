@@ -13,14 +13,14 @@ Certain things are missing—there's no syncing, sharing, or inviting. It's an a
 
 ## How
 1. Make a copy of `calendar-template.html`. Give it a cool name.
-2. Add `<cal-event>` tags to that file. See below for details.
+2. Add `<cal-event>` elements to that file. See below for details.
 3. View that file in a browser.
 
 Viewing the HTML file locally should work fine. Or host them as static files. It's very much a DIY situation. Other than the HTML file, the entirety of the application is in `calendar.js` and the styling is in `calendar.css`. No transpiling, no framework, no package.json, no chaff.
 
 ## Events
 
-A custom HTML tag `<cal-event>` defines the events that are shown on the calendar. Dates, times, and descriptions go into the text of the tag and the application figures out the rest. For example:
+A custom HTML element `<cal-event>` defines the events that are shown on the calendar. Dates, times, and descriptions go into the text of the element and the application figures out the rest. For example:
 
 ```
 <cal-event>1999-12-31 Prepare for Y2K</cal-event>
@@ -40,7 +40,7 @@ An event with two dates is treated as a multi-day event. The separator (the word
 
 Events that occur at specific times can be expressed in 12- or 24-hour formats. If found, the first one is treated as the start and the second as the end.
 
-The rest of the tag content up to the first `<details>` tag is treated as the event title. Anything in the `<details>` tag is only shown on the day view as a supplemental description.
+The rest of the element content up to the first `<details>` element is treated as the event title. Anything in the `<details>` element is only shown on the day view as a supplemental description.
 
 ```
 <cal event>
@@ -50,12 +50,19 @@ The rest of the tag content up to the first `<details>` tag is treated as the ev
 </cal-event>
 ```
 
-Although `cal-event` is a custom tag, it can take a class or style attribute like anything else. There's also a special `data-icon` attribute that can be used to set a custom Emoji or SVG symbol id (if available from a `defs` tag) as the icon for an event.
+Although `cal-event` is a custom element, it can take a class or style attribute like anything else. There's also a special `data-icon` attribute that can be used to set a custom Emoji or SVG symbol id (if available from a `defs` element) as the icon for an event.
 
 For multi-day events that run through weekends, set `data-skip-weekend` to hide the weekend occurrences and resume the following Monday.
 
+
+## Tagging
+A `cal-event` element can be tagged using the `data-tags` attribute. Its value should be a comma-delimited list of tag names.
+
+When tags are present, the day view will show extra links for navigating to the next and previous event for a given tag. It will also count the number of tagged days for the year to date and the prior year.
+
+
 ## Repetition
-When a `cal-event` tag has a `data-repeat` attribute, it will show up multiple times according to whatever cadence you set.
+When a `cal-event` element has a `data-repeat` attribute, it will show up multiple times according to whatever cadence you set.
 
 The following words and phrases are recognized:
 
@@ -76,7 +83,7 @@ Repetition starts from the date of the initial event and goes forward. For repet
 For more complex repetition patterns, multiple single-occurrence events are a better choice.
 
 ## Customization
-A couple things can be customized by adding special meta tags to the HTML document:
+A couple things can be customized by adding special meta elements to the HTML document:
 
 *Name*: a title displayed in the header:
 ```
@@ -95,7 +102,7 @@ A couple things can be customized by adding special meta tags to the HTML docume
 <meta name="locale" content="FR_fr" />
 ```
 
-*Latitude* and *Longitude*: Used to show sunrise and sunset times on the day view. If this is something you want, add an additional script tag to your HTML file that loads `extras/sunrise.js`:
+*Latitude* and *Longitude*: Used to show sunrise and sunset times on the day view. If this is something you want, load `extras/sunrise.js` in your calendar file and describe your latitude and longitude using meta elements.
 
 ``
 <meta name="latitude" content="40.7128" />
@@ -116,7 +123,7 @@ A couple things can be customized by adding special meta tags to the HTML docume
 ```
 
 ## Linking
-A calendar's default date can be set from the URL hash. If present, it takes precedence over the date meta tag.
+A calendar's default date can be set from the URL hash. If present, it takes precedence over the date meta element.
 
 The URL hash can be a date or a localized keyword phrase:
   - yyyy-mm-dd
