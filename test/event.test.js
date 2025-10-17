@@ -625,4 +625,29 @@ describe('CalendarEvent', function() {
             }
         });
     });
+
+    describe("tagging", function() {
+        test("tag list defaults to empty list", function() {
+            const event = document.createElement('cal-event')
+            event.textContent = '2025-01-01 tagged event';
+            document.body.appendChild(event);
+            expect(event.tags()).toEqual([]);
+        });
+
+        test("tag list without whitespace", function() {
+            const event = document.createElement('cal-event')
+            event.dataset.tags = 'tag1,tag2';
+            event.textContent = '2025-01-01 tagged event';
+            document.body.appendChild(event);
+            expect(event.tags()).toEqual(['tag1', 'tag2']);
+        });
+
+        test("tag list with whitespace", function() {
+            const event = document.createElement('cal-event')
+            event.dataset.tags = 'tag1, tag2, tag3';
+            event.textContent = '2025-01-01 tagged event';
+            document.body.appendChild(event);
+            expect(event.tags()).toEqual(['tag1', 'tag2', 'tag3']);
+        });
+    });
 });

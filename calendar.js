@@ -983,7 +983,7 @@ class CalendarEvent extends CalendarBase {
 
     tags() {
         const splitter = (node) => {
-            return node.dataset.tags ? node.dataset.tags.split(',') : [];
+            return node.dataset.tags ? node.dataset.tags.split(/,\s*/) : [];
         }
 
         const tags = splitter(this);
