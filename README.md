@@ -82,6 +82,14 @@ Repetition starts from the date of the initial event and goes forward. For repet
 
 For more complex repetition patterns, multiple single-occurrence events are a better choice.
 
+## Repetition Counting
+If an event repeats, the number of repetitions can be shown on the day view if the `cal-event` element has `data-count` attribute with no value:
+
+```
+<cal-event data-count data-repeat="weekly">2025-01-01 Repeating event</cal-event>
+```
+
+
 ## Customization
 A couple things can be customized by adding special meta elements to the HTML document:
 

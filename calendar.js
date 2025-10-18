@@ -108,8 +108,12 @@ class CalendarBase extends HTMLElement {
         return d;
     }
 
+    daysBetweenDates(d1, d2) {
+        return Math.round(Math.abs(this.startOfDayMs(d1) - this.startOfDayMs(d2)) / (1000 * 60 * 60 * 24));
+    }
+
     relativeDays(d1, d2) {
-        const delta = Math.abs(this.startOfDayMs(d1) - this.startOfDayMs(d2)) / (1000 * 60 * 60 * 24);
+        const delta = this.daysBetweenDates(d1, d2);
 
         if (d1 < d2) {
             if (delta === 1) return 'tomorrow';
@@ -919,6 +923,16 @@ class CalendarDay extends CalendarView {
                 p.appendChild(document.createTextNode(` (${interval}${skip})`));
             }
 
+            const repetitionCount = event.repetitionCount(this.date);
+            if (repetitionCount > 0) {
+                const p = details.appendChild(document.createElement('p'));
+                p.classList.add('occurrence-count');
+                if (repetitionCount === 1) p.textContent = 'First occurrence';
+                if (repetitionCount > 0) p.textContent = `Occurrence #${repetitionCount}`;
+            }
+
+
+
             for (const occurrence of event.previousOccurrence(this.date)) {
                 if (occurrence.length === 1) recurrence('Previously occurred on ', occurrence[0]);
                 if (occurrence.length === 2) recurrence(`Previous <span class="tag"><svg class="icon"><use xlink:href="#tag"></use></svg>${occurrence[1]}</span> was `, occurrence[0]);
@@ -1359,6 +1373,22 @@ class CalendarEvent extends CalendarBase {
         }
 
         return [];
+    }
+
+    repetitionCount(d) {
+        if (!('count' in this.dataset)) return 0;
+        if (!this.repeatsOn(d)) return 0;
+        let day = new Date(this.start);
+        let counter = 1;
+
+        while (day < d) {
+            counter++;
+            const nextOccurrence = this.occurrenceBySequence(day, 1);
+            const daysAway = this.daysBetweenDates(day, nextOccurrence[0][0]);
+            day.setDate(day.getDate() + daysAway);
+        }
+
+        return counter;
     }
 
     repeatsOn(d) {

@@ -148,6 +148,10 @@ cal-day .event .details p.counts {
     margin-left: 0;
 }
 
+cal-day .event .details p.occurrence-count {
+    margin-left: 0;
+}
+
 cal-day .event .tags {
     list-style-type: none;
     display: flex;
