@@ -45,7 +45,7 @@ class CalendarBase extends HTMLElement {
         const names = new Array(7);
         for (let i = 0; i < names.length; i++) {
             d.setDate(d.getDate() + 1);
-            names[i] = d.toLocaleString(this.locale, {weekday: format});
+            names[i] = d.toLocaleString(this.locale, { weekday: format });
         }
         return names;
     }
@@ -55,7 +55,7 @@ class CalendarBase extends HTMLElement {
         const names = new Array(12);
         for (let i = 0; i < names.length; i++) {
             d.setMonth(i);
-            names[i] = d.toLocaleString(this.locale, {month: format});
+            names[i] = d.toLocaleString(this.locale, { month: format });
         }
         return names;
     }
@@ -194,9 +194,8 @@ class CalendarBase extends HTMLElement {
         }
 
         for (const event of document.querySelectorAll(this.tagSelector(tag))) {
-            const start = new Date(event.start);
             const [elapsedDays, totalDays] = event.dayCount(this.date, this.date.getFullYear());
-            const [_, totalDaysLastYear] = event.dayCount(this.date, this.date.getFullYear() - 1);
+            const [, totalDaysLastYear] = event.dayCount(this.date, this.date.getFullYear() - 1);
 
             if (event.start.getFullYear() === this.date.getFullYear() || event.end.getFullYear() === this.date.getFullYear()) {
                 increment('year', totalDays);
@@ -249,7 +248,7 @@ class CalendarView extends CalendarBase {
         this.swipe = [0, 0];
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name, _oldValue, newValue) {
         if (name !== 'date') return;
         if (!newValue) return;
 
@@ -326,7 +325,7 @@ class CalendarView extends CalendarBase {
         if (e.type === 'swipe' && e.detail.type === 'touchend') {
             const xDelta = e.detail.x - this.swipe[0];
             const yDelta = e.detail.y - this.swipe[1];
-            const step = new CustomEvent('step', {detail: {to: null}});
+            const step = new CustomEvent('step', { detail: { to: null } });
 
             if (Math.abs(xDelta) > Math.abs(yDelta)) {
                 if (xDelta > 0) step.detail.to = 'previous';
@@ -422,7 +421,7 @@ class CalendarView extends CalendarBase {
 
     populateTitle() {
         const formatter = new Intl.DateTimeFormat(this.locale, this.titleFormat);
-        const prefix = (this.name)? [this.name, ' '] : [];
+        const prefix = (this.name) ? [this.name, ' '] : [];
 
         if (prefix.length > 0) {
             const span = document.createElement('span');
@@ -467,7 +466,7 @@ class CalendarView extends CalendarBase {
             node = document.createElement('span')
             node.classList.add('icon');
             node.innerText = id;
-        }  else {
+        } else {
             node = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             node.setAttribute('class', 'icon');
             const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
@@ -513,7 +512,7 @@ class CalendarYear extends CalendarView {
         super(cache, config);
         this.name = config.name;
         this.locale = config.locale;
-        this.titleFormat = {year: 'numeric'}
+        this.titleFormat = { year: 'numeric' }
     }
 
     get next() {
@@ -570,7 +569,7 @@ class CalendarYear extends CalendarView {
                 const link = title.appendChild(document.createElement('a'));
                 link.href = '#';
                 link.hash = this.ym(d);
-                link.innerText = d.toLocaleString(this.locale, {month: 'long'});
+                link.innerText = d.toLocaleString(this.locale, { month: 'long' });
 
                 for (const day of this.dayNames) {
                     const div = document.createElement('div');
@@ -609,10 +608,10 @@ class CalendarYear extends CalendarView {
 
         const el = document.getElementById(ym);
         if (el && window.scrollY === 0) {
-            document.addEventListener('scrollend', (e) => {
+            document.addEventListener('scrollend', () => {
                 this.highlight(el);
-            }, {'once': true});
-            el.scrollIntoView({behavior: 'smooth', block: 'start'});
+            }, { 'once': true });
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
@@ -659,7 +658,7 @@ class CalendarMonth extends CalendarView {
         this.name = config.name;
         this.locale = config.locale;
         this.linkedTitleParts = ['year'];
-        this.titleFormat = {month: 'long', year: 'numeric'}
+        this.titleFormat = { month: 'long', year: 'numeric' }
     }
 
     get next() {
@@ -797,7 +796,7 @@ class CalendarMonth extends CalendarView {
 
         let label = '';
         if (d.getDate() === 1) {
-            label = d.toLocaleString(this.locale, {month: 'short'});
+            label = d.toLocaleString(this.locale, { month: 'short' });
             label += ' ';
         }
 
@@ -813,7 +812,7 @@ class CalendarDay extends CalendarView {
         this.name = config.name;
         this.locale = config.locale;
         this.linkedTitleParts = ['year', 'month'];
-        this.titleFormat = {month: 'long', day: 'numeric', year: 'numeric'}
+        this.titleFormat = { month: 'long', day: 'numeric', year: 'numeric' }
     }
 
     get next() {
@@ -840,7 +839,7 @@ class CalendarDay extends CalendarView {
 
         const li = extras.appendChild(document.createElement('li'));
         li.classList.add('day-of-week');
-        li.innerHTML = `<span>${this.date.toLocaleString(this.locale, {weekday: 'long'})}</span><span>${this.relativeAge(this.date)}</span>`;
+        li.innerHTML = `<span>${this.date.toLocaleString(this.locale, { weekday: 'long' })}</span><span>${this.relativeAge(this.date)}</span>`;
 
         for (const values of this.runExtras(this.date)) {
             for (const [value, icon] of values) {
@@ -865,13 +864,13 @@ class CalendarDay extends CalendarView {
             const time = container.appendChild(document.createElement('time'));
             if (event.canShowStartTime(this.date)) {
                 const div = time.appendChild(document.createElement('div'));
-                div.textContent = event.start.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+                div.textContent = event.start.toLocaleString(this.locale, { hour: 'numeric', minute: 'numeric' });
             }
 
             if (event.canShowEndTime(this.date)) {
                 this.renderIcon(time, 'arrow-down');
                 const div = time.appendChild(document.createElement('div'));
-                div.textContent = event.end.toLocaleString(this.locale, {hour: 'numeric', minute: 'numeric'});
+                div.textContent = event.end.toLocaleString(this.locale, { hour: 'numeric', minute: 'numeric' });
             }
 
             if (!event.canShowStartTime(this.date) && !event.canShowEndTime(this.date)) {
@@ -916,7 +915,7 @@ class CalendarDay extends CalendarView {
 
                 const link = p.appendChild(document.createElement('a'));
                 link.href = `#${this.ymd(d)}`;
-                link.textContent = d.toLocaleString(this.locale, {month: 'long', day: 'numeric', year: 'numeric'});
+                link.textContent = d.toLocaleString(this.locale, { month: 'long', day: 'numeric', year: 'numeric' });
 
                 const interval = this.relativeDays(this.date, d);
                 const skip = event.canSkipWeekend() ? ', skipping weekend' : '';
@@ -963,7 +962,7 @@ class CalendarEvent extends CalendarBase {
         this.start = null;
         this.end = null;
         this.startTime = [0, 0];
-        this.endTime = [0,0];
+        this.endTime = [0, 0];
         this.parsingIndex = -1;
         this.locale = Intl.DateTimeFormat().resolvedOptions().locale;
         this.parsedDate = false;
@@ -1038,8 +1037,8 @@ class CalendarEvent extends CalendarBase {
             this.className, this.hasAttribute('class'),
         ];
 
-        for (let i=0; i < candidates.length; i = i + 2) {
-            if (candidates[i+1]) {
+        for (let i = 0; i < candidates.length; i = i + 2) {
+            if (candidates[i + 1]) {
                 classes.push(candidates[i]);
             }
         }
@@ -1131,7 +1130,7 @@ class CalendarEvent extends CalendarBase {
     }
 
     * days() {
-        let d = new Date(this.startOfDayMs(this.start));
+        const d = new Date(this.startOfDayMs(this.start));
         while (d <= this.end) {
             yield new Date(d);
             d.setDate(d.getDate() + 1);
@@ -1159,7 +1158,7 @@ class CalendarEvent extends CalendarBase {
         const markupStart = haystack.indexOf('<');
         if (markupStart > -1) haystack = haystack.slice(0, markupStart);
         const iterator = haystack.matchAll(pattern);
-        for (let i=0; i < limit; i++) {
+        for (let i = 0; i < limit; i++) {
             const result = iterator.next();
             if (result.done) return;
             yield [i, result.value];
@@ -1174,7 +1173,7 @@ class CalendarEvent extends CalendarBase {
                 if (wordsSinceLastMatch.indexOf('&lt;') > -1) continue;
             }
             this.captureParsingIndex(match);
-            const [_, year, month, day] = match.map(x => Number.parseInt(x, 10));
+            const [, year, month, day] = match.map(x => Number.parseInt(x, 10));
             if (i === 0) {
                 this.start = new Date(year, month - 1, day, 0, 0, 0, 0);
             }
@@ -1286,7 +1285,7 @@ class CalendarEvent extends CalendarBase {
 
         if (hasWord('bimonthly') && !this.repetition.months) {
             this.repetition.date = this.start.getDate();
-            const start = (this.start.getMonth() + 1) % 2 === 0 ? 1: 0;
+            const start = (this.start.getMonth() + 1) % 2 === 0 ? 1 : 0;
             for (let i = start; i < 12; i += 2) includeMonth(i);
         }
 
@@ -1332,7 +1331,7 @@ class CalendarEvent extends CalendarBase {
 
     occurrenceByTag(asOfDate, step) {
         for (const tag of this.tags()) {
-            let matches = [];
+            const matches = [];
             for (const node of document.querySelectorAll(this.tagSelector(tag))) {
                 for (const day of node.days()) {
                     if (this.canSkipWeekend && this.isWeekend(day)) continue;
@@ -1378,7 +1377,7 @@ class CalendarEvent extends CalendarBase {
     repetitionCount(d) {
         if (!('count' in this.dataset)) return 0;
         if (!this.repeatsOn(d)) return 0;
-        let day = new Date(this.start);
+        const day = new Date(this.start);
         let counter = 1;
 
         while (day < d) {
@@ -1434,7 +1433,7 @@ class CalendarEvent extends CalendarBase {
 
         if (this.hasStartTime()) {
             const t = document.createElement('time');
-            t.innerHTML = this.start.toLocaleString(locale, {hour: 'numeric', minute: 'numeric'});
+            t.innerHTML = this.start.toLocaleString(locale, { hour: 'numeric', minute: 'numeric' });
             result += `${t.outerHTML} `;
         }
 
@@ -1482,7 +1481,7 @@ window.addEventListener('keypress', (e) => {
     if (e.key === 'm') to = 'month';
     if (e.key === 'y') to = 'year';
     if (e.key === 'g') event = new CustomEvent('jump');
-    if (to) event = new CustomEvent('step', {detail: {to: to}});
+    if (to) event = new CustomEvent('step', { detail: { to: to } });
     if (event) document.body.querySelector('.view[date]').dispatchEvent(event);
 });
 
@@ -1490,7 +1489,7 @@ window.addEventListener('click', (e) => {
     if (e.target.nodeName === 'A') e.target.blur();
 
     const stepTo = (keyword) => {
-        const event = new CustomEvent('step', {detail: {to: keyword}});
+        const event = new CustomEvent('step', { detail: { to: keyword } });
         document.body.querySelector('.view[date]').dispatchEvent(event);
     }
 
@@ -1520,7 +1519,7 @@ window.addEventListener('click', (e) => {
     }
 });
 
-window.addEventListener('hashchange', (e) => {
+window.addEventListener('hashchange', () => {
     let dest = window.location.hash.replace('#', '');
     if (!dest) {
         const meta = document.head.querySelector('META[name=start]');
@@ -1557,7 +1556,7 @@ window.addEventListener('hashchange', (e) => {
     document.body.querySelector(view.tag).setAttribute('date', d);
 });
 
-window.addEventListener('DOMContentLoaded', (e) => {
+window.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
     today.setHours(0);
     today.setMinutes(0);
@@ -1577,14 +1576,14 @@ window.addEventListener('DOMContentLoaded', (e) => {
         if (!meta.content) continue;
 
         switch (meta.name) {
-        case 'begin':
-            config[meta.name] = new Date(`${meta.content}T00:00:00`);
-            break;
-        case 'end':
-            config[meta.name] = new Date(`${meta.content}T00:00:00`);
-            break;
-        default:
-            config[meta.name] = meta.content;
+            case 'begin':
+                config[meta.name] = new Date(`${meta.content}T00:00:00`);
+                break;
+            case 'end':
+                config[meta.name] = new Date(`${meta.content}T00:00:00`);
+                break;
+            default:
+                config[meta.name] = meta.content;
         }
     }
 
