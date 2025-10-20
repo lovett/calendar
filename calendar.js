@@ -248,15 +248,12 @@ class CalendarView extends CalendarBase {
         this.swipe = [0, 0];
     }
 
-    attributeChangedCallback(name, _oldValue, newValue) {
-        if (name !== 'date') return;
-        if (!newValue) return;
-
-        this.date = new Date(newValue);
+    renderPage(ymd, callback) {
+        this.date = new Date(ymd);
         if (!this.renderFromCache()) {
             this.renderShell();
             this.populateTitle();
-            this.renderView();
+            callback.call(this);
             this.cachePage();
         }
         document.title = document.querySelector('.navigator h1').innerText;
@@ -531,7 +528,12 @@ class CalendarYear extends CalendarView {
         return d.getFullYear();
     }
 
-    renderView() {
+    attributeChangedCallback(name, _oldValue, newValue) {
+        if (name !== 'date') return;
+        this.renderPage(newValue, this.renderYear);
+    }
+
+    renderYear() {
         this.removeAll('.month');
 
         const fragment = document.createDocumentFragment();
@@ -677,7 +679,12 @@ class CalendarMonth extends CalendarView {
         return this.ym(d);
     }
 
-    renderView() {
+    attributeChangedCallback(name, _oldValue, newValue) {
+        if (name !== 'date') return;
+        this.renderPage(newValue, this.renderMonth);
+    }
+
+    renderMonth() {
         this.removeAll('.day');
 
         const firstDay = new Date(this.date.getFullYear(), this.date.getMonth(), 1, 0, 0, 0, 0);
@@ -827,7 +834,12 @@ class CalendarDay extends CalendarView {
         return this.ymd(d);
     }
 
-    renderView() {
+    attributeChangedCallback(name, _oldValue, newValue) {
+        if (name !== 'date') return;
+        this.renderPage(newValue, this.renderDay);
+    }
+
+    renderDay() {
         let counter = 0;
         this.removeAll('.event, .day-of-week, .extras');
 
