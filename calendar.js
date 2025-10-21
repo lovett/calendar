@@ -231,7 +231,8 @@ class CalendarView extends CalendarBase {
     constructor(cache, config) {
         super();
         this.viewCache = cache;
-        this.name = '';
+        this.name = config.name || '';
+        this.locale = config.locale;
         this.linkedTitleParts = [];
         this.emojiPattern = /\p{Emoji}/u;
         this.begin = config.begin;
@@ -507,8 +508,6 @@ class CalendarYear extends CalendarView {
 
     constructor(cache, config) {
         super(cache, config);
-        this.name = config.name;
-        this.locale = config.locale;
         this.titleFormat = { year: 'numeric' }
     }
 
@@ -657,8 +656,6 @@ class CalendarMonth extends CalendarView {
 
     constructor(cache, config) {
         super(cache, config);
-        this.name = config.name;
-        this.locale = config.locale;
         this.linkedTitleParts = ['year'];
         this.titleFormat = { month: 'long', year: 'numeric' }
     }
@@ -816,8 +813,6 @@ class CalendarDay extends CalendarView {
 
     constructor(cache, config) {
         super(cache, config);
-        this.name = config.name;
-        this.locale = config.locale;
         this.linkedTitleParts = ['year', 'month'];
         this.titleFormat = { month: 'long', day: 'numeric', year: 'numeric' }
     }
