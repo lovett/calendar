@@ -233,7 +233,6 @@ class CalendarView extends CalendarBase {
         this.viewCache = cache;
         this.name = config.name || '';
         this.locale = config.locale;
-        this.linkedTitleParts = [];
         this.emojiPattern = /\p{Emoji}/u;
         this.begin = config.begin;
         this.end = config.end;
@@ -427,9 +426,13 @@ class CalendarView extends CalendarBase {
             prefix[0] = span.outerHTML;
         }
 
+        const linkedParts = [];
+        if (this.constructor === CalendarMonth) linkedParts.push('year');
+        if (this.constructor === CalendarDay) linkedParts.push('year', 'month');
+
         this.querySelector('.navigator h1').innerHTML = prefix.concat(
             formatter.formatToParts(this.date).map(({ type, value }) => {
-                if (this.linkedTitleParts.indexOf(type) === -1) return value;
+                if (linkedParts.indexOf(type) === -1) return value;
                 const link = document.createElement('a');
                 link.href = '#';
                 link.textContent = value;
@@ -656,7 +659,6 @@ class CalendarMonth extends CalendarView {
 
     constructor(cache, config) {
         super(cache, config);
-        this.linkedTitleParts = ['year'];
         this.titleFormat = { month: 'long', year: 'numeric' }
     }
 
@@ -813,7 +815,6 @@ class CalendarDay extends CalendarView {
 
     constructor(cache, config) {
         super(cache, config);
-        this.linkedTitleParts = ['year', 'month'];
         this.titleFormat = { month: 'long', day: 'numeric', year: 'numeric' }
     }
 
