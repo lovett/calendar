@@ -532,10 +532,10 @@ class CalendarYear extends CalendarView {
 
     attributeChangedCallback(name, _oldValue, newValue) {
         if (name !== 'date') return;
-        this.renderPage(newValue, this.renderYear);
+        if (newValue) this.renderPage(newValue, this.renderView);
     }
 
-    renderYear() {
+    renderView() {
         this.removeAll('.month');
 
         const fragment = document.createDocumentFragment();
@@ -680,10 +680,10 @@ class CalendarMonth extends CalendarView {
 
     attributeChangedCallback(name, _oldValue, newValue) {
         if (name !== 'date') return;
-        this.renderPage(newValue, this.renderMonth);
+        if (newValue) this.renderPage(newValue, this.renderView);
     }
 
-    renderMonth() {
+    renderView() {
         this.removeAll('.day');
 
         const firstDay = new Date(this.date.getFullYear(), this.date.getMonth(), 1, 0, 0, 0, 0);
@@ -832,10 +832,10 @@ class CalendarDay extends CalendarView {
 
     attributeChangedCallback(name, _oldValue, newValue) {
         if (name !== 'date') return;
-        this.renderPage(newValue, this.renderDay);
+        if (newValue) this.renderPage(newValue, this.renderView);
     }
 
-    renderDay() {
+    renderView() {
         let counter = 0;
         this.removeAll('.event, .day-of-week, .extras');
 
