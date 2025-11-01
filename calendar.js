@@ -498,12 +498,6 @@ class CalendarView extends CalendarBase {
         </header>
         `;
     }
-
-    removeAll(selector) {
-        for (const node of this.querySelectorAll(selector)) {
-            node.remove();
-        }
-    }
 }
 
 class CalendarYear extends CalendarView {
@@ -530,13 +524,16 @@ class CalendarYear extends CalendarView {
         return d.getFullYear();
     }
 
-    attributeChangedCallback(name, _oldValue, newValue) {
-        if (name !== 'date') return;
+    attributeChangedCallback(_name, _oldValue, newValue) {
         if (newValue) this.renderPage(newValue, this.renderView);
+        if (!newValue) this.resetView();
+    }
+
+    resetView() {
+        this.querySelectorAll('.month').forEach(node => node.remove());
     }
 
     renderView() {
-        this.removeAll('.month');
 
         const fragment = document.createDocumentFragment();
         const d = this.previousDay(this.date);
@@ -678,14 +675,16 @@ class CalendarMonth extends CalendarView {
         return this.ym(d);
     }
 
-    attributeChangedCallback(name, _oldValue, newValue) {
-        if (name !== 'date') return;
+    attributeChangedCallback(_name, _oldValue, newValue) {
         if (newValue) this.renderPage(newValue, this.renderView);
+        if (!newValue) this.resetView();
+    }
+
+    resetView() {
+        this.querySelectorAll('.day').forEach(node => node.remove());
     }
 
     renderView() {
-        this.removeAll('.day');
-
         const firstDay = new Date(this.date.getFullYear(), this.date.getMonth(), 1, 0, 0, 0, 0);
         firstDay.setDate(1 - firstDay.getDay());
 
@@ -830,17 +829,19 @@ class CalendarDay extends CalendarView {
         return this.ymd(d);
     }
 
-    attributeChangedCallback(name, _oldValue, newValue) {
-        if (name !== 'date') return;
+    attributeChangedCallback(_name, _oldValue, newValue) {
         if (newValue) this.renderPage(newValue, this.renderView);
+        if (!newValue) this.resetView();
+    }
+
+    resetView() {
+        this.querySelectorAll('.event, .day-of-week, .extras').forEach(node => node.remove());
     }
 
     renderView() {
         let counter = 0;
-        this.removeAll('.event, .day-of-week, .extras');
 
         this.constrainNavigation(this.date, this.date, this.begin, this.end);
-
 
         const extras = this.appendChild(document.createElement('ul'));
         extras.classList.add('extras');
