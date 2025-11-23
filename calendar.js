@@ -1343,7 +1343,7 @@ class CalendarEvent extends CalendarBase {
             const matches = [];
             for (const node of document.querySelectorAll(this.tagSelector(tag))) {
                 for (const day of node.days()) {
-                    if (this.canSkipWeekend && this.isWeekend(day)) continue;
+                    if (this.canSkipWeekend() && this.isWeekend(day)) continue;
                     if (this.ymd(day) === this.ymd(asOfDate)) continue;
                     if (step === 1 && day < asOfDate) continue;
                     if (step === -1 && day > asOfDate) continue;
