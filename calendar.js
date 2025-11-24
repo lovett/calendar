@@ -939,16 +939,18 @@ class CalendarDay extends CalendarView {
                 if (repetitionCount > 0) p.textContent = `Occurrence #${repetitionCount}`;
             }
 
+            const previousOccurrence = event.occurrenceBySequence(this.date, -1);
+            if (previousOccurrence) recurrence('Previously occurred on ', previousOccurrence);
 
+            const nextOccurrence = event.occurrenceBySequence(this.date, 1);
+            if (nextOccurrence) recurrence('Next occurs on ', nextOccurrence);
 
-            for (const occurrence of event.previousOccurrence(this.date)) {
-                if (occurrence.length === 1) recurrence('Previously occurred on ', occurrence[0]);
-                if (occurrence.length === 2) recurrence(`Previous <span class="tag"><svg class="icon"><use xlink:href="#tag"></use></svg>${occurrence[1]}</span> was `, occurrence[0]);
-            }
+            for (const tag of event.tags()) {
+                const previousTagOccurrence = event.occurrenceByTag(this.date, -1, tag);
+                if (previousTagOccurrence) recurrence(`Previous <span class="tag"><svg class="icon"><use xlink:href="#tag"></use></svg>${tag}</span> was `, previousTagOccurrence);
 
-            for (const occurrence of event.nextOccurrence(this.date)) {
-                if (occurrence.length === 1) recurrence('Next occurs on ', occurrence[0]);
-                if (occurrence.length === 2) recurrence(`Next <span class="tag"><svg class="icon"><use xlink:href="#tag"></use></svg>${occurrence[1]}</span> is `, occurrence[0]);
+                const nextTagOccurrence = event.occurrenceByTag(this.date, 1, tag);
+                if (nextTagOccurrence) recurrence(`Next <span class="tag"><svg class="icon"><use xlink:href="#tag"></use></svg>${tag}</span> is `, nextTagOccurrence);
             }
         }
 
@@ -1330,38 +1332,27 @@ class CalendarEvent extends CalendarBase {
         return true;
     }
 
-    previousOccurrence(asOfDate) {
-        return this.occurrenceByTag(asOfDate, -1).concat(this.occurrenceBySequence(asOfDate, -1));
-    }
-
-    nextOccurrence(asOfDate) {
-        return this.occurrenceByTag(asOfDate, 1).concat(this.occurrenceBySequence(asOfDate, 1));
-    }
-
-    occurrenceByTag(asOfDate, step) {
-        for (const tag of this.tags()) {
-            const matches = [];
-            for (const node of document.querySelectorAll(this.tagSelector(tag))) {
-                for (const day of node.days()) {
-                    if (this.canSkipWeekend() && this.isWeekend(day)) continue;
-                    if (this.ymd(day) === this.ymd(asOfDate)) continue;
-                    if (step === 1 && day < asOfDate) continue;
-                    if (step === -1 && day > asOfDate) continue;
-                    matches.push(day);
-                }
+    occurrenceByTag(asOfDate, step, tag) {
+        const matches = [];
+        for (const node of document.querySelectorAll(this.tagSelector(tag))) {
+            for (const day of node.days()) {
+                if (this.canSkipWeekend() && this.isWeekend(day)) continue;
+                if (this.ymd(day) === this.ymd(asOfDate)) continue;
+                if (step === 1 && day < asOfDate) continue;
+                if (step === -1 && day > asOfDate) continue;
+                matches.push(day);
             }
-
-            matches.sort((a, b) => (step === 1) ? a - b : b - a);
-
-            return [[matches[0], tag]];
         }
 
-        return [];
+        matches.sort((a, b) => (step === 1) ? a - b : b - a);
+
+        if (matches.length > 0) return matches[0];
+        return null;
     }
 
     occurrenceBySequence(asOfDate, step) {
-        if (!this.repetition) return [];
-        if (!this.repetition.since) return [];
+        if (!this.repetition) return null;
+        if (!this.repetition.since) return null;
 
         const d = new Date(asOfDate ? asOfDate : this.start);
         d.setHours(0);
@@ -1371,16 +1362,16 @@ class CalendarEvent extends CalendarBase {
 
         if (this.repetition.dayStep) {
             d.setDate(d.getDate() + this.repetition.dayStep * step);
-            if (this.repeatsOn(d)) return [[d]];
-            return [];
+            if (this.repeatsOn(d)) return d;
+            return null;
         }
 
         for (let i = 0; i <= 365; i++) {
             d.setDate(d.getDate() + 1 * step);
-            if (this.repeatsOn(d)) return [[d]];
+            if (this.repeatsOn(d)) return d;
         }
 
-        return [];
+        return null;
     }
 
     repetitionCount(d) {
@@ -1392,7 +1383,10 @@ class CalendarEvent extends CalendarBase {
         while (day < d) {
             counter++;
             const nextOccurrence = this.occurrenceBySequence(day, 1);
-            const daysAway = this.daysBetweenDates(day, nextOccurrence[0][0]);
+            if (!nextOccurrence) {
+                return 0;
+            }
+            const daysAway = this.daysBetweenDates(day, nextOccurrence);
             day.setDate(day.getDate() + daysAway);
         }
 
