@@ -182,6 +182,12 @@ class CalendarBase extends HTMLElement {
         }
     }
 
+    removeAll(selector) {
+        for (const node of this.querySelectorAll(selector)) {
+            node.remove()
+        }
+    }
+
     tagSelector(tag) {
         return `[data-tags *= ${tag}] cal-event, cal-event[data-tags *= ${tag}]`;
     }
@@ -526,11 +532,7 @@ class CalendarYear extends CalendarView {
 
     attributeChangedCallback(_name, _oldValue, newValue) {
         if (newValue) this.renderPage(newValue, this.renderView);
-        if (!newValue) this.resetView();
-    }
-
-    resetView() {
-        this.querySelectorAll('.month').forEach(node => node.remove());
+        if (!newValue) this.removeAll('.month');
     }
 
     renderView() {
@@ -677,11 +679,7 @@ class CalendarMonth extends CalendarView {
 
     attributeChangedCallback(_name, _oldValue, newValue) {
         if (newValue) this.renderPage(newValue, this.renderView);
-        if (!newValue) this.resetView();
-    }
-
-    resetView() {
-        this.querySelectorAll('.day').forEach(node => node.remove());
+        if (!newValue) this.removeAll('.day');
     }
 
     renderView() {
@@ -831,11 +829,7 @@ class CalendarDay extends CalendarView {
 
     attributeChangedCallback(_name, _oldValue, newValue) {
         if (newValue) this.renderPage(newValue, this.renderView);
-        if (!newValue) this.resetView();
-    }
-
-    resetView() {
-        this.querySelectorAll('.event, .day-of-week, .extras').forEach(node => node.remove());
+        if (!newValue) this.removeAll('.event, .day-of-week, .extras');
     }
 
     renderView() {
