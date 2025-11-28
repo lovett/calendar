@@ -1,7 +1,12 @@
-.PHONY: lint test watch
+.PHONY: lint lint-css test watch
 
-lint:
-	biome lint calendar.js || true
+lint: lint-css lint-js
+
+lint-js:
+	biome lint calendar.js extras/sunrise.js
+
+lint-css:
+	biome lint calendar.css
 
 test:
 	cd test && bun test
