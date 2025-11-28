@@ -146,7 +146,7 @@ function calculateDaylight(sunriseResult) {
     let hoursUntilSunrise = 0;
     let minutesUntilSunrise = 0;
     let spentPercent = 0;
-    let isBeforeSunrise = now.getTime() < sunriseResult.sunriseDate.getTime();
+    const isBeforeSunrise = now.getTime() < sunriseResult.sunriseDate.getTime();
     const sunriseDelta = Math.abs((sunriseResult.sunriseDate.getTime() - now.getTime()) / 60_000);
     if (isBeforeSunrise) {
         hoursUntilSunrise = Math.trunc(sunriseDelta / 60);
@@ -162,7 +162,7 @@ function calculateDaylight(sunriseResult) {
     let hoursUntilSunset = 0;
     let minutesUntilSunset = 0;
     let remainingPercent = 0;
-    let isAfterSunset = now.getTime() > sunriseResult.sunsetDate.getTime();
+    const isAfterSunset = now.getTime() > sunriseResult.sunsetDate.getTime();
     const sunsetDelta = Math.abs((now.getTime() - sunriseResult.sunsetDate.getTime()) / 60_000)
     if (isAfterSunset) {
         hoursSinceSunset = Math.trunc(sunsetDelta / 60);
