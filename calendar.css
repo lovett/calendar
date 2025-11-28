@@ -23,8 +23,7 @@ html {
     font-family: "New York Medium", "Baskerville", "Liberation Serif", serif;
     color: var(--default);
     font-size: 16px;
-    background-color: var(--bg);
-    background: transparent url('calendar.svg') no-repeat center center;
+    background: var(--bg) url('calendar.svg') no-repeat center center;
     background-size: 8em 8em;
     min-height: 100%;
 }
@@ -169,7 +168,6 @@ cal-event {
 }
 
 cal-month {
-    height: 100vh;
     height: 100dvh;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: auto 2em;
