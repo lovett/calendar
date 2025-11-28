@@ -148,6 +148,14 @@ The URL hash can be a date or a localized keyword phrase:
   - next-year
 
 
+## Development Notes
+
+### Linting configuration in biome.json
+The `useOptionalChain` rule is disabled because of a conflict with typescript-language-server. Biome wants the optional chain operator to be used, but the LSP thinks it's a mangled ternary.
+
+The `noDescendingSpecificity` CSS rule is disabled because of what seemed like false positives. Not otherwise concerned with what this rule is trying to guard against.
+
+
 ## Acknowledgements
 
 This project uses icons from [Phosphor icons](https://github.com/phosphor-icons/core)
