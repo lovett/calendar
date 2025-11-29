@@ -20,26 +20,37 @@ class CalendarCache {
 }
 
 class CalendarBase extends HTMLElement {
-    daysOfWeek(format) {
-        const d = new Date();
-        d.setDate(d.getDate() - d.getDay() - 1);
-
-        const names = new Array(7);
-        for (let i = 0; i < names.length; i++) {
-            d.setDate(d.getDate() + 1);
-            names[i] = d.toLocaleString(this.locale, { weekday: format });
+    nameSequence(unit, format) {
+        const cacheKey = `${unit}-sequence-${format}`;
+        const cacheValue = window.sessionStorage.getItem(cacheKey);
+        if (cacheValue) {
+            return JSON.parse(cacheValue);
         }
-        return names;
-    }
 
-    monthsOfYear(format) {
         const d = new Date();
-        d.setDate(1);
-        const names = new Array(12);
-        for (let i = 0; i < names.length; i++) {
-            d.setMonth(i);
-            names[i] = d.toLocaleString(this.locale, { month: format });
+
+        let names;
+        if (unit === 'day') {
+            names = new Array(7);
+            d.setDate(d.getDate() - d.getDay() - 1);
+
+            for (let i = 0; i < names.length; i++) {
+                d.setDate(d.getDate() + 1);
+                names[i] = d.toLocaleString(this.locale, { weekday: format });
+            }
         }
+
+        if (unit === 'month') {
+            names = new Array(12);
+            d.setDate(1);
+
+            for (let i = 0; i < names.length; i++) {
+                d.setMonth(i);
+                names[i] = d.toLocaleString(this.locale, { month: format });
+            }
+        }
+
+        window.sessionStorage.setItem(cacheKey, JSON.stringify(names))
         return names;
     }
 
@@ -353,12 +364,6 @@ class CalendarView extends CalendarBase {
         }
     }
 
-    dayNames() {
-        return this.viewCache.get('day-names', () => {
-            return this.daysOfWeek('short');
-        });
-    }
-
     eventFinder(start, end) {
         const selectors = new Set();
         selectors.add(`${CalendarEvent.tag}[data-repeat]`)
@@ -537,7 +542,7 @@ class CalendarYear extends CalendarView {
                 link.hash = this.ym(d);
                 link.innerText = d.toLocaleString(this.locale, { month: 'long' });
 
-                for (const day of this.dayNames()) {
+                for (const day of this.nameSequence('day', 'short')) {
                     const div = document.createElement('div');
                     div.classList.add('day-of-week');
                     div.innerText = day;
@@ -659,7 +664,7 @@ class CalendarMonth extends CalendarView {
         const fragment = document.createDocumentFragment();
 
         if (!this.querySelector('.day-of-week')) {
-            for (const day of this.dayNames()) {
+            for (const day of this.nameSequence('day', 'short')) {
                 const div = document.createElement('div');
                 div.classList.add('day-of-week');
                 div.textContent = day;
@@ -1212,11 +1217,11 @@ class CalendarEvent extends CalendarBase {
             this.repetition.months.add(index);
         }
 
-        for (const [index, dayOfWeek] of this.daysOfWeek('long').entries()) {
+        for (const [index, dayOfWeek] of this.nameSequence('day', 'long').entries()) {
             if (hasWord(dayOfWeek)) includeDay(index);
         }
 
-        for (const [index, dayOfWeek] of this.daysOfWeek('short').entries()) {
+        for (const [index, dayOfWeek] of this.nameSequence('day', 'short').entries()) {
             if (hasWord(dayOfWeek)) includeDay(index);
         }
 
@@ -1238,11 +1243,11 @@ class CalendarEvent extends CalendarBase {
             for (let i = 1; i < 6; i++) includeDay(i);
         }
 
-        for (const [index, monthOfYear] of this.monthsOfYear('long').entries()) {
+        for (const [index, monthOfYear] of this.nameSequence('month', 'long').entries()) {
             if (hasWord(monthOfYear)) includeMonth(index);
         }
 
-        for (const [index, monthOfYear] of this.monthsOfYear('short').entries()) {
+        for (const [index, monthOfYear] of this.nameSequence('month', 'short').entries()) {
             if (hasWord(monthOfYear)) includeMonth(index);
         }
 
