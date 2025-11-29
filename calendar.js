@@ -232,7 +232,7 @@ class CalendarBase extends HTMLElement {
 }
 
 class CalendarView extends CalendarBase {
-    static get observedAttributes() { return ['date']; }
+    static observedAttributes = ['date'];
 
     constructor(cache, config) {
         super();
