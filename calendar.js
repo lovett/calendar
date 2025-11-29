@@ -255,6 +255,12 @@ class CalendarView extends CalendarBase {
         this.swipe = [0, 0];
     }
 
+    get now() {
+        return this.viewCache.get('now', () => {
+            return new Date();
+        });
+    }
+
     renderPage(ymd, callback) {
         this.date = new Date(ymd);
         if (!this.renderFromCache()) {
@@ -388,12 +394,6 @@ class CalendarView extends CalendarBase {
     dayNames() {
         return this.viewCache.get('day-names', () => {
             return this.daysOfWeek('short');
-        });
-    }
-
-    get now() {
-        return this.viewCache.get('now', () => {
-            return new Date();
         });
     }
 
@@ -992,6 +992,20 @@ class CalendarEvent extends CalendarBase {
         }
     }
 
+    get description() {
+        if (this.parsingIndex < 0) return '';
+        const initialSlice = this.innerHTML.slice(this.parsingIndex);
+        const detailsIndex = initialSlice.indexOf('<details');
+        if (detailsIndex > -1) return initialSlice.slice(0, detailsIndex);
+        return initialSlice;
+    }
+
+    get details() {
+        const details = this.querySelector('details');
+        if (details) return details.innerHTML;
+        return '';
+    }
+
     * parents() {
         let parent = this.parentElement;
         while (parent) {
@@ -1054,20 +1068,6 @@ class CalendarEvent extends CalendarBase {
         }
 
         return classes;
-    }
-
-    get description() {
-        if (this.parsingIndex < 0) return '';
-        const initialSlice = this.innerHTML.slice(this.parsingIndex);
-        const detailsIndex = initialSlice.indexOf('<details');
-        if (detailsIndex > -1) return initialSlice.slice(0, detailsIndex);
-        return initialSlice;
-    }
-
-    get details() {
-        const details = this.querySelector('details');
-        if (details) return details.innerHTML;
-        return '';
     }
 
     hasStartTime() {
