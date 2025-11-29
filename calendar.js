@@ -346,12 +346,12 @@ class CalendarView extends CalendarBase {
 
         if (e.type === 'step' && e.detail.to === 'next') {
             if (document.body.classList.contains('cannot-step-forward')) return;
-            window.location.hash = this.hasher(this.next);
+            window.location.hash = this.hasher(this.chronologicalNext());
         }
 
         if (e.type === 'step' && e.detail.to === 'previous') {
             if (document.body.classList.contains('cannot-step-backward')) return;
-            window.location.hash = this.hasher(this.previous);
+            window.location.hash = this.hasher(this.chronologicalPrevious());
         }
 
         if (e.type === 'step' && e.detail.to === 'day') {
@@ -515,13 +515,13 @@ class CalendarYear extends CalendarView {
         this.titleFormat = { year: 'numeric' }
     }
 
-    get next() {
+    chronologicalNext() {
         const d = new Date(this.date);
         d.setFullYear(d.getFullYear() + 1);
         return d;
     }
 
-    get previous() {
+    chronologicalPrevious() {
         const d = new Date(this.date);
         d.setFullYear(d.getFullYear() - 1);
         return d;
@@ -662,13 +662,13 @@ class CalendarMonth extends CalendarView {
         this.titleFormat = { month: 'long', year: 'numeric' }
     }
 
-    get next() {
+    chronologicalNext() {
         const d = new Date(this.date);
         d.setMonth(d.getMonth() + 1);
         return d;
     }
 
-    get previous() {
+    chronologicalPrevious() {
         const d = new Date(this.date);
         d.setMonth(d.getMonth() - 1);
         return d;
@@ -816,11 +816,11 @@ class CalendarDay extends CalendarView {
         this.titleFormat = { month: 'long', day: 'numeric', year: 'numeric' }
     }
 
-    get next() {
+    chronologicalNext() {
         return this.nextDay(this.date);
     }
 
-    get previous() {
+    chronologicalPrevious() {
         return this.previousDay(this.date);
     }
 
