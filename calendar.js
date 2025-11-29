@@ -385,7 +385,7 @@ class CalendarView extends CalendarBase {
         }
     }
 
-    get dayNames() {
+    dayNames() {
         return this.viewCache.get('day-names', () => {
             return this.daysOfWeek('short');
         });
@@ -575,7 +575,7 @@ class CalendarYear extends CalendarView {
                 link.hash = this.ym(d);
                 link.innerText = d.toLocaleString(this.locale, { month: 'long' });
 
-                for (const day of this.dayNames) {
+                for (const day of this.dayNames()) {
                     const div = document.createElement('div');
                     div.classList.add('day-of-week');
                     div.innerText = day;
@@ -697,7 +697,7 @@ class CalendarMonth extends CalendarView {
         const fragment = document.createDocumentFragment();
 
         if (!this.querySelector('.day-of-week')) {
-            for (const day of this.dayNames) {
+            for (const day of this.dayNames()) {
                 const div = document.createElement('div');
                 div.classList.add('day-of-week');
                 div.textContent = day;
