@@ -507,7 +507,7 @@ class CalendarView extends CalendarBase {
 }
 
 class CalendarYear extends CalendarView {
-    static get tag() { return 'cal-year' }
+    static tag = 'cal-year';
 
     constructor(cache, config) {
         super(cache, config);
@@ -654,7 +654,7 @@ class CalendarYear extends CalendarView {
 }
 
 class CalendarMonth extends CalendarView {
-    static get tag() { return 'cal-month' }
+    static tag = 'cal-month';
 
     constructor(cache, config) {
         super(cache, config);
@@ -808,7 +808,7 @@ class CalendarMonth extends CalendarView {
 }
 
 class CalendarDay extends CalendarView {
-    static get tag() { return 'cal-day' }
+    static tag = 'cal-day';
 
     constructor(cache, config) {
         super(cache, config);
