@@ -124,12 +124,6 @@ A couple things can be customized by adding special meta elements to the HTML do
 <meta name="date" content="1999-12-31" />
 ```
 
-*Version*: when set, turns on caching for a slight speedup. The cache only lasts while the browser window is open. Ideally, the version is changed whenever events are added or changed.
-
-```
-<meta name="version" content="anything" />
-```
-
 ## Linking
 A calendar's default date can be set from the URL hash. If present, it takes precedence over the date meta element.
 

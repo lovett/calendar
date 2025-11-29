@@ -1,14 +1,6 @@
 class CalendarCache {
-    constructor(storage, version) {
+    constructor() {
         this.cache = new Map();
-        this.version = version;
-        this.storage = storage;
-        if (!this.version) this.storage.clear();
-    }
-
-    versionedKey(key) {
-        if (!this.version) return null;
-        return `${this.version}:${key}`;
     }
 
     set(key, value) {
@@ -24,16 +16,6 @@ class CalendarCache {
 
     clear(key) {
         this.cache.delete(key);
-    }
-
-    storageSet(key, value) {
-        this.storage.setItem(key, value);
-    }
-
-    storageGet(key, foundCallback, notFoundCallback) {
-        const value = this.storage.getItem(key);
-        if (value) return foundCallback(value);
-        return notFoundCallback();
     }
 }
 
@@ -263,21 +245,11 @@ class CalendarView extends CalendarBase {
 
     renderPage(ymd, callback) {
         this.date = new Date(ymd);
-        if (!this.renderFromCache()) {
-            this.renderShell();
-            this.populateTitle();
-            callback.call(this);
-            this.cachePage();
-        }
+        this.renderShell();
+        this.populateTitle();
+        callback.call(this);
         document.title = document.querySelector('.navigator h1').innerText;
         this.markToday();
-    }
-
-    cachePage() {
-        const hash = this.hasher(this.date);
-        const key = this.viewCache.versionedKey(hash);
-        if (!key) return;
-        this.viewCache.storageSet(key, this.innerHTML);
     }
 
     outOfBounds(d) {
@@ -307,16 +279,6 @@ class CalendarView extends CalendarBase {
         setTimeout(() => {
             el.classList.remove('highlighted');
         }, 1000);
-    }
-
-    renderFromCache() {
-        const hash = this.hasher(this.date);
-        const key = this.viewCache.versionedKey(hash);
-        return this.viewCache.storageGet(
-            key,
-            (value) => { this.innerHTML = value; return true },
-            () => false
-        );
     }
 
     handleEvent(e) {
@@ -1564,7 +1526,6 @@ window.addEventListener('DOMContentLoaded', () => {
     const config = {
         locale: Intl.DateTimeFormat().resolvedOptions().locale,
         name: '',
-        version: '',
         appVersion: '!dev!',
         start: today,
         defaultView: CalendarMonth,
@@ -1697,7 +1658,7 @@ window.addEventListener('DOMContentLoaded', () => {
     appVersionMeta.name = 'app-version';
     appVersionMeta.content = config.appVersion;
 
-    const cache = new CalendarCache(window.sessionStorage, config.version);
+    const cache = new CalendarCache();
 
     for (const viewClass of [CalendarMonth, CalendarYear, CalendarDay]) {
         for (const node of document.body.querySelectorAll(viewClass.tag)) node.remove();
