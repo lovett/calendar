@@ -961,7 +961,7 @@ class CalendarDay extends CalendarView {
 }
 
 class CalendarEvent extends CalendarBase {
-    static get tag() { return 'cal-event' }
+    static tag = 'cal-event';
 
     constructor() {
         super();
