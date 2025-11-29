@@ -52,6 +52,7 @@ class CalendarBase extends HTMLElement {
 
     monthsOfYear(format) {
         const d = new Date();
+        d.setDate(1);
         const names = new Array(12);
         for (let i = 0; i < names.length; i++) {
             d.setMonth(i);
