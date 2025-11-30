@@ -8,6 +8,7 @@
     --default: #333;
     --default-inverse: #fff;
     --highlighted: #AED6BE;
+    --active: #D7EADF;
 }
 
 * {
@@ -177,6 +178,11 @@ cal-month {
 
 cal-month .day {
     box-shadow:1px 1px 0 0px var(--diminished);
+}
+
+cal-month .day:hover {
+    cursor: pointer;
+    background-color: var(--active);
 }
 
 cal-month .has-events a {

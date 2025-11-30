@@ -758,10 +758,7 @@ class CalendarMonth extends CalendarView {
     }
 
     renderDayNumber(parent, d) {
-        const dayNumber = parent.appendChild(document.createElement('a'));
-        dayNumber.href = '#';
-        dayNumber.hash = this.ymd(d);
-
+        const dayNumber = parent.appendChild(document.createElement('div'));
         dayNumber.classList.add('day-number');
         dayNumber.setAttribute('title', this.relativeAge(d));
 
@@ -1481,6 +1478,11 @@ window.addEventListener('click', (e) => {
     if (e.target.matches('.nav.toggle')) {
         e.preventDefault();
         e.target.parentElement.classList.toggle('open');
+    }
+
+    if (e.target.matches('cal-month .day')) {
+        e.preventDefault();
+        window.location.hash = e.target.dataset.ymd;
     }
 });
 
