@@ -1,24 +1,3 @@
-class CalendarCache {
-    constructor() {
-        this.cache = new Map();
-    }
-
-    set(key, value) {
-        this.cache.set(key, value);
-    }
-
-    get(key, notFoundCallback) {
-        if (notFoundCallback && !this.cache.has(key)) {
-            this.set(key, notFoundCallback());
-        }
-        return this.cache.get(key);
-    }
-
-    clear(key) {
-        this.cache.delete(key);
-    }
-}
-
 class CalendarBase extends HTMLElement {
     nameSequence(unit, format) {
         const cacheKey = `${unit}-sequence-${format}`;
@@ -160,18 +139,7 @@ class CalendarBase extends HTMLElement {
     }
 
     * runExtras(date, config) {
-        const extras = this.viewCache.get('extras', () => {
-            const extras = [];
-            for (const script of document.querySelectorAll('script')) {
-                if (script.src.indexOf('extras/') === -1) continue;
-                const name = script.src.split('/').pop();
-                const func = name.split('.', 1).shift();
-                extras.push(`run${func.charAt(0).toUpperCase()}${func.slice(1)}`);
-            }
-            return extras;
-        });
-
-        for (const extra of extras) {
+        for (const extra of this.extras) {
             yield window[extra](date, config);
         }
     }
@@ -228,11 +196,11 @@ class CalendarBase extends HTMLElement {
 class CalendarView extends CalendarBase {
     static observedAttributes = ['date'];
 
-    constructor(cache, config) {
+    constructor(config) {
         super();
-        this.viewCache = cache;
         this.name = config.name || '';
         this.locale = config.locale;
+        this.relativeTimeFormatter = config.relativeTimeFormatter;
         this.emojiPattern = /\p{Emoji}/u;
         this.begin = config.begin;
         this.end = config.end;
@@ -249,9 +217,32 @@ class CalendarView extends CalendarBase {
     }
 
     get now() {
-        return this.viewCache.get('now', () => {
-            return new Date();
-        });
+        const cachedValue = window.sessionStorage.getItem('now');
+        if (cachedValue !== null) {
+            return new Date(parseInt(cachedValue, 10));
+        }
+
+        const d = new Date();
+        this.now = d;
+        return d;
+    }
+
+    set now(d) {
+        window.sessionStorage.setItem('now', JSON.stringify(d.getTime()));
+    }
+
+    get capturedDate() {
+        const cachedValue = window.sessionStorage.getItem('capturedDate');
+        if (cachedValue === null) return cachedValue;
+        return new Date(parseInt(cachedValue, 10));
+    }
+
+    set capturedDate(d) {
+        if (d === null) {
+            window.sessionStorage.removeItem('captureDate');
+        } else {
+            window.sessionStorage.setItem('capturedDate', JSON.stringify(d.getTime()));
+        }
     }
 
     renderPage(ymd, callback) {
@@ -296,7 +287,7 @@ class CalendarView extends CalendarBase {
         if (e.type === 'clock') {
             const now = new Date();
             if (now.getDate() !== this.now.getDate()) {
-                this.viewCache.set('now', now);
+                this.now = now;
                 this.markToday();
             }
         }
@@ -338,17 +329,17 @@ class CalendarView extends CalendarBase {
         }
 
         if (e.type === 'step' && e.detail.to === 'month') {
-            const capturedDate = this.viewCache.get('capturedDate');
+            const capturedDate = this.capturedDate;
             if (capturedDate) {
                 window.location.hash = this.ym(capturedDate);
-                this.viewCache.clear('capturedDate');
+                this.capturedDate = null;
             } else {
                 window.location.hash = this.ym(this.dateWithinBoundary(this.date));
             }
         }
 
         if (e.type === 'step' && e.detail.to === 'year') {
-            this.viewCache.set('capturedDate', this.date);
+            this.capturedDate = this.date;
             window.location.hash = this.date.getFullYear();
         }
 
@@ -418,11 +409,7 @@ class CalendarView extends CalendarBase {
     }
 
     relativeAge(d) {
-        const formatter = this.viewCache.get('relativeTimeFormatter', () => {
-            if (!window.Intl.RelativeTimeFormat) return null;
-            return new Intl.RelativeTimeFormat(this.locale, { numeric: "auto" });
-        });
-
+        const formatter = this.relativeTimeFormatter;
         if (!formatter) return '';
         const ms = d.getTime() - this.now.getTime();
         const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
@@ -572,7 +559,7 @@ class CalendarYear extends CalendarView {
         this.append(fragment);
 
         let ym = this.ym(this.now);
-        const capturedDate = this.viewCache.get('capturedDate');
+        const capturedDate = this.capturedDate;
         if (capturedDate) {
             ym = this.ym(capturedDate);
         }
@@ -774,6 +761,25 @@ class CalendarMonth extends CalendarView {
 
 class CalendarDay extends CalendarView {
     static tag = 'cal-day';
+
+    set extras(value) {
+        window.sessionStorage.setItem('extras', JSON.stringify(value));
+    }
+
+    get extras() {
+        const cachedValue = window.sessionStorage.getItem('extras');
+        if (cachedValue) return JSON.parse(cachedValue);
+
+        const extras = [];
+        for (const script of document.querySelectorAll('script')) {
+            if (script.src.indexOf('extras/') === -1) continue;
+            const name = script.src.split('/').pop();
+            const func = name.split('.', 1).shift();
+            extras.push(`run${func.charAt(0).toUpperCase()}${func.slice(1)}`);
+        }
+        this.extras = extras;
+        return extras;
+    }
 
     constructor(cache, config) {
         super(cache, config);
@@ -1530,12 +1536,20 @@ window.addEventListener('DOMContentLoaded', () => {
     today.setSeconds(0);
     today.setMilliseconds(0);
 
+    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+
+    let relativeTimeFormatter = null;
+    if (window.Intl.RelativeTimeFormat) {
+        relativeTimeFormatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+    }
+
     const config = {
-        locale: Intl.DateTimeFormat().resolvedOptions().locale,
+        locale,
+        relativeTimeFormatter,
         name: '',
         appVersion: '!dev!',
         start: today,
-        defaultView: CalendarMonth,
+        defaultView: CalendarMonth
     };
 
     for (const meta of document.head.querySelectorAll('meta')) {
@@ -1665,11 +1679,9 @@ window.addEventListener('DOMContentLoaded', () => {
     appVersionMeta.name = 'app-version';
     appVersionMeta.content = config.appVersion;
 
-    const cache = new CalendarCache();
-
     for (const viewClass of [CalendarMonth, CalendarYear, CalendarDay]) {
         for (const node of document.body.querySelectorAll(viewClass.tag)) node.remove();
-        const view = document.body.appendChild(new viewClass(cache, config));
+        const view = document.body.appendChild(new viewClass(config));
         if (viewClass === config.defaultView) view.setAttribute('date', config.start);
     }
 
