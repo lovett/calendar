@@ -4,8 +4,15 @@ set -eu
 
 cd "$(dirname "$0")/../test"
 
-if [ "$#" -lt 1 ]; then
-    bun test
-else
-    bun test "$@"
-fi
+case "${1:-all}" in
+    --help)
+        echo "With no arguments, runs all unit tests."
+        echo "With one argument, runs the specified suite."
+        ;;
+    all)
+        bun test --bail --concurrent
+        ;;
+    *)
+        bun test "$(basename "$@")"
+        ;;
+esac
