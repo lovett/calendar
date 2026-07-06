@@ -2,7 +2,16 @@
 
 set -eu
 
-cd "$(dirname "$0")/../test"
+cd "$(dirname "$0")/../"
+
+BUN_IMAGE="oven/bun:alpine"
+
+if ! podman image exists "$BUN_IMAGE"; then
+    echo "Pulling $BUN_IMAGE"
+    podman pull -q "$BUN_IMAGE"
+fi
+
+BUN="podman run --rm -it -v $PWD:/app:Z -w /app/test $BUN_IMAGE bun"
 
 case "${1:-all}" in
     --help)
@@ -10,9 +19,11 @@ case "${1:-all}" in
         echo "With one argument, runs the specified suite."
         ;;
     all)
-        bun test --bail --concurrent
+        $BUN install
+        $BUN test --bail --concurrent
         ;;
     *)
-        bun test "$(basename "$@")"
+        $BUN install
+        $BUN test "$(basename "$@")"
         ;;
 esac
