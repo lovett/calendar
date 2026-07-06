@@ -11,7 +11,7 @@ if ! podman image exists "$BUN_IMAGE"; then
     podman pull -q "$BUN_IMAGE"
 fi
 
-BUN="podman run --rm -it -v $PWD:/app:Z -e NO_COLOR=1 -w /app/test $BUN_IMAGE bun"
+BUN="podman run --rm -v $PWD:/app:Z -w /app/test $BUN_IMAGE bun"
 
 case "${1:-all}" in
     --help)
