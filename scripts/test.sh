@@ -4,7 +4,7 @@ set -eu
 
 cd "$(dirname "$0")/../"
 
-BUN_IMAGE="oven/bun:alpine"
+BUN_IMAGE="docker.io/oven/bun:alpine"
 
 if ! podman image exists "$BUN_IMAGE"; then
     echo "Pulling $BUN_IMAGE"
