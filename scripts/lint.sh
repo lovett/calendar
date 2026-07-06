@@ -2,17 +2,20 @@
 
 set -eu
 
-BIOME="test/node_modules/.bin/biome"
-PROJECT_ROOT="$(dirname "$0")/../"
+cd "$(dirname "$0")/../"
 
-cd "$PROJECT_ROOT"
+BIOME_IMAGE="ghcr.io/biomejs/biome"
 
-if [ ! -f "$BIOME" ]; then
-   cd test
-   bun install
+if ! podman image exists "$BIOME_IMAGE"; then
+    echo "Pulling $BIOME_IMAGE"
+    podman pull -q "$BIOME_IMAGE"
 fi
 
-cd "$PROJECT_ROOT"
+BIOME="podman run --rm -it -v $PWD:/app:Z -w /app $BIOME_IMAGE"
+
+if ! rpm -q ShellCheck >/dev/null 2>&1; then
+  sudo dnf install -y ShellCheck
+fi
 
 lint_css() {
     $BIOME lint calendar.css
