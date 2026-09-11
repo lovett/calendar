@@ -53,12 +53,12 @@ class CalendarBase extends HTMLElement {
 
     ym(d) {
         if (!d) return '';
-        return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+        return this.ymd(d).substr(0, 7);
     }
 
     ymd(d) {
         if (!d) return '';
-        return `${this.ym(d)}-${d.getDate().toString().padStart(2, '0')}`;
+        return d.toLocaleString('en-CA');
     }
 
     startOfDayMs(d) {
