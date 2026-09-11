@@ -4,14 +4,7 @@ set -eu
 
 cd "$(dirname "$0")/../"
 
-BUN_IMAGE="docker.io/oven/bun:alpine"
-
-if ! podman image exists "$BUN_IMAGE"; then
-    echo "Pulling $BUN_IMAGE"
-    podman pull -q "$BUN_IMAGE"
-fi
-
-BUN="podman run --rm -v $PWD:/app:Z -w /app/test $BUN_IMAGE bun"
+. "scripts/vars.sh"
 
 case "${1:-all}" in
     --help)

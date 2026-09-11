@@ -4,18 +4,7 @@ set -eu
 
 cd "$(dirname "$0")/../"
 
-BIOME_IMAGE="ghcr.io/biomejs/biome"
-
-if ! podman image exists "$BIOME_IMAGE"; then
-    echo "Pulling $BIOME_IMAGE"
-    podman pull -q "$BIOME_IMAGE"
-fi
-
-BIOME="podman run --rm -it -v $PWD:/app:Z -w /app $BIOME_IMAGE"
-
-if ! rpm -q ShellCheck >/dev/null 2>&1; then
-  sudo dnf install -y ShellCheck
-fi
+. "scripts/vars.sh"
 
 lint_css() {
     $BIOME lint calendar.css
@@ -26,7 +15,17 @@ lint_js() {
 }
 
 lint_sh() {
-    shellcheck scripts/*
+    shellcheck -s sh scripts/*
+}
+
+lint_json() {
+    if command -v "jq" > /dev/null 2>&1; then
+        jq empty < biome.json
+        jq empty < test/package.json
+    else
+        echo "jq is not installed"
+        exit 1
+    fi
 }
 
 case "${1:-all}" in
@@ -42,10 +41,14 @@ case "${1:-all}" in
     sh)
         lint_sh
         ;;
+    json)
+        lint_json
+        ;;
     all)
         lint_css
         lint_js
         lint_sh
+        lint_json
         ;;
     *)
         echo "Unknown argument." >&2
