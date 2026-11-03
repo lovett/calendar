@@ -3,6 +3,13 @@
 
 set -eu
 
+cd "$(dirname "$0")/../"
+
+. "scripts/vars.sh"
+
+cd test
+bun install
+
 # Fedora
 if command -v dnf >/dev/null 2>&1; then
     # No package available for biome or sqlfluff
