@@ -58,7 +58,7 @@ class CalendarBase extends HTMLElement {
 
     ymd(d) {
         if (!d) return '';
-        return d.toLocaleString('en-CA');
+        return d.toLocaleDateString('en-CA');
     }
 
     startOfDayMs(d) {
