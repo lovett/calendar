@@ -2,21 +2,15 @@
 
 set -eu
 
+# Run from repository root
 cd "$(dirname "$0")/../"
 
 . "scripts/vars.sh"
 
-case "${1:-all}" in
-    --help)
-        echo "With no arguments, runs all unit tests."
-        echo "With one argument, runs the specified suite."
-        ;;
-    all)
-        $BUN install
-        $BUN test --only-failures --bail --concurrent
-        ;;
-    *)
-        $BUN install
-        $BUN test --only-failures "$(basename "$@")"
-        ;;
-esac
+if [ "${1-}" = "--help" ]; then
+    echo "With no arguments, runs all unit tests."
+    echo "With one argument, runs the specified suite."
+    exit
+fi
+
+$BUN test --only-failures --bail --concurrent "$(basename "$@")"

@@ -187,7 +187,7 @@ class CalendarBase extends HTMLElement {
 
         const span = document.createElement('span')
         span.classList.add('summary');
-        span.innerText = statements.join(', ');
+        span.textContent = statements.join(', ');
         return span;
     }
 
@@ -250,7 +250,7 @@ class CalendarView extends CalendarBase {
         this.renderShell();
         this.populateTitle();
         callback.call(this);
-        document.title = document.querySelector('.navigator h1').innerText;
+        document.title = document.querySelector('.navigator h1').textContent;
         this.markToday();
     }
 
@@ -387,7 +387,7 @@ class CalendarView extends CalendarBase {
 
         if (prefix.length > 0) {
             const span = document.createElement('span');
-            span.innerText = prefix[0];
+            span.textContent = prefix[0];
             prefix[0] = span.outerHTML;
         }
 
@@ -427,7 +427,7 @@ class CalendarView extends CalendarBase {
         if (this.emojiPattern.test(id)) {
             node = document.createElement('span')
             node.classList.add('icon');
-            node.innerText = id;
+            node.textContent = id;
         } else {
             node = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             node.setAttribute('class', 'icon');
@@ -527,12 +527,12 @@ class CalendarYear extends CalendarView {
                 const link = title.appendChild(document.createElement('a'));
                 link.href = '#';
                 link.hash = this.ym(d);
-                link.innerText = d.toLocaleString(this.locale, { month: 'long' });
+                link.textContent = d.toLocaleString(this.locale, { month: 'long' });
 
                 for (const day of this.nameSequence('day', 'short')) {
                     const div = document.createElement('div');
                     div.classList.add('day-of-week');
-                    div.innerText = day;
+                    div.textContent = day;
                     fragment.lastChild.append(div);
                 }
 

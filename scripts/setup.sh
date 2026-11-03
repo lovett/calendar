@@ -1,26 +1,31 @@
 #!/usr/bin/env sh
+# shellcheck disable=SC2086 # splitting of PACKAGES is intentional
 
 set -eu
 
-PACKAGES="ShellCheck jq"
+# Fedora
+if command -v dnf >/dev/null 2>&1; then
+    # No package available for biome or sqlfluff
+    PACKAGES="ShellCheck"
 
-# Run from repository root
-cd "$(dirname "$0")/../"
+    if ! rpm -q $PACKAGES >/dev/null 2>&1; then
+        sudo dnf --assumeyes install $PACKAGES
+    fi
 
-. "scripts/vars.sh"
-
-# shellcheck disable=SC2086 # splitting of PACKAGES is intentional.
-if ! rpm -q $PACKAGES >/dev/null 2>&1; then
-    echo "Installing packages..."
-    sudo dnf --assumeyes install $PACKAGES
+    exit
 fi
 
-if ! podman image exists "$BIOME_IMAGE"; then
-    echo "Pulling $BIOME_IMAGE"
-    podman pull -q "$BIOME_IMAGE"
+# FreeBSD
+if command -v pkg >/dev/null 2>&1; then
+    # No package available for biome
+    PACKAGES="hs-ShellCheck"
+
+    if ! pkg info -e $PACKAGES; then
+        doas pkg install --yes $PACKAGES
+    fi
+
+    exit
 fi
 
-if ! podman image exists "$BUN_IMAGE"; then
-    echo "Pulling $BUN_IMAGE"
-    podman pull -q "$BUN_IMAGE"
-fi
+echo "No supported package manager found."
+exit 1

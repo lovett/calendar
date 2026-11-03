@@ -6,26 +6,62 @@ cd "$(dirname "$0")/../"
 
 . "scripts/vars.sh"
 
+can_skip() {
+    EXT="${1:-}"
+    CMD="${2:-}"
+    NAME="${3:-}"
+
+    if [ -z "${CMD:-}" ]; then
+        echo "Skipping $NAME because it is not available"
+        echo ""
+        return 0
+    fi
+
+    # Checkout is pristine, or the all argument was used.
+    [ -z "${CHANGED_FILES:-}" ] && return 1
+
+    COUNT=$(git ls-files -m -o --exclude-standard "*$EXT" | wc -l)
+    if [ "$COUNT" -gt 0 ]; then
+        # At least one changed file. Cannot skip.
+        return 1
+    fi
+
+    # No changed files
+    echo "Skipping $EXT linting";
+    return 0
+}
+
 lint_css() {
+    can_skip ".css" "$BIOME" "biome" && return
+    echo "Linting css assets with biome"
     $BIOME lint calendar.css
 }
 
 lint_js() {
+    can_skip ".js" "$BIOME" "biome" && return
+    echo "Linting js assets with biome"
     $BIOME lint calendar.js extras/sunrise.js
 }
 
 lint_sh() {
-    shellcheck -s sh scripts/*
+    can_skip ".sh" "$SHELLCHECK" "shellcheck" && return
+    echo "Linting scripts with shellcheck"
+    $SHELLCHECK scripts/*
+    echo ""
 }
 
 lint_json() {
-    if command -v "jq" > /dev/null 2>&1; then
-        jq empty < biome.json
-        jq empty < test/package.json
-    else
-        echo "jq is not installed"
-        exit 1
-    fi
+    can_skip ".json" "$BUN" "bun" && return
+    echo "Linting json files with bun"
+    $BUN check ./*.json test/*.json
+    echo ""
+}
+
+lint_all() {
+    lint_css
+    lint_js
+    lint_sh
+    lint_json
 }
 
 case "${1:-all}" in
@@ -38,19 +74,17 @@ case "${1:-all}" in
     js)
         lint_js
         ;;
-    sh)
-        lint_sh
-        ;;
     json)
         lint_json
         ;;
-    all)
-        lint_css
-        lint_js
+    sh)
         lint_sh
-        lint_json
+        ;;
+    all)
+        lint_all
         ;;
     *)
-        echo "Unknown argument." >&2
+        CHANGED_FILES=$(git status --porcelain)
+        lint_all
         ;;
 esac
