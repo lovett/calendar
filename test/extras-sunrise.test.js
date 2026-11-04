@@ -328,7 +328,6 @@ describe('Sunrise', function() {
             expect(daylightResult.spentPercent + daylightResult.remainingPercent).toEqual(100);
         });
 
-
         test("daylight spent plus remaining time matches total", function() {
             const now = new Date();
             const fakeSunrise = new Date();
@@ -352,6 +351,22 @@ describe('Sunrise', function() {
                 expect(spentPlusRemainingMinutes).toEqual(fakeSunlightDurationMinutes);
             }
 
+        });
+
+        test("total daylight rounding", function() {
+            addTestMetaTag('latitude', 40.7128);
+            addTestMetaTag('longitude', -74.006);
+            const d = new Date('2026-06-07T00:00:00');
+            const result = runSunrise(d);
+
+            let matched = false
+            for (let [value, _icon] of runSunrise(d)) {
+                if (!value.endsWith('daylight')) continue;
+                matched = true;
+                expect(value).toEqual('14h 59m daylight');
+            }
+
+            expect(matched).toBe(true);
         });
     });
 });

@@ -22,7 +22,7 @@ function runSunrise(date) {
     const result = calculateSunrise(date, latitude, longitude);
     const timeFormat = {hour: 'numeric', minute: 'numeric'};
     const durationHours = Math.trunc(result.sunlightDurationMinutes / 60);
-    const durationMinutes = Math.ceil(result.sunlightDurationMinutes % 60);
+    const durationMinutes = Math.trunc(result.sunlightDurationMinutes % 60);
     const locale = Intl.DateTimeFormat().resolvedOptions().locale;
 
     const results = [
