@@ -8,7 +8,7 @@ cd "$(dirname "$0")/../"
 . "scripts/vars.sh"
 
 cd test
-bun install
+$BUN install
 
 # Fedora
 if command -v dnf >/dev/null 2>&1; then
