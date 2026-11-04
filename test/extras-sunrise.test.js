@@ -201,10 +201,10 @@ describe('Sunrise', function() {
     describe("Daylight Calculation", function() {
         test("skipped for past and future dates", function() {
             const now = new Date();
-
+            const oneDayMs = 86_400_000;
             const scenarios = [
-                new Date(now.getFullYear(), now.getMonth(), now.getDay() - 1),
-                new Date(now.getFullYear(), now.getMonth(), now.getDay() + 1),
+                new Date(now.getTime() - oneDayMs),
+                new Date(now.getTime() + oneDayMs)
             ];
 
             for (const scenario of scenarios) {
