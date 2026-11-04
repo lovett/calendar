@@ -7,4 +7,4 @@ cd "$(dirname "$0")/../"
 
 . "scripts/vars.sh"
 
-$BUN test --only-failures --bail --concurrent
+$BUN test --only-failures --concurrent $@
