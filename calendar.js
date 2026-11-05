@@ -1486,9 +1486,19 @@ window.addEventListener('click', (e) => {
         e.target.parentElement.classList.toggle('open');
     }
 
+    if (e.target instanceof HTMLAnchorElement) {
+        return;
+    }
+
     if (e.target.matches('cal-month .day')) {
         e.preventDefault();
         window.location.hash = e.target.dataset.ymd;
+    }
+
+    const closestDay = e.target.closest('.day');
+    if (closestDay) {
+        e.preventDefault();
+        window.location.hash = closestDay.dataset.ymd;
     }
 });
 
