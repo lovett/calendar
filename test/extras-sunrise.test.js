@@ -105,6 +105,7 @@ describe('Sunrise', function() {
             }
             const result = minutesToDuration(i, label, locale);
             expect(result).toEqual(expected);
+            expect(result.indexOf('60m')).toBe(-1);
         }
     });
 
@@ -239,7 +240,7 @@ describe('Sunrise', function() {
             }
         });
 
-        test("sunrise delta", function() {
+        test("sunrise/sunset delta", function() {
             const now = new Date();
             now.setHours(12);
 
@@ -268,106 +269,74 @@ describe('Sunrise', function() {
 
                 expect(daylightResult.sunriseDeltaMS).toEqual(i * 60 * 1000);
 
-                if (d <= sunrise) {
+                if (d < sunrise) {
+                    expect(daylightResult.sinceSunriseMinutes).toBe(null);
+                    expect(daylightResult.sinceSunsetMinutes).toBe(null);
+                    expect(daylightResult.remainingMinutes).toEqual(daylightMinutes);
+                    expect(daylightResult.spentPercent).toEqual(0);
+                    expect(daylightResult.remainingPercent).toEqual(100);
                     expect(daylightResult.spentPercent).toEqual(0);
                 }
 
-                if (d > sunrise && d < sunset) {
-                    const spent = Math.trunc(i / daylightMinutes) * 100;
-                    const spentClamped = Math.min(Math.max(0, spent), 100);
-                    expect(daylightResult.spentPercent).toEqual(spentClamped);
+                if (d >= sunrise && d < sunset) {
+                    const minutesSpent = (d - sunrise) / 1000 / 60;
+                    const minutesSpentPercent = Math.ceil(minutesSpent / daylightMinutes * 100);
+                    expect(daylightResult.sinceSunriseMinutes).toBe(minutesSpent);
+                    expect(daylightResult.sinceSunsetMinutes).toBe(null);
+                    expect(daylightResult.spentPercent).toEqual(minutesSpentPercent);
+                    expect(daylightResult.remainingMinutes).toEqual(daylightMinutes - minutesSpent);
+                    expect(daylightResult.remainingPercent).toEqual(100 - minutesSpentPercent);
                 }
 
                 if (d >= sunset) {
+                    expect(daylightResult.sinceSunriseMinutes).toBe((d - sunrise) / 1000 / 60);
+                    expect(daylightResult.sinceSunsetMinutes).toBe((d - sunset) / 1000 / 60);
                     expect(daylightResult.spentPercent).toEqual(100);
+                    expect(daylightResult.remainingMinutes).toEqual(0);
+                    expect(daylightResult.remainingPercent).toEqual(0);
                 }
             }
         });
 
-        test("sunset delta", function() {
-            const now = new Date();
-            now.setHours(12);
+        test("total daylight rounding", function() {
+            addStandardLatLong();
+            const d = new Date('2026-06-07T00:00:00');
 
-            const sunrise = new Date(now);
-            sunrise.setHours(now.getHours() - 1);
-
-            const sunset = new Date(now);
-            sunset.setHours(now.getHours() + 1);
-
-            const daylightMinutes = (sunset - sunrise) / 1000 / 60;
-
-            // 1-minute increments from before sunrise to after sunset
-            // starting from sunset
-            for (let i = daylightMinutes * -1; i <= daylightMinutes; i++) {
-                const d = new Date(sunset);
-                d.setMinutes(sunrise.getMinutes() + i);
-
-                const sunriseResult = {
-                    date: d,
-                    sunriseDate: sunrise,
-                    sunsetDate: sunset,
-                    sunlightDurationMinutes: daylightMinutes,
-                };
-
-                const daylightResult = window.calculateDaylightFacts(d, sunriseResult);
-
-                expect(daylightResult.sunsetDeltaMS).toEqual(i * 60 * 1000);
-
-                if (d <= sunrise) {
-                    expect(daylightResult.spentPercent).toEqual(0);
-                }
-
-                if (d > sunrise && d < sunset) {
-                    const spent = Math.trunc(i / daylightMinutes) * 100;
-                    const spentClamped = Math.min(Math.max(0, spent), 100);
-                    expect(daylightResult.spentPercent).toEqual(spentClamped);
-                }
-
-                if (d >= sunset) {
-                    expect(daylightResult.spentPercent).toEqual(100);
-                }
+            let matched = false
+            for (let [value, _icon] of runSunrise(d)) {
+                if (!value.endsWith('daylight')) continue;
+                matched = true;
+                expect(value).toEqual('14h 59m daylight');
             }
+
+            expect(matched).toBe(true);
         });
 
-        // test("total daylight rounding", function() {
-        //     addStandardLatLong();
-        //     const d = new Date('2026-06-07T00:00:00');
+        test("after sunrise rounding", function() {
+            const now = "2026-06-07T05:26:00";
+            setSystemTime(new Date(now));
+            addStandardLatLong();
 
-        //     let matched = false
-        //     for (let [value, _icon] of runSunrise(d)) {
-        //         if (!value.endsWith('daylight')) continue;
-        //         matched = true;
-        //         expect(value).toEqual('14h 59m daylight');
-        //     }
+            const d = new Date()
 
-        //     expect(matched).toBe(true);
-        // });
+            let matched = false
+            for (let [value, _icon] of runSunrise(d)) {
+                if (value.indexOf('daylight spent') === -1) continue;
+                matched = true;
+                expect(value).toEqual('1m daylight spent (1%)');
+            }
 
-        // test("after sunrise rounding", function() {
-        //     const now = "2026-06-07T05:26:00";
-        //     setSystemTime(new Date(now));
-        //     addStandardLatLong();
+            expect(matched).toBe(true);
 
-        //     const d = new Date()
+            matched = false
+            for (let [value, _icon] of runSunrise(d)) {
+                if (value.indexOf('daylight remaining') === -1) continue;
+                matched = true;
+                expect(value).toEqual('14h 58m daylight remaining (99%)');
+            }
 
-        //     let matched = false
-        //     for (let [value, _icon] of runSunrise(d)) {
-        //         if (value.indexOf('daylight spent') === -1) continue;
-        //         matched = true;
-        //         expect(value).toEqual('0h 1m daylight spent (1%)');
-        //     }
-
-        //     expect(matched).toBe(true);
-
-        //     // let matched = false
-        //     // for (let [value, _icon] of runSunrise(d)) {
-        //     //     if (!value.endsWith('daylight')) continue;
-        //     //     matched = true;
-        //     //     expect(value).toEqual('14h 59m daylight');
-        //     // }
-
-        //     // expect(matched).toBe(true);
-        // });
+            expect(matched).toBe(true);
+        });
 
     });
 });

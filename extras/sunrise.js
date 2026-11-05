@@ -194,11 +194,11 @@ function calculateDaylightFacts(now, solarFacts) {
         spentPercent = 100;
         remainingPercent = 0;
     } else {
-        sinceSunriseMinutes = sunriseDeltaMS / 1000 / 60;
-        sinceSunsetMinutes = sunsetDeltaMS / 1000 / 60;
+        sinceSunriseMinutes = Math.ceil(sunriseDeltaMS / 1000 / 60);
+        sinceSunsetMinutes = null;
         remainingMinutes = solarFacts.sunlightDurationMinutes - sinceSunriseMinutes;
-        spentPercent = Math.ceil(sunriseDeltaMS / daylightMS * 100);
-        remainingPercent = Math.abs(Math.ceil(sunsetDeltaMS / daylightMS * 100));
+        spentPercent = Math.ceil(sinceSunriseMinutes / solarFacts.sunlightDurationMinutes * 100);
+        remainingPercent = 100 - spentPercent;
     }
 
     return {
