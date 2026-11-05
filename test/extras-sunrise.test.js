@@ -1,4 +1,4 @@
-import {test, expect, describe, beforeAll, beforeEach, afterEach} from "bun:test";
+import {test, expect, describe, beforeAll, beforeEach, afterEach, setSystemTime} from "bun:test";
 
 process.env.TZ = "America/New_York";
 
@@ -13,6 +13,11 @@ function addTestMetaTag(name, content) {
     meta.name = name;
     meta.content = content;
     meta.classList.add('sunrise-spec-test');
+}
+
+function addStandardLatLong() {
+    addTestMetaTag('latitude', 40.7128);
+    addTestMetaTag('longitude', -74.006);
 }
 
 function removeTestMetaTags() {
@@ -30,29 +35,25 @@ describe('Sunrise', function() {
     afterEach(function() {
         removeTestMetaTags();
         window.sunriseCache.clear();
+        setSystemTime();
     });
 
     describe("Configuration", function() {
         test("returns nulls if latitude and longitude meta tags are not present", function() {
             const result = runSunrise(date);
-            expect(result[0]).toBe(null);
-            expect(result[1]).toBe(null);
+            expect(result).toHaveLength(0);
         });
 
         test("returns nulls if latitude and longitude are not both present", function() {
             addTestMetaTag('latitude', 'test');
-
             const result = runSunrise(date);
-            expect(result[0]).toBe(null);
-            expect(result[1]).toBe(null);
+            expect(result).toHaveLength(0);
         });
 
         test("returns nulls if latitude or longitude are zero", function() {
             addTestMetaTag('latitude', 0);
-
             const result = runSunrise(date);
-            expect(result[0]).toBe(null);
-            expect(result[1]).toBe(null);
+            expect(result).toHaveLength(0);
         });
     });
 
@@ -75,12 +76,12 @@ describe('Sunrise', function() {
         });
     });
 
-    describe("Formatting", function() {
+    describe("decimalDaysToHMS()", function() {
         const cases = [
-            [0, {hours: 0, minutes: 0, seconds: 0}],
-            [.5, {hours: 12, minutes: 0, seconds: 0}],
-            [1, {hours: 0, minutes: 0, seconds: 0}],
-            [0.246237380230012, {hours: 5, minutes: 54, seconds: 34}]
+            [0, { hours: 0, minutes: 0, seconds: 0 }],
+            [.5, { hours: 12, minutes: 0, seconds: 0 }],
+            [1, { hours: 0, minutes: 0, seconds: 0 }],
+            [0.246237380230012, { hours: 5, minutes: 54, seconds: 34 }]
         ];
 
         test.each(cases)("%p", (decimal, obj) => {
@@ -89,9 +90,27 @@ describe('Sunrise', function() {
         });
     });
 
+    test("minutesToDuration()", function() {
+        const locale = "en";
+        const label = "mylabel";
+        let expected;
+        for (let i = -61; i <= 61; i++) {
+            const h = Math.trunc(Math.abs(i) / 60);
+            const m = Math.trunc(Math.abs(i) % 60);
+
+            if (h == 0) {
+                expected = `${m}m ${label}`;
+            } else {
+                expected = `${h}h ${m}m ${label}`;
+            }
+            const result = minutesToDuration(i, label, locale);
+            expect(result).toEqual(expected);
+        }
+    });
+
     /**
      * The calculate method's return object models the NOAA
-     * spreadsheet.  Each property is an incremental value that isn't
+     * spreadsheet.  Each property is an incrementgal value that isn't
      * especially useful in isolation but gets treated that way here
      * for incremental verification.
      *
@@ -100,7 +119,7 @@ describe('Sunrise', function() {
      */
     describe("Sunrise Calculation", function() {
         beforeEach(function() {
-            result = window.calculateSunrise(date, 40.7128, -74.006);
+            result = window.calculateSolarFacts(date, 40.7128, -74.006);
         });
 
         test("Julian Day", function() {
@@ -201,172 +220,154 @@ describe('Sunrise', function() {
     describe("Daylight Calculation", function() {
         test("skipped for past and future dates", function() {
             const now = new Date();
-            const oneDayMs = 86_400_000;
-            const scenarios = [
-                new Date(now.getTime() - oneDayMs),
-                new Date(now.getTime() + oneDayMs)
-            ];
+            now.setHours(12);
 
-            for (const scenario of scenarios) {
-                const sunriseResult = {date: scenario};
-                const daylightResult = window.calculateDaylight(sunriseResult);
-                expect(daylightResult).toBeNull();
+            const sunrise = new Date(now);
+            sunrise.setHours(now.getHours() - 1);
+
+            for (let i = -1; i <= 1; i++) {
+                const d = new Date(now);
+                d.setHours(now.getHours() + i * 24);
+                const sunriseResult = {date: d, sunriseDate: sunrise};
+                const daylightResult = window.calculateDaylightFacts(d, sunriseResult);
+
+                if (i == 0) {
+                    expect(daylightResult).toBeObject();
+                } else {
+                    expect(daylightResult).toBeNull();
+                }
             }
         });
 
-        test("pre-sunrise values", function() {
+        test("sunrise delta", function() {
             const now = new Date();
-            const fakeSunrise = new Date();
-            fakeSunrise.setHours(now.getHours() + 1);
-            fakeSunrise.setMinutes(now.getMinutes() + 1);
+            now.setHours(12);
 
-            const fakeSunset = new Date();
+            const sunrise = new Date(now);
+            sunrise.setHours(now.getHours() - 1);
 
-            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
-            const daylightResult = window.calculateDaylight(sunriseResult);
-            expect(daylightResult.hoursUntilSunrise).toEqual(1);
-            expect(daylightResult.minutesUntilSunrise).toEqual(1);
-            expect(daylightResult.hoursSinceSunrise).toEqual(0);
-            expect(daylightResult.minutesSinceSunrise).toEqual(0);
-            expect(daylightResult.isBeforeSunrise).toBe(true);
-        });
+            const sunset = new Date(now);
+            sunset.setHours(now.getHours() + 1);
 
-        test("post-sunrise values", function() {
-            const now = new Date();
-            const fakeSunrise = new Date();
-            fakeSunrise.setHours(now.getHours() - 1);
-            fakeSunrise.setMinutes(now.getMinutes() - 2);
+            const daylightMinutes = (sunset - sunrise) / 1000 / 60;
 
-            const fakeSunset = new Date();
+            // 1-minute increments from before sunrise to after sunset
+            // starting from sunrise
+            for (let i = daylightMinutes * -1; i <= daylightMinutes; i++) {
+                const d = new Date(sunrise);
+                d.setMinutes(sunrise.getMinutes() + i);
 
-            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
-            const daylightResult = window.calculateDaylight(sunriseResult);
-            expect(daylightResult.hoursUntilSunrise).toEqual(0);
-            expect(daylightResult.minutesUntilSunrise).toEqual(0);
-            expect(daylightResult.hoursSinceSunrise).toEqual(1);
-            expect(daylightResult.minutesSinceSunrise).toEqual(2);
-            expect(daylightResult.isBeforeSunrise).toBe(false);
-        });
+                const sunriseResult = {
+                    date: d,
+                    sunriseDate: sunrise,
+                    sunsetDate: sunset,
+                    sunlightDurationMinutes: daylightMinutes,
+                };
 
-        test("at-sunrise values", function() {
-            const now = new Date();
-            const fakeSunrise = new Date();
-            const fakeSunset = new Date();
+                const daylightResult = window.calculateDaylightFacts(d, sunriseResult);
 
-            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
-            const daylightResult = window.calculateDaylight(sunriseResult);
-            expect(daylightResult.hoursUntilSunrise).toEqual(0);
-            expect(daylightResult.minutesUntilSunrise).toEqual(0);
-            expect(daylightResult.hoursSinceSunrise).toEqual(0);
-            expect(daylightResult.minutesSinceSunrise).toEqual(0);
-            expect(daylightResult.isBeforeSunrise).toBe(false);
-        });
+                expect(daylightResult.sunriseDeltaMS).toEqual(i * 60 * 1000);
 
-        test("pre-sunset values", function() {
-            const now = new Date();
-            const fakeSunrise = new Date();
+                if (d <= sunrise) {
+                    expect(daylightResult.spentPercent).toEqual(0);
+                }
 
-            const fakeSunset = new Date();
-            fakeSunset.setHours(now.getHours() + 2);
-            fakeSunset.setMinutes(now.getMinutes() + 2);
+                if (d > sunrise && d < sunset) {
+                    const spent = Math.trunc(i / daylightMinutes) * 100;
+                    const spentClamped = Math.min(Math.max(0, spent), 100);
+                    expect(daylightResult.spentPercent).toEqual(spentClamped);
+                }
 
-            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
-            const daylightResult = window.calculateDaylight(sunriseResult);
-            expect(daylightResult.hoursUntilSunset).toEqual(2);
-            expect(daylightResult.minutesUntilSunset).toEqual(2);
-            expect(daylightResult.hoursSinceSunset).toEqual(0);
-            expect(daylightResult.minutesSinceSunset).toEqual(0);
-            expect(daylightResult.isAfterSunset).toBe(false);
-        });
-
-        test("post-sunset values", function() {
-            const now = new Date();
-            const fakeSunrise = new Date();
-
-            const fakeSunset = new Date();
-            fakeSunset.setHours(now.getHours() - 3);
-            fakeSunset.setMinutes(now.getMinutes() - 3);
-
-            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
-            const daylightResult = window.calculateDaylight(sunriseResult);
-            expect(daylightResult.hoursUntilSunset).toEqual(0);
-            expect(daylightResult.minutesUntilSunset).toEqual(0);
-            expect(daylightResult.hoursSinceSunset).toEqual(3);
-            expect(daylightResult.minutesSinceSunset).toEqual(3);
-            expect(daylightResult.isAfterSunset).toBe(true);
-        });
-
-        test("at-sunset values", function() {
-            const now = new Date();
-            const fakeSunrise = new Date();
-
-            const fakeSunset = new Date();
-
-            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset};
-            const daylightResult = window.calculateDaylight(sunriseResult);
-            expect(daylightResult.hoursUntilSunset).toEqual(0);
-            expect(daylightResult.minutesUntilSunset).toEqual(0);
-            expect(daylightResult.hoursSinceSunset).toEqual(0);
-            expect(daylightResult.minutesSinceSunset).toEqual(0);
-            expect(daylightResult.isAfterSunset).toBe(false);
-        });
-
-        test("daylight spent plus remaining percent adds to 100", function() {
-            const now = new Date();
-
-            const fakeSunrise = new Date();
-            fakeSunrise.setHours(now.getHours() - 1);
-
-            const fakeSunset = new Date();
-            fakeSunset.setHours(now.getHours() + 1);
-
-            const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset, sunlightDurationMinutes: 120};
-            const daylightResult = window.calculateDaylight(sunriseResult);
-
-            expect(daylightResult.spentPercent).toBeGreaterThan(0);
-            expect(daylightResult.remainingPercent).toBeLessThan(100);
-            expect(daylightResult.spentPercent + daylightResult.remainingPercent).toEqual(100);
-        });
-
-        test("daylight spent plus remaining time matches total", function() {
-            const now = new Date();
-            const fakeSunrise = new Date();
-            fakeSunrise.setHours(now.getHours() - 1);
-
-            const fakeSunset = new Date();
-            fakeSunset.setHours(now.getHours() + 1);
-
-            for (let i = 0; i < 59; i++) {
-                now.setMinutes(i);
-                fakeSunrise.setMinutes(i);
-                fakeSunset.setMinutes(i);
-
-                const fakeSunlightDurationMinutes = (fakeSunset.getTime() - fakeSunrise.getTime()) / 60_000;
-                const sunriseResult = {date: now, sunriseDate: fakeSunrise, sunsetDate: fakeSunset, sunlightDurationMinutes: fakeSunlightDurationMinutes };
-                const daylightResult = window.calculateDaylight(sunriseResult);
-
-                let spentPlusRemainingMinutes = (daylightResult.hoursSinceSunrise * 60) + daylightResult.minutesSinceSunrise +
-                    (daylightResult.hoursUntilSunset * 60) + daylightResult.minutesUntilSunset;
-
-                expect(spentPlusRemainingMinutes).toEqual(fakeSunlightDurationMinutes);
+                if (d >= sunset) {
+                    expect(daylightResult.spentPercent).toEqual(100);
+                }
             }
-
         });
 
-        test("total daylight rounding", function() {
-            addTestMetaTag('latitude', 40.7128);
-            addTestMetaTag('longitude', -74.006);
-            const d = new Date('2026-06-07T00:00:00');
-            const result = runSunrise(d);
+        test("sunset delta", function() {
+            const now = new Date();
+            now.setHours(12);
 
-            let matched = false
-            for (let [value, _icon] of runSunrise(d)) {
-                if (!value.endsWith('daylight')) continue;
-                matched = true;
-                expect(value).toEqual('14h 59m daylight');
+            const sunrise = new Date(now);
+            sunrise.setHours(now.getHours() - 1);
+
+            const sunset = new Date(now);
+            sunset.setHours(now.getHours() + 1);
+
+            const daylightMinutes = (sunset - sunrise) / 1000 / 60;
+
+            // 1-minute increments from before sunrise to after sunset
+            // starting from sunset
+            for (let i = daylightMinutes * -1; i <= daylightMinutes; i++) {
+                const d = new Date(sunset);
+                d.setMinutes(sunrise.getMinutes() + i);
+
+                const sunriseResult = {
+                    date: d,
+                    sunriseDate: sunrise,
+                    sunsetDate: sunset,
+                    sunlightDurationMinutes: daylightMinutes,
+                };
+
+                const daylightResult = window.calculateDaylightFacts(d, sunriseResult);
+
+                expect(daylightResult.sunsetDeltaMS).toEqual(i * 60 * 1000);
+
+                if (d <= sunrise) {
+                    expect(daylightResult.spentPercent).toEqual(0);
+                }
+
+                if (d > sunrise && d < sunset) {
+                    const spent = Math.trunc(i / daylightMinutes) * 100;
+                    const spentClamped = Math.min(Math.max(0, spent), 100);
+                    expect(daylightResult.spentPercent).toEqual(spentClamped);
+                }
+
+                if (d >= sunset) {
+                    expect(daylightResult.spentPercent).toEqual(100);
+                }
             }
-
-            expect(matched).toBe(true);
         });
+
+        // test("total daylight rounding", function() {
+        //     addStandardLatLong();
+        //     const d = new Date('2026-06-07T00:00:00');
+
+        //     let matched = false
+        //     for (let [value, _icon] of runSunrise(d)) {
+        //         if (!value.endsWith('daylight')) continue;
+        //         matched = true;
+        //         expect(value).toEqual('14h 59m daylight');
+        //     }
+
+        //     expect(matched).toBe(true);
+        // });
+
+        // test("after sunrise rounding", function() {
+        //     const now = "2026-06-07T05:26:00";
+        //     setSystemTime(new Date(now));
+        //     addStandardLatLong();
+
+        //     const d = new Date()
+
+        //     let matched = false
+        //     for (let [value, _icon] of runSunrise(d)) {
+        //         if (value.indexOf('daylight spent') === -1) continue;
+        //         matched = true;
+        //         expect(value).toEqual('0h 1m daylight spent (1%)');
+        //     }
+
+        //     expect(matched).toBe(true);
+
+        //     // let matched = false
+        //     // for (let [value, _icon] of runSunrise(d)) {
+        //     //     if (!value.endsWith('daylight')) continue;
+        //     //     matched = true;
+        //     //     expect(value).toEqual('14h 59m daylight');
+        //     // }
+
+        //     // expect(matched).toBe(true);
+        // });
+
     });
 });

@@ -1,7 +1,28 @@
 const sunriseCache = new Map();
 
+function minutesToDuration(minutes, label, locale) {
+    if (!sunriseCache.has('durationFormatter')) {
+        const formatter = new Intl.DurationFormat(locale, {
+            style: "narrow",
+            minutesDisplay: "always"
+        });
+        sunriseCache.set('durationFormatter', formatter);
+    }
+
+    const duration = {
+        hours: Math.trunc(Math.abs(minutes) / 60),
+        minutes: Math.trunc(Math.abs(minutes) % 60)
+    }
+
+    const result = sunriseCache.get('durationFormatter').format(duration);
+    return `${result} ${label}`;
+}
+
 function runSunrise(date) {
-    if (!sunriseCache.has('filled')) {
+    const now = new Date();
+    const extras = [];
+
+    if (!sunriseCache.has('latlong')) {
         for (const meta of document.head.querySelectorAll('meta')) {
             if (meta.name === 'latitude') {
                 sunriseCache.set('latitude', parseFloat(meta.content) || 0);
@@ -11,43 +32,60 @@ function runSunrise(date) {
                 sunriseCache.set('longitude', parseFloat(meta.content) || 0);
             }
         }
-        sunriseCache.set('filled', true);
+        sunriseCache.set('latlong', true);
     }
 
-    if (!(sunriseCache.has('latitude') && sunriseCache.has('longitude'))) return [null, null];
+    if (!sunriseCache.has('locale')) {
+        sunriseCache.set('locale', Intl.DateTimeFormat().resolvedOptions().locale);
+    }
 
+    if (!sunriseCache.has('timeformat')) {
+        sunriseCache.set('timeformat', { hour: 'numeric', minute: 'numeric' });
+    }
 
     const latitude = sunriseCache.get('latitude');
     const longitude = sunriseCache.get('longitude');
-    const result = calculateSunrise(date, latitude, longitude);
-    const timeFormat = {hour: 'numeric', minute: 'numeric'};
-    const durationHours = Math.trunc(result.sunlightDurationMinutes / 60);
-    const durationMinutes = Math.trunc(result.sunlightDurationMinutes % 60);
-    const locale = Intl.DateTimeFormat().resolvedOptions().locale;
+    if (!latitude || !longitude) return [];
 
-    const results = [
-        [`${result.sunriseDate.toLocaleString(locale, timeFormat)} sunrise`, 'icon-sunrise'],
-    ];
+    const locale = sunriseCache.get('locale');
+    const timeFormat = sunriseCache.get('timeformat');
 
-    const daylight = calculateDaylight(result);
-    if (daylight && daylight.isBeforeSunrise) {
-        results.push([`${daylight.hoursUntilSunrise}h ${daylight.minutesUntilSunrise}m until sunrise`, 'icon-sunrise']);
+    const solarFacts = calculateSolarFacts(date, latitude, longitude);
+
+    extras.push([
+        `${solarFacts.sunriseDate.toLocaleString(locale, timeFormat)} sunrise`,
+        'icon-sunrise'
+    ]);
+
+    extras.push([
+        `${solarFacts.sunsetDate.toLocaleString(locale, timeFormat)} sunset`,
+        'icon-sunset'
+    ]);
+
+    const daylightDuration = minutesToDuration(solarFacts.sunlightDurationMinutes, 'daylight', locale);
+    extras.push([daylightDuration, 'icon-sun']);
+
+    const daylightFacts = calculateDaylightFacts(now, solarFacts);
+
+    if (daylightFacts?.sunIsUp) {
+        const spent = minutesToDuration(daylightFacts.spentMinutes, 'daylight spent');
+        extras.push([spent, 'icon-sun']);
+        const remaining = minutesToDuration(daylightFacts.remainingMinutes, 'daylight remaining');
+        extras.push([remaining, 'icon-sun']);
     }
 
-    results.push([`${durationHours}h ${durationMinutes}m daylight`, 'icon-sun']);
-
-    if (daylight && !daylight.isBeforeSunrise && !daylight.isAfterSunset) {
-        results.push([`${daylight.hoursUntilSunset}h ${daylight.hoursUntilSunset}m daylight remaining (${daylight.remainingPercent}%)`, 'icon-sun']);
-        results.push([`${daylight.hoursSinceSunrise}h ${daylight.minutesSinceSunrise}m daylight spent (${daylight.spentPercent}%)`, 'icon-sun']);
+    if (daylightFacts?.afterSunrise) {
+        const since = minutesToDuration(daylightFacts.sinceSunriseMinutes, 'since sunrise');
+        extras.push([since, 'icon-sunrise']);
     }
 
-    results.push([`${result.sunsetDate.toLocaleString(locale, timeFormat)} sunset`, 'icon-sunset']);
 
-    if (daylight && daylight.isAfterSunset) {
-        results.push([`${daylight.hoursSinceSunset}h ${daylight.minutesSinceSunset}m since sunset`, 'icon-sunset']);
+    if (daylightFacts?.afterSunset) {
+        const since = minutesToDuration(daylightFacts.sinceSunsetMinutes, 'since sunset');
+        extras.push([since, 'icon-sunset']);
     }
 
-    return results;
+    return extras;
 }
 
 /**
@@ -56,7 +94,7 @@ function runSunrise(date) {
  * See: https://gml.noaa.gov/grad/solcalc/
  * See: https://gml.noaa.gov/grad/solcalc/calcdetails.html
  */
-function calculateSunrise(date, latitude, longitude) {
+function calculateSolarFacts(date, latitude, longitude) {
     const radians = (degrees) => degrees * (Math.PI / 180);
     const degrees = (radians) => radians * (180 / Math.PI);
 
@@ -132,65 +170,66 @@ function decimalDaysToHMS(value) {
     return { hours, minutes, seconds };
 }
 
-function calculateDaylight(sunriseResult) {
-    const now = new Date();
-
-    const dateIsToday = now.getFullYear() === sunriseResult.date.getFullYear() &&
-        now.getMonth() === sunriseResult.date.getMonth() &&
-        now.getDate() === sunriseResult.date.getDate();
-
-    if (!dateIsToday) return null;
-
-    let hoursSinceSunrise = 0;
-    let minutesSinceSunrise = 0;
-    let hoursUntilSunrise = 0;
-    let minutesUntilSunrise = 0;
-    let spentPercent = 0;
-    const isBeforeSunrise = now.getTime() < sunriseResult.sunriseDate.getTime();
-    const sunriseDelta = Math.abs((sunriseResult.sunriseDate.getTime() - now.getTime()) / 60_000);
-    if (isBeforeSunrise) {
-        hoursUntilSunrise = Math.trunc(sunriseDelta / 60);
-        minutesUntilSunrise = Math.floor(sunriseDelta % 60);
-    } else {
-        hoursSinceSunrise = Math.trunc(sunriseDelta / 60);
-        minutesSinceSunrise = Math.floor(sunriseDelta % 60);
-        spentPercent = Math.floor(sunriseDelta / sunriseResult.sunlightDurationMinutes * 100);
+function calculateDaylightFacts(now, solarFacts) {
+    const nowYMD = now.toLocaleDateString();
+    const sunriseYMD = solarFacts.sunriseDate.toLocaleDateString();
+    if (nowYMD !== sunriseYMD) {
+        return null;
     }
 
-    let hoursSinceSunset = 0;
-    let minutesSinceSunset = 0;
-    let hoursUntilSunset = 0;
-    let minutesUntilSunset = 0;
-    let remainingPercent = 0;
-    const isAfterSunset = now.getTime() > sunriseResult.sunsetDate.getTime();
-    const sunsetDelta = Math.abs((now.getTime() - sunriseResult.sunsetDate.getTime()) / 60_000)
-    if (isAfterSunset) {
-        hoursSinceSunset = Math.trunc(sunsetDelta / 60);
-        minutesSinceSunset = Math.ceil(sunsetDelta % 60);
+    const beforeSunrise = now < solarFacts.sunriseDate;
+    const afterSunrise = now >= solarFacts.sunriseDate;
+    const afterSunset = now >= solarFacts.sunsetDate;
+    const beforeSunset = now < solarFacts.sunsetDate;
+    const sunIsUp = now >= solarFacts.sunriseDate && now < solarFacts.sunsetDate;
+
+    const sunriseDeltaMS = now - solarFacts.sunriseDate;
+    const sunsetDeltaMS = now - solarFacts.sunsetDate;
+    const daylightMS = solarFacts.sunlightDurationMinutes * 60 * 1000;
+
+    let spentMinutes, spentPercent, remainingMinutes, remainingPercent, sinceSunriseMinutes, sinceSunsetMinutes;
+    if (beforeSunrise) {
+        spentMinutes = 0;
+        spentPercent = 0;
+        remainingMinutes = solarFacts.sunlightDurationMinutes;
+        remainingPercent = 100
+        sinceSunsetMinutes = null;
+        sinceSunriseMinutes = null;
+    } else if (afterSunset) {
+        spentMinutes = solarFacts.sunlightDurationMinutes;
+        spentPercent = 100;
+        remainingMinutes = 0;
+        remainingPercent = 0;
+        sinceSunriseMinutes = sunriseDeltaMS / 1000 / 60;
+        sinceSunsetMinutes = sunsetDeltaMS / 1000 / 60;
     } else {
-        hoursUntilSunset = Math.trunc(sunsetDelta / 60);
-        minutesUntilSunset = Math.ceil(sunsetDelta % 60);
-        remainingPercent = Math.ceil(sunsetDelta / sunriseResult.sunlightDurationMinutes * 100);
+        spentMinutes = sunriseDeltaMS / daylightMS / 1000 / 60;
+        spentPercent = Math.trunc(sunriseDeltaMS / daylightMS) * 100;
+        remainingMinutes = sunsetDeltaMS / daylightMS / 1000 / 60;
+        remainingPercent = Math.trunc(sunsetDeltaMS / daylightMS) * 100;
+        sinceSunriseMinutes = sunriseDeltaMS / 1000 / 60;
+        sinceSunsetMinutes = sunsetDeltaMS / 1000 / 60;
     }
 
     return {
-        isBeforeSunrise,
-        isAfterSunset,
-        hoursUntilSunrise,
-        minutesUntilSunrise,
-        hoursSinceSunrise,
-        minutesSinceSunrise,
-        hoursUntilSunset,
-        minutesUntilSunset,
-        hoursSinceSunset,
-        minutesSinceSunset,
+        beforeSunrise,
+        afterSunrise,
+        afterSunset,
+        sunIsUp,
+        sunriseDeltaMS,
+        sunsetDeltaMS,
+        spentMinutes,
         spentPercent,
+        remainingMinutes,
         remainingPercent,
+        sinceSunriseMinutes,
+        sinceSunsetMinutes,
     }
 }
 
 window.runSunrise = runSunrise;
-window.calculateDaylight = calculateDaylight;
-window.calculateSunrise = calculateSunrise;
+window.calculateDaylightFacts = calculateDaylightFacts;
+window.calculateSolarFacts = calculateSolarFacts;
 window.decimalDaysToHMS = decimalDaysToHMS;
+window.minutesToDuration = minutesToDuration;
 window.sunriseCache = sunriseCache;
