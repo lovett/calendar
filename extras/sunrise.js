@@ -68,17 +68,11 @@ function runSunrise(date) {
     const daylightFacts = calculateDaylightFacts(now, solarFacts);
 
     if (daylightFacts?.sunIsUp) {
-        const spent = minutesToDuration(daylightFacts.spentMinutes, 'daylight spent');
+        const spent = minutesToDuration(daylightFacts.sinceSunriseMinutes, `daylight spent (${daylightFacts.spentPercent}%)`);
         extras.push([spent, 'icon-sun']);
-        const remaining = minutesToDuration(daylightFacts.remainingMinutes, 'daylight remaining');
+        const remaining = minutesToDuration(daylightFacts.remainingMinutes, `daylight remaining (${daylightFacts.remainingPercent}%)`);
         extras.push([remaining, 'icon-sun']);
     }
-
-    if (daylightFacts?.afterSunrise) {
-        const since = minutesToDuration(daylightFacts.sinceSunriseMinutes, 'since sunrise');
-        extras.push([since, 'icon-sunrise']);
-    }
-
 
     if (daylightFacts?.afterSunset) {
         const since = minutesToDuration(daylightFacts.sinceSunsetMinutes, 'since sunset');
@@ -180,35 +174,31 @@ function calculateDaylightFacts(now, solarFacts) {
     const beforeSunrise = now < solarFacts.sunriseDate;
     const afterSunrise = now >= solarFacts.sunriseDate;
     const afterSunset = now >= solarFacts.sunsetDate;
-    const beforeSunset = now < solarFacts.sunsetDate;
     const sunIsUp = now >= solarFacts.sunriseDate && now < solarFacts.sunsetDate;
 
     const sunriseDeltaMS = now - solarFacts.sunriseDate;
     const sunsetDeltaMS = now - solarFacts.sunsetDate;
     const daylightMS = solarFacts.sunlightDurationMinutes * 60 * 1000;
 
-    let spentMinutes, spentPercent, remainingMinutes, remainingPercent, sinceSunriseMinutes, sinceSunsetMinutes;
+    let sinceSunriseMinutes, sinceSunsetMinutes, remainingMinutes, spentPercent, remainingPercent;
     if (beforeSunrise) {
-        spentMinutes = 0;
-        spentPercent = 0;
-        remainingMinutes = solarFacts.sunlightDurationMinutes;
-        remainingPercent = 100
-        sinceSunsetMinutes = null;
         sinceSunriseMinutes = null;
+        sinceSunsetMinutes = null;
+        remainingMinutes = solarFacts.sunlightDurationMinutes;
+        spentPercent = 0;
+        remainingPercent = 100
     } else if (afterSunset) {
-        spentMinutes = solarFacts.sunlightDurationMinutes;
-        spentPercent = 100;
+        sinceSunriseMinutes = sunriseDeltaMS / 1000 / 60;
+        sinceSunsetMinutes = sunsetDeltaMS / 1000 / 60;
         remainingMinutes = 0;
+        spentPercent = 100;
         remainingPercent = 0;
-        sinceSunriseMinutes = sunriseDeltaMS / 1000 / 60;
-        sinceSunsetMinutes = sunsetDeltaMS / 1000 / 60;
     } else {
-        spentMinutes = sunriseDeltaMS / daylightMS / 1000 / 60;
-        spentPercent = Math.trunc(sunriseDeltaMS / daylightMS) * 100;
-        remainingMinutes = sunsetDeltaMS / daylightMS / 1000 / 60;
-        remainingPercent = Math.trunc(sunsetDeltaMS / daylightMS) * 100;
         sinceSunriseMinutes = sunriseDeltaMS / 1000 / 60;
         sinceSunsetMinutes = sunsetDeltaMS / 1000 / 60;
+        remainingMinutes = solarFacts.sunlightDurationMinutes - sinceSunriseMinutes;
+        spentPercent = Math.ceil(sunriseDeltaMS / daylightMS * 100);
+        remainingPercent = Math.abs(Math.ceil(sunsetDeltaMS / daylightMS * 100));
     }
 
     return {
@@ -218,7 +208,6 @@ function calculateDaylightFacts(now, solarFacts) {
         sunIsUp,
         sunriseDeltaMS,
         sunsetDeltaMS,
-        spentMinutes,
         spentPercent,
         remainingMinutes,
         remainingPercent,
