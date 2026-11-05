@@ -1703,7 +1703,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     clockCallback();
     window.setInterval(clockCallback, 5000);
-    document.documentElement.classList.add('loaded');
 });
 
 if (!window.customElements || !window.customElements.define) {

@@ -24,13 +24,7 @@ html {
     font-family: "New York Medium", "Baskerville", "Liberation Serif", serif;
     color: var(--default);
     font-size: 16px;
-    background: var(--bg) url('calendar.svg') no-repeat center center;
-    background-size: 8em 8em;
     min-height: 100%;
-}
-
-html.loaded {
-    background-image: none;
 }
 
 a {
