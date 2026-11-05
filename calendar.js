@@ -920,12 +920,18 @@ class CalendarDay extends CalendarView {
         }
 
         if (counter === 0) {
-            const container = this.appendChild(document.createElement('div'));
-            container.classList.add('event', 'empty');
-            const time = container.appendChild(document.createElement('time'));
-            this.renderIcon(time, 'calendar-x');
-            const h2 = container.appendChild(document.createElement('h2'));
-            h2.textContent = 'No events';
+            const li = extras.appendChild(document.createElement('li'));
+            li.classList.add('no-events');
+            this.renderIcon(li, 'calendar-x');
+            const span = li.appendChild(document.createElement('span'));
+            span.textContent = 'No events';
+
+            // const container = this.appendChild(document.createElement('div'));
+            // container.classList.add('event', 'empty');
+            // const time = container.appendChild(document.createElement('time'));
+            // this.renderIcon(time, 'calendar-x');
+            // const h2 = container.appendChild(document.createElement('h2'));
+            // h2.textContent = 'No events';
         }
     }
 }

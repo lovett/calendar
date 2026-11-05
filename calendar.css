@@ -59,6 +59,10 @@ cal-day .extras .day-of-week {
     justify-content: space-between;
 }
 
+cal-day .extras .no-events {
+    grid-column: 1 / -1;
+}
+
 cal-day .event {
     display: grid;
     grid-template-columns: 2em 1fr;
