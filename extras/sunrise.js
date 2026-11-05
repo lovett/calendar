@@ -178,7 +178,6 @@ function calculateDaylightFacts(now, solarFacts) {
 
     const sunriseDeltaMS = now - solarFacts.sunriseDate;
     const sunsetDeltaMS = now - solarFacts.sunsetDate;
-    const daylightMS = solarFacts.sunlightDurationMinutes * 60 * 1000;
 
     let sinceSunriseMinutes, sinceSunsetMinutes, remainingMinutes, spentPercent, remainingPercent;
     if (beforeSunrise) {

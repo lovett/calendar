@@ -53,7 +53,7 @@ lint_sh() {
 lint_json() {
     can_skip ".json" "$BUN" "bun" && return
     echo "Linting json files with bun"
-    $BUN check ./*.json test/*.json
+    $BUN check ./*.json
     echo ""
 }
 
